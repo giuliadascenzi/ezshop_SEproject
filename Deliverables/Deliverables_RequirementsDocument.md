@@ -53,7 +53,6 @@ EZShop is a software application to:
 | Product | Generic product sold by the shop |
 | IT Administrator | Employee tasked with maintaining and operating the IT part of the system |
 | Fidelity card | Card granted to fidelity customers, identified by a bar code |
-| Anonymous user | Employee not logged in to the system |
 
 # Context Diagram and interfaces
 
@@ -61,8 +60,6 @@ EZShop is a software application to:
 [context diagram]
 
 ## Interfaces
-
-*- add interaction through employee card? -*
 
 | Actor | Logical Interface | Physical Interface  |
 | ------------- |:-------------:| -----:|
@@ -75,7 +72,6 @@ EZShop is a software application to:
 | IT Administrator | Application GUI | Device |
 | Customer | POS GUI | POS |
 | Fidelity card | Read the card | Bar code reader |
-| Anonymous User | Application GUI | Device, Cash register |
 
 For reference:
 
@@ -139,7 +135,6 @@ As an accountant:
 | - FR3.3 | - Delete account |
 | - FR3.4 | - Update account points |
 | - FR3.5 | - Scan fidelity card |
-| - FR3.6 | - Change points value |
 | ... | --- |
 | FR4 | Manage accounting |
 | - FR4.1 | - Compute current balance |
@@ -148,36 +143,33 @@ As an accountant:
 | - FR4.4 | - Add revenue |
 | ... | --- |
 | FR5 | Security management |
-| - FR5.1 | - Log in |
-| - FR5.2 | - Log out |
-| - FR5.3 | - View log history |
-| - FR5.4 | - Add employee account |
-| - - FR5.4.1 | - - Give permissions |
-| - FR5.5 | - Modify employee account |
-| - - FR5.5.1 | - - Modify permissions |
-| - FR5.6 | - Delete employee account |
+| - FR5.1 | - View log history |
+| - FR5.2 | - Add employee account |
+| - - FR5.2.1 | - - Give permissions |
+| - FR5.3 | - Modify employee account |
+| - - FR5.3.1 | - - Modify permissions |
+| - FR5.4 | - Delete employee account |
+| ... | --- |
+| FR6 | Change shop settings |
 
 ### Access rights, actor vs. function
 
-| Function    | Manager | Accountant | Cashier | Inventory manager | IT Administrator | Anonymous user |
-| ----------- | ------- | ---------- | ------- | ----------------- | ---------------- | -------------- |
-| FR1         | Yes     | No         | Yes     | No                | No               | No             |
-| FR2         | Yes     | No         | No      | Yes               | No               | No             |
-| FR3.1 - 3.5 | Yes     | No         | Yes     | No                | Yes              | No             |
-| FR3.6       | Yes     | No         | No      | No                | No               | No             |
-| FR4         | Yes     | Yes        | No      | No                | No               | No             |
-| FR5.1       | No      | No         | No      | No                | No               | Yes            |
-| FR5.2       | Yes     | Yes        | Yes     | Yes               | Yes              | No             |
-| FR5.3 - 5.6 | Yes     | No         | No      | No                | Yes              | No             |
+| Function    | Manager | Accountant | Cashier | Inventory manager | IT Administrator |
+| ----------- | ------- | ---------- | ------- | ----------------- | ---------------- |
+| FR1         | Yes     | No         | Yes     | No                | No               |
+| FR2         | Yes     | No         | No      | Yes               | No               |
+| FR3         | Yes     | No         | Yes     | No                | Yes              |
+| FR4         | Yes     | Yes        | No      | No                | No               |
+| FR5         | Yes     | No         | No      | No                | Yes              |
+| FR6         | Yes     | No         | No      | No                | No               |
 
 In short:
 
 - The Accountant can access all functions regarding FR4;
-- The Cashier can access all functions regarding FR1 and FR3 except FR3.6;
+- The Cashier can access all functions regarding FR1 and FR3;
 - The Inventory Manager can access all functions regarding FR2;
-- The IT Administrator can access all functions regarding FR3 (except FR3.6) and FR5;
+- The IT Administrator can access all functions regarding FR3 and FR5;
 - The Manager can access any function;
-- An anonymous user cannot access any function of the system except FR5.1 (Log in); any logged-in employee can log out of the system (FR5.2).
 
 ## Non Functional Requirements
 
