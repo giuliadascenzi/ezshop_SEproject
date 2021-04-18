@@ -57,7 +57,8 @@ EZShop is a software application to:
 # Context Diagram and interfaces
 
 ## Context Diagram
-[context diagram]
+
+![](Diagrams/contextdiagram.png)
 
 ## Interfaces
 
@@ -194,13 +195,25 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                              Transaction (purchase) T has been added, inventory has been updated, fidelity account A is updated if it exists                               |
-| Nominal Scenario | 1. The cashier scans the products with the bar code reader and adds them to a purchase list and eventually modifies each product's quantity;</br> 2. the system computes the total amount and applies eventual discounts; </br> 3. the cashier then proceeds to process the payment as computed in UC2; </br> 4. the transaction is added to the system, the system prints the receipt, the inventory is updated |
+| Nominal Scenario | The cashier scans the products, processes the payment and then finalizes the transaction and prints the receipt |
 | Variant |  If the customer has a fidelity account, they can decide to convert some points in euros to have a discount; after the payment the account's points are updated as computed in UC11, regardless of whether points were spent or not |
 | Variant | If the payment is rejected (e.g. the payment system doesn't respond or rejects the payment, the customer doesn't have enough money, etc.) the transaction is rolled back |
 
 #### Scenario 1.1
 
-| Scenario 1.1 | The customer decides to use points to get a discount |
+| Scenario 1.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | Transaction (purchase) T has been added, inventory has been updated, fidelity account A (if present) is updated |
+| Step#          |                         Description                          |
+| 1 | The cashier scans the products with the bar code reader and adds them to a purchase list and eventually modifies each product's quantity |
+| 2 | The system computes the total amount and applies eventual discounts |
+| 3 | The cashier proceeds to process the payment as computed in UC2 |
+| 4 | The transaction is added to the system, the system prints the receipt, the inventory is updated, the customer's fidelity account (if it exists) is updated |
+
+#### Scenario 1.2
+
+| Scenario 1.2 | The customer decides to use points to get a discount |
 | -------------- | :----------------------------------------------------------: |
 | Precondition   | - |
 | Post condition | Transaction (purchase) T has been added, inventory has been updated, fidelity account A is updated |
@@ -220,7 +233,7 @@ In short:
 | Nominal Scenario | The cashier inputs the payment method chosen by the customer and processes the payment |
 | Variant | The cashier inputs "cash" as the payment method |
 | Variant | The cashier inputs "credit card" as the payment method |
-| Variant | If the amount of euros to pay is 0, the use case isn't executed |
+| Variant | If the amount of euros to pay is 0 (e.g. the customer pays for everything with only points), the use case isn't executed |
 
 #### Scenario 2.1
 
@@ -252,9 +265,20 @@ In short:
 | Actors Involved  |                      Cashier                       |
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     | Purchase P exists and hasn't been fully refunded |
-| Post condition   | Refund R is added  |
-| Nominal Scenario | The cashier selects "Refund"; the cashier searches for the transaction by either scanning the receipt or writing the transaction code written on the receipt; the cashier selects the products the customer wants to have refunded along with the respective quantities; the cashier registers the refund |
+| Post condition   | Refund R is added and linked to P |
+| Nominal Scenario | The cashier refunds a number of products from a purchase |
 | Variants         | - |
+
+#### Scenario 3.1
+
+| Scenario 3.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Purchase P exists and hasn't been fully refunded |
+| Post condition | Refund R is added and linked to P |
+| Step#          |                         Description                          |
+| 1 | The cashier searches for the transaction by either scanning the receipt or writing the transaction code |
+| 2 | The cashier selects the products the customer wants to have refunded along with the respective quantities |
+| 3 | The cashiers registers the refund |
 
 ### Use case 4, UC4 - Filter products
 
@@ -271,6 +295,17 @@ In short:
 | Variants         |                     sorted by date added                     |
 | Variants         |          sorted by expiration date (if applicable)           |
 | Variants         |                       sorted by price                        |
+
+#### Scenario 4.1
+
+| Scenario 4.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The inventory manager selects the filtering criteria for the products (see variants above) |
+| 2 | The inventory manager selects the sorting criteria for the products (see variants above) |
+| 3 | The inventory manager filters and sorts the products available in the shop's inventory |
 
 ### Use case 5, UC5 - Create inventory report
 
@@ -290,6 +325,16 @@ In short:
 | Nominal Scenario | The inventory manager scans the product's bar code to find the product in the inventory, and then inserts all information regarding the new supplies (e.g. quantity, expiration date, etc.) |
 | Variants         |                          -                          |
 
+#### Scenario 6.1
+
+| Scenario 6.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | A new supply for product P has been added |
+| Step#          |                         Description                          |
+| 1 | The inventory maanger scans the product's bar code to find the product in the inventory |
+| 2 | The inventory manager inserts all information regarding the new supplies (i.e. quantity, amount paid, etc.) |
+
 ### Use case 7, UC7 - Add new product
 
 | Actors Involved  |                  Inventory manager                  |
@@ -298,6 +343,17 @@ In short:
 | Post condition   | A new product P has been added to the inventory |
 | Nominal Scenario | The inventory manager selects "add new product" from the inventory screen; the inventory manager scans the product's bar code and then inputs all information regarding the product |
 | Variants         |                          -                          |
+
+#### Scenario 7.1
+
+| Scenario 7.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | A new product P has been added to the inventory |
+| Step#          |                         Description                          |
+| 1 | The inventory manager selects "add new product" from the inventory screen |
+| 2 | The inventory manager scans the product's bar code |
+| 3 | The inventory manager inputs all information regarding the product |
 
 ### Use case 8, UC8 - Create fidelity account
 
@@ -387,25 +443,8 @@ In short:
 | Nominal Scenario | The accountant clicks on the "Add revenue" button; the accountant inserts the date and the amount of euros added |
 | Variants         |                              -                               |
 
-### Use case 17, UC17 - Log in
 
-| Actors Involved  |                        Anonymous user                        |
-| ---------------- | :----------------------------------------------------------: |
-| Precondition     |                              -                               |
-| Post condition   |    The employee is logged in to their respective account     |
-| Nominal Scenario | An employee logs in to the system by scanning the employee card with a bar code reader |
-| Variants         | The manager can log in by inserting the user ID and the password associated with it |
-
-### Use case 18, UC18 - Log out
-
-| Actors Involved  |    Cashier/Inventory manager/Accountant/IT Administrator     |
-| ---------------- | :----------------------------------------------------------: |
-| Precondition     |                              -                               |
-| Post condition   | The employee is logged out of their respective account and is considered an anonymous user |
-| Nominal Scenario | The employee logs out of their account by clicking the "Log Out" button in their home page |
-| Variants         |                              -                               |
-
-### Use case 19, UC19 - View log history
+### Use case 17, UC17 - View log history
 
 | Actors Involved  |                       IT Administrator                       |
 | ---------------- | :----------------------------------------------------------: |
@@ -414,7 +453,7 @@ In short:
 | Nominal Scenario | The administrator clicks on the "View log history" button; the administrator inputs a period of time for which they want to know the log history; the application displays the log history of employees to see who has logged in or out and at what time for that time period |
 | Variants         |                              -                               |
 
-### Use case 20, UC20 - Add employee account
+### Use case 18, UC18 - Add employee account
 
 | Actors Involved  |                       IT Administrator                       |
 | ---------------- | :----------------------------------------------------------: |
@@ -423,7 +462,7 @@ In short:
 | Nominal Scenario | The Administrator creates a new employee account by inserting a new user code, their name and surname and the permissions to be granted to the new user; the administrator scans an unused employee card to associate it with the new account |
 | Variants         |                              -                               |
 
-### Use case 21, UC21 - Modify employee account
+### Use case 19, UC19 - Modify employee account
 
 | Actors Involved  |                       IT Administrator                       |
 | ---------------- | :----------------------------------------------------------: |
@@ -432,7 +471,7 @@ In short:
 | Nominal Scenario | The administrator selects the employee account to modify; the administrator modifies the selected employee account's information, and eventually scanning a new employee card to be associated with the account |
 | Variants         |                              -                               |
 
-### Use case 22, UC22 - Delete employee account
+### Use case 20, UC20 - Delete employee account
 
 | Actors Involved  |                       IT Administrator                       |
 | ---------------- | :----------------------------------------------------------: |
@@ -441,7 +480,7 @@ In short:
 | Nominal Scenario | The administrator selects the employee account to delete; the administrator confirms the choice when prompted by the system |
 | Variants         |                              -                               |
 
-### Use case 23, UC23 - Change shop settings
+### Use case 21, UC21 - Change shop settings
 
 | Actors Involved  |                           Manager                            |
 | ---------------- | :----------------------------------------------------------: |
