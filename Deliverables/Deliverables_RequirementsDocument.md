@@ -467,7 +467,7 @@ In short:
 Notes:
 - Fidelity points: By having a fidelity account the customer is able to get points for every purchase made in proportion to the total amount paid in the purchase. (The value in euros of a point is choosen by the shop manager.) The points accumulated can be used by the customer to get a discount (i.e: the customer has 4000 points. For that shop 50€-> 1 point. The customer wants to use 500 of his/her points to get a 10€ discount. The customer now has 3500 points remaining on his/her account)
 - Product: In the inventory a product record is a generical description of a product sold by the shop.
-- Supply: Group of products bought by the shop from a supplier. It is added to the inventory by specifying what product it is (i.e. by scanning the product's bar code or inserting its code), but also adding more informations such as expiration date (if exists), selling price, price paid, discount (if any) and quantity.
+- Supply: Group of products bought by the shop from a supplier. The products are added to the inventory by specifying ProductId (i.e. by scanning the product's bar code or inserting its code), quantity bought (to update the amount of quantity of that product) and price payed (to memorise the purchase done and keeping track of the average price payed for that product).
 
 # System Design
 
