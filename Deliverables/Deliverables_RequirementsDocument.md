@@ -313,8 +313,19 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                              -                               |
-| Nominal Scenario | The inventory manager filters and sorts transactions as computed in UC4; the inventory manager then creates a PDF containing a sales report, containing the generated list of products |
+| Nominal Scenario | The inventory manager filters and sorts products as computed in UC4; the inventory manager then creates a PDF containing a sales report, containing the generated list of products |
 | Variants         |                              -                               |
+
+#### Scenario 5.1
+
+| Scenario 5.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The inventory manager filters and sorts products as computed in UC4 |
+| 2 | The inventory manager clicks on "Create report" |
+| 3 | The system generates a PDF containing an inventory report with the generated list of products |
 
 ### Use case 6, UC6 - Add new supply
 
@@ -363,6 +374,8 @@ In short:
 | Post condition   |           Fidelity account A exists; A.points = 0            |
 | Nominal Scenario | The actor creates a new fidelity account for a customer who requested it and populates its fields and scans a new fidelity card to be associated with the new account |
 | Variants         | A customer can have only one fidelity account, this is checked through the email (one email per account) provided by the customer |
+
+
 
 ### Use case 9, UC9 - Modify fidelity account
 
