@@ -1,10 +1,10 @@
 # Requirements Document 
 
-Authors:
+Authors: Giulia D'Ascenzi, Francesco Di Franco, Mahmoud Hassan Ali, Antonino Monti
 
 Date:
 
-Version:
+Version: 1.0
 
 # Contents
 
@@ -21,7 +21,6 @@ Version:
 - [Use case diagram and use cases](#use-case-diagram-and-use-cases)
 	+ [Use case diagram](#use-case-diagram)
 	+ [Use cases](#use-cases)
-    	+ [Relevant scenarios](#relevant-scenarios)
 - [Glossary](#glossary)
 - [System design](#system-design)
 - [Deployment diagram](#deployment-diagram)
@@ -38,7 +37,6 @@ EZShop is a software application to:
 
 
 # Stakeholders
-
 
 | Stakeholder name  | Description |
 | ----------------- |:-----------:|
@@ -139,7 +137,7 @@ As an accountant:
 | ... | --- |
 | FR4 | Manage accounting |
 | - FR4.1 | - Compute current balance |
-| - FR4.2 | - Create accounting report |
+| - FR4.2 | - Create sales report |
 | - FR4.3 | - Add expense |
 | - FR4.4 | - Add revenue |
 | ... | --- |
@@ -187,7 +185,13 @@ In short:
 
 ## Use case diagram
 
-[use case diagrams]
+![](Diagrams/UCDiagram_Main.png)
+![](Diagrams/UCDiagram_ManageSalesCustomers.png)
+![](Diagrams/UCDiagram_ManageInventory.png)
+![](Diagrams/UCDiagram_ManageAccounting.png)
+![](Diagrams/UCDiagram_ManageSecurity.png)
+
+## Use cases
 
 ### Use case 1, UC1 - Create transaction
 
@@ -462,7 +466,7 @@ In short:
 | Post condition   |                              -                               |
 | Nominal Scenario | The actor searches for the fidelity account associated with the email or fidelity card to display its information |
 | Variant          | The actor scans the fidelity card with a bar code reader to find the account |
-| Variant          |   The actor manually inserts the email to find the account   |
+| Variant          | The actor manually inserts the email to find the account   |
 
 #### Scenario 12.1
 
@@ -608,9 +612,19 @@ In short:
 | Actors Involved  |                       IT Administrator                       |
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                  Employee account E exists                   |
-| Post condition   | The data associated with E, which can include permissions, is modified |
-| Nominal Scenario | The administrator selects the employee account to modify; the administrator modifies the selected employee account's information, and eventually scanning a new employee card to be associated with the account |
+| Post condition   | The data associated with E is modified |
+| Nominal Scenario | The administrator modifies an employee account |
 | Variants         |                              -                               |
+
+#### Scenario 19.1
+
+| Scenario 19.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Employee account E exists |
+| Post condition | The data associated with E is modified |
+| Step#          |                         Description                          |
+| 1 | The administrator selects the employee account to modify |
+| 2 | The administrator modifies the selected employee account's information and eventually scans a new employee card to be associated with it |
 
 ### Use case 20, UC20 - Delete employee account
 
@@ -618,8 +632,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                  Employee account E exists                   |
 | Post condition   |                 E is deleted from the system                 |
-| Nominal Scenario | The administrator selects the employee account to delete; the administrator confirms the choice when prompted by the system |
+| Nominal Scenario | The administrator deletes an employee account |
 | Variants         |                              -                               |
+
+#### Scenario 20.1
+
+| Scenario 20.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Employee account E exists |
+| Post condition | E is deleted from the system |
+| Step#          |                         Description                          |
+| 1 | The administrator selects the employee account to delete |
+| 2 | The administrator confirms the choice when prompted by the system |
 
 ### Use case 21, UC21 - Change shop settings
 
@@ -630,21 +654,19 @@ In short:
 | Nominal Scenario | The manager changes the shop's settings (name, phone number, points value and conversion rate, etc.) |
 | Variants         | - |
 
-
-
 # Glossary
 
-[glossary photo]
+![glossary photo](Diagrams/glossary.png)
 
 Notes:
 - Fidelity points: By having a fidelity account the customer is able to get points for every purchase made in proportion to the total amount paid in the purchase. (The value in euros of a point is choosen by the shop manager.) The points accumulated can be used by the customer to get a discount (i.e: the customer has 4000 points. For that shop 50€-> 1 point. The customer wants to use 500 of his/her points to get a 10€ discount. The customer now has 3500 points remaining on his/her account)
 - Product: In the inventory a product record is a generical description of a product sold by the shop.
-- Supply: Group of products bought by the shop from a supplier. The products are added to the inventory by specifying ProductId (i.e. by scanning the product's bar code or inserting its code), quantity bought (to update the amount of quantity of that product) and price payed (to memorise the purchase done and keeping track of the average price payed for that product).
+- Supply: Group of products bought by the shop from a supplier in a certain date. The products are added to the inventory by specifying ProductId (i.e. by scanning the product's bar code or inserting its code), quantity bought (to update the amount of quantity of that product) and price paid (to memorise the purchase done and keeping track of the average price payed for that product).
 
 # System Design
 
-[system diagram photo]
+![system diagram photo](Diagrams/systemdesign.png)
 
 # Deployment Diagram
 
-[deployment diagram photo]
+![deployment diagram photo](Diagrams/deploymentdiagram.png)
