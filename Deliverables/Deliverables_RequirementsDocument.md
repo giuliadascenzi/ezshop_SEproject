@@ -313,7 +313,7 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                              -                               |
-| Nominal Scenario | The inventory manager filters and sorts products as computed in UC4; the inventory manager then creates a PDF containing a sales report, containing the generated list of products |
+| Nominal Scenario | The inventory manager creates a PDF containing an inventory report |
 | Variants         |                              -                               |
 
 #### Scenario 5.1
@@ -352,7 +352,7 @@ In short:
 | ---------------- | :-------------------------------------------------: |
 | Precondition     |                          -                          |
 | Post condition   | A new product P has been added to the inventory |
-| Nominal Scenario | The inventory manager selects "add new product" from the inventory screen; the inventory manager scans the product's bar code and then inputs all information regarding the product |
+| Nominal Scenario | The inventory manager adds a new product to the inventory |
 | Variants         |                          -                          |
 
 #### Scenario 7.1
@@ -370,12 +370,21 @@ In short:
 
 | Actors Involved  |                   Cashier/IT Administrator                   |
 | ---------------- | :----------------------------------------------------------: |
-| Precondition     |              Fidelity account A does not exist               |
+| Precondition     |  Fidelity account A associated with the provided email does not exist |
 | Post condition   |           Fidelity account A exists; A.points = 0            |
-| Nominal Scenario | The actor creates a new fidelity account for a customer who requested it and populates its fields and scans a new fidelity card to be associated with the new account |
-| Variants         | A customer can have only one fidelity account, this is checked through the email (one email per account) provided by the customer |
+| Nominal Scenario | The actor creates a new fidelity account for a customer who requested it |
+| Variants         | - |
 
+#### Scenario 8.1
 
+| Scenario 8.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Fidelity account A associated with the provided email does not exist |
+| Post condition | Fidelity account A exists; A.points = 0 |
+| Step#          |                         Description                          |
+| 1 | The actor creates a new fidelity account for a customer |
+| 2 | The actor scans a new fidelity card to be associated with the account |
+| 3 | The actor populates the new account's fields, including the customer's email |
 
 ### Use case 9, UC9 - Modify fidelity account
 
@@ -383,8 +392,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                  Fidelity account A exists                   |
 | Post condition   |             Fidelity account A has been modified             |
-| Nominal Scenario | The actor selects the fidelity account to modify as computed in UC12; the actor modifies the selected fidelity account and eventually scans a new fidelity card to be associated with the fidelity account |
+| Nominal Scenario | The actor modifies a fidelity account |
 | Variants         |                              -                               |
+
+#### Scenario 9.1
+
+| Scenario 9.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Fidelity account A exists |
+| Post condition | Fidelity account A has been modified |
+| Step#          |                         Description                          |
+| 1 | The actor selects the fidelity account as computed in UC12 |
+| 2 | The actor modifies the selected fidelity account and eventually scans a new fidelity card to be associated with it|
 
 ### Use case 10, UC10 - Delete fidelity account
 
@@ -392,8 +411,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                  Fidelity account A exists                   |
 | Post condition   |             Fidelity account A has been deleted              |
-| Nominal Scenario | The actor selects the fidelity account to delete as computed in UC12; the actor confirms the choice when prompted by the system |
+| Nominal Scenario | The actor deletes a fidelity account from the system |
 | Variants         |                              -                               |
+
+#### Scenario 10.1
+
+| Scenario 10.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Fidelity account A exists |
+| Post condition | Fidelity account A has been deleted |
+| Step#          |                         Description                          |
+| 1 | The actor selects the fidelity account to delete as computed in UC12 |
+| 2 | The actor confirms the choice to delete the account when prompted by the system |
 
 ### Use case 11, UC11 - Update account points
 
@@ -401,9 +430,29 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                  Fidelity account A exists                   |
 | Post condition   |                  A.points has been modified                  |
-| Nominal Scenario | The actor searches for the customer's fidelity account as computed in UC12; the actor modifies the amount of points associated with account A |
+| Nominal Scenario | The actor searches for the customer's fidelity account and modifies its amount of points |
 | Variant          | The actor subtracts a certain amount of points from the account (e.g. after making a purchase with points) |
 | Variant          | The actor adds a certain amount of points to the account (e.g. after a purchase) |
+
+#### Scenario 11.1
+
+| Scenario 11.1   | The actor subtracts points from the account |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Fidelity account A exists |
+| Post condition | A.points -= amount |
+| Step#          |                         Description                          |
+| 1 | The actor searches for the customer's account as computed in UC12 |
+| 2 | The actor subtracts a certain amount of points from the account |
+
+#### Scenario 11.2
+
+| Scenario 11.2   | The actor adds points to the account|
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | Fidelity account A exists |
+| Post condition | A.points += amount |
+| Step#          |                         Description                          |
+| 1 | The actor searches for the customer's account as computed in UC12 |
+| 2 | The actor adds a certain amount of points to the account |
 
 ### Use case 12, UC12 - Search fidelity account
 
@@ -414,6 +463,24 @@ In short:
 | Nominal Scenario | The actor searches for the fidelity account associated with the email or fidelity card to display its information |
 | Variant          | The actor scans the fidelity card with a bar code reader to find the account |
 | Variant          |   The actor manually inserts the email to find the account   |
+
+#### Scenario 12.1
+
+| Scenario 12.1   | The actor scans the fidelity card |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The actor scans the fidelity card with a bar code reader to find the account |
+
+#### Scenario 12.2
+
+| Scenario 12.2   | The actor searches through email |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The actor inserts the customer's email to find the account |
 
 ### Use case 13, UC13 - Filter transactions
 
@@ -429,14 +496,36 @@ In short:
 | Variants         |                        sorted by date                        |
 | Variants         |                sorted by amount spent/earned                 |
 
+#### Scenario 13.1
+
+| Scenario 13.1   | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The accountant selects the filtering criteria for the transactions (see variants above) |
+| 2 | The accountant selects the sorting criteria for the transactions (see variants above) |
+| 3 | The accountant filters and sorts the transactions stored in the system's database |
+
 ### Use case 14, UC14 - Create sales report
 
 | Actors Involved  |                          Accountant                          |
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                              -                               |
-| Nominal Scenario | The accountant filters and sorts transactions as computed in UC13; the accountant then creates a PDF containing a sales report, containing the list of transactions and the overall balance |
+| Nominal Scenario | The accountant PDF containing a sales report, containing a list of transactions and the overall balance |
 | Variants         |                              -                               |
+
+#### Scenario 14.1
+
+| Scenario 14.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The accountant filters and sorts transactions as computed in UC13 |
+| 2 | The accountant clicks on "Create sales report" |
+| 3 | The system generates a PDF containing a sales report with the generated list of transactions |
 
 ### Use case 15, UC15 - Add expense
 
@@ -444,8 +533,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                  An expense has been added                   |
-| Nominal Scenario | The accountant clicks on the "Add expense" button; the accountant inserts the date and the amount of euros spent |
+| Nominal Scenario | The accountant adds a new expense |
 | Variants         |                              -                               |
+
+#### Scenario 15.1
+
+| Scenario 15.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | An expense has been added |
+| Step#          |                         Description                          |
+| 1 | The accountant adds a new expense |
+| 2 | The accountant inserts the date and the amount of euros spent |
 
 ### Use case 16, UC16 - Add revenue
 
@@ -453,9 +552,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                   A revenue has been added                   |
-| Nominal Scenario | The accountant clicks on the "Add revenue" button; the accountant inserts the date and the amount of euros added |
+| Nominal Scenario | The accountant adds a new revenue |
 | Variants         |                              -                               |
 
+#### Scenario 16.1
+
+| Scenario 16.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | A revenue has been added |
+| Step#          |                         Description                          |
+| 1 | The accountant adds a new revenue |
+| 2 | The accountant inserts the date and the amount of euros earned |
 
 ### Use case 17, UC17 - View log history
 
@@ -463,8 +571,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   |                              -                               |
-| Nominal Scenario | The administrator clicks on the "View log history" button; the administrator inputs a period of time for which they want to know the log history; the application displays the log history of employees to see who has logged in or out and at what time for that time period |
+| Nominal Scenario | The administrator views the log history of employees in a given period of time |
 | Variants         |                              -                               |
+
+#### Scenario 17.1
+
+| Scenario 17.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | - |
+| Step#          |                         Description                          |
+| 1 | The administrator clicks on the "View log history" button |
+| 2 | The administrator inputs a period of time for which they want to know the log history  |
 
 ### Use case 18, UC18 - Add employee account
 
@@ -472,8 +590,18 @@ In short:
 | ---------------- | :----------------------------------------------------------: |
 | Precondition     |                              -                               |
 | Post condition   | Employee account E has been created; E has certain permissions; E has an employee card associated with it |
-| Nominal Scenario | The Administrator creates a new employee account by inserting a new user code, their name and surname and the permissions to be granted to the new user; the administrator scans an unused employee card to associate it with the new account |
+| Nominal Scenario | The administrator creates a new employee account by inserting a new user code, their name and surname and the permissions to be granted to the new user; the administrator scans an unused employee card to associate it with the new account |
 | Variants         |                              -                               |
+
+#### Scenario 18.1
+
+| Scenario 18.1 | Nominal scenario |
+| -------------- | :----------------------------------------------------------: |
+| Precondition   | - |
+| Post condition | Employee account E has been created; E has certain permissions; E has an employee card associated with it |
+| Step#          |                         Description                          |
+| 1 | The administrator creates a new employee account and inserts the employee's data and their permissions |
+| 2 | The administrator scans an unused employee card to associate it with the account |
 
 ### Use case 19, UC19 - Modify employee account
 
