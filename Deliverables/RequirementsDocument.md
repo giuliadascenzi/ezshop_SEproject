@@ -79,31 +79,16 @@ For reference:
 # Stories and personas
 
 
-Alice, manager of a small shop with 4 employees; 2 cashiers, inventory manager, and an accountant. 
-Alice and her employees us commercial notebooks to record and manage to work operations of the shop without any technological support. 
-As the shop is getting more customers, and the number of orders is increasing, she decided to digitalize the management of the shop by getting a system to manage sales, inventory, customers, and accounting with the same number of employees.
-## User Stories:
-## Manager
+Alice is 49 and works as a manager in a small supermarket. She loves to keep everything under control, and for this reason she wants to monitor the working hours of the employees and the financial situation by watching the cash flow anytime, so that she may schedule the shop's future expenses
+In order to decide new offers and special discounts of loyal customers and order the sold-out items, Alice also wants to monitor sales by keeping track of the number of purchases and customers.
 
-As a manager :
--	She wants to monitor the working hours of the employees, so that he can observe the work process in the shop. 
-- 	She wants to monitor the financial situation by watching the cash flow anytime, so that she can schedule the future expenses.
-- 	She wants to monitor sales by watching the number of purchases and customers who frequented to the shop, so that she can decide new offers and special discount to loyal customers. 
-- She wants to get daily updates about the products in the inventory, so that she can order the sold-out items. 
-## Cashier
-As a cashier: 
--	He needs the prices of all the items to be recorded in the system and to be easy to retrieve, so that he can manage the sales easily and effectively.
-- 	He needs a payment system with credit card system, so that he can receive money from customers with different payment method.
-- 	He wants the calculations of a transaction to be accurate and the printing of receipt to be fast, so that the sales process will be precise and takes less time from the customers.
-## The Inventory Manager 
-As an inventory manager: 
--	He needs to track the availability of each item in the shop, to be able to report the shortage of any item to the manager in order to order new quantities of it.
-- He needs to be able to insert new products to the system easily or update the current items in the shop, so that the records will be always up-to-date.
-## The Accountant
-As an accountant: 
--	He wants to monitor the transactions done by the cashiers time by time, so the he can include them in his financial reports to be delivered to the manager. 
-- 	He wants to record the expenses of the shop and other revenues to the financial records, so he can report the financial situation to the manager. 
+John is 32 and works as a cashier in a small grocery shop. His job involves interacting with a lot of customers every day, which means he needs to be as efficient as possible in managing the sales, and the best way to achieve that is to use a software product. In particular, he needs the prices of all items to be recorded in the system and to be easy to retrieve, and to have the calculations be accurate and the printing of the receipt to be fast so that the sales process can be precise and take less time from the customers. Furthermore, lately many customers have been asking to pay with their credit card, and since the shop doesn't currently own a system that accepts them he would be more than pleased to have one that does that.
 
+Jack is 39 and works as an inventory manager in a small clothes chop. He needs to track the availability of each item in the shop, to be able to report the shortage of any item to the manager in order to order new quantities of it. He needs to be able to insert new products to the system easily or update the current items in the shop, so that the records will be always up-to-date.
+
+Lisa is 50 and works as an accountant for a small store. Unfortunately, her job can be very taxing as she sometimes spends all night doing accounting calculations. To prevent that from happening, she would like to use a system that monitors the transactions processed by the cashiers in real time and automatically, so she can include them in her financial reports to be delivered to the manager. Thanks to the software, she would also be able to record the expenses and the revenues of the shop in order to include them in the financial records as well and report this to the manager.
+
+Carl is 24, works in a bank opposite a small supermarket. He's a regular customer, and after work he usually spends some time at the market to buy a few things he needs. Even though he's satisfied with the service the shop provides, he wouldn't mind benefitting from occasional discounts for loyal customers.
 
 # Functional and non functional requirements
 
