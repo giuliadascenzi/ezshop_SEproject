@@ -64,7 +64,7 @@ From the top: the first one is to go back to the home page, the second one to ma
 
 Depending on the rights that a user has (set by the manager/IT administrator at the creation of the user account) a user can or can not access the page linked by these buttons.
 
-![](GuiPrototypePNGs\Hope_page.png)
+![](GuiPrototypePNGs/Hope_page.png)
 
 # Security
 
