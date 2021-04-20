@@ -36,7 +36,6 @@ Version: 1.0
       - [Using cash](#using-cash)
   - [New refund](#new-refund)
 - [Inventory](#inventory)
-- [Inventory](#inventory-1)
   - [New product](#new-product)
   - [New supply](#new-supply)
 - [Accounting](#accounting)
@@ -144,7 +143,9 @@ Clicking on the quantity of a record already inserted.
 Clicking on "Customer"
 
 In case no customer has been inserted yet:
+
 ![](GuiPrototypePNGs/NTrCustomer.png)
+
 
 Scanning the fidelity card of the customer the informations about that customer are shown.
 Instead, if the customer does not have a fidelity customer account and wants to create one, the cashier can click on "New customer" and fill in all the informations.
@@ -218,7 +219,6 @@ Clicking on "Refund items selected":
 
 The cashier gives the customer the money back and the system memorizes the refund transaction.
 
-# Inventory
 
 # Inventory
 In case the user does not have the rights to access this part of GUI:
