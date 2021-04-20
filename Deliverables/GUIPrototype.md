@@ -144,17 +144,17 @@ Clicking on "Customer"
 
 In case no customer has been inserted yet:
 
-![](GuiPrototypePNGs/NTrCustomer.png)
+![](GuiPrototypePNGs/NtrCustomer.png)
 
 
 Scanning the fidelity card of the customer the informations about that customer are shown.
 Instead, if the customer does not have a fidelity customer account and wants to create one, the cashier can click on "New customer" and fill in all the informations.
 
-![](GuiPrototypePNGs/NTrSignInCustomer.png)
+![](GuiPrototypePNGs/NtrSignInCustomer.png)
 
 After a customer has been registered by the cashier, the window opened by clicking on "Customer" gets updated with all the informations about that customer, giving the cashier the ability of modifying those informations, checking the points balance or also deleting the account (if the customer requests so).
 
-![](GuiPrototypePNGs/NTrCustomer_2.png)
+![](GuiPrototypePNGs/NtrCustomer_2.png)
 
 
 ### Use points to pay
