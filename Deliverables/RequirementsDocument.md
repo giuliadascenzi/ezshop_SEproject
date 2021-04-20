@@ -66,11 +66,11 @@ EZShop is a software application to:
 | Cashier | Application GUI | Cash register |
 | Inventory manager | Application GUI | Device |
 | Accountant | Application GUI | Device |
-| Product | Read the bar code | Bar code reader |
+| Product | On the Application GUI "Scan the product" | Bar code reader |
 | Payment system | Payment APIs | POS, Device |
 | IT Administrator | Application GUI | Device |
 | Customer | POS GUI | POS |
-| Fidelity card | Read the card | Bar code reader |
+| Fidelity card | On the Application GUI "Scan the card" | Bar code reader |
 
 For reference:
 
