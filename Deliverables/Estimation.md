@@ -9,9 +9,7 @@ Version: 1.0
 - [Contents](#contents)
 - [Estimation approach](#estimation-approach)
   - [Estimate by product decomposition](#estimate-by-product-decomposition)
-    - [](#)
   - [Estimate by activity decomposition](#estimate-by-activity-decomposition)
-    - [](#-1)
 
 
 
@@ -25,7 +23,7 @@ Version: 1.0
 <Consider the EZGas  project as described in YOUR requirement document, assume that you are going to develop the project INDEPENDENT of the deadlines of the course>
 
 ## Estimate by product decomposition
-### 
+ 
 |             | Estimate                        |             
 | ----------- | ------------------------------- |  
 | NC =  Estimated number of classes to be developed   |              20 classes        |             
@@ -35,7 +33,7 @@ Version: 1.0
 | C = Estimated cost, in euro (here use 1 person hour cost = 30 euro) | 9000€ | 
 | Estimated calendar time, in calendar weeks (Assume team of 4 people, 8 hours per day, 5 days per week ) |  2 weeks      |               
 ## Estimate by activity decomposition
-### 
+
 |         Activity name                     | Estimated effort (person hours)   |             
 | -----------                               | ------------------------------- | 
 | Identify user requirements                |  40 person hour |
@@ -50,5 +48,9 @@ Version: 1.0
 | Configuration management                  |  16 person hour |
 | Documentation of the system use           |  40 person hour |
 
-###
-Insert here Gantt chart with above activities
+Gantt chart:
+
+![](Diagrams/GanttDiagram.png)
+
+
+The configuration and project management are activities done all throughout the project.
