@@ -83,7 +83,7 @@ All classes except for UserSession are persistent.
 
 #### Scenario 6.4: Sale of product type X with loyalty card update
 
-![sequence 6.4](Diagrams/Design/6-4-SaleTransactionCompleted-CreditCard.png)
+![sequence 6.4](Diagrams/Design/6-4-SaleTransactionCompleted-LoyaltyAccount.png)
 
 #### Scenario 7.1: Manage payment by valid credit card
 
