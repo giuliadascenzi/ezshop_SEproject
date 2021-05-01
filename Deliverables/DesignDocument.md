@@ -1,11 +1,11 @@
 # Design Document 
 
 
-Authors: 
+Authors: Giulia D'Ascenzi, Francesco Di Franco, Mahmoud Hassan Ali, Antonino Monti
 
-Date:
+Date: 30/04/2021
 
-Version:
+Version: 1.0
 
 
 # Contents
@@ -21,40 +21,84 @@ The design must satisfy the Official Requirements document, notably functional a
 
 # High level design 
 
-<discuss architectural styles used, if any>
-<report package diagram>
+Since the project is very simple and small, the application is composed of only four packages. The application follows the MVC pattern: the View is implemented in the GUI package, while the Model and Control are implemented in the Data, the Model and the Exceptions package.
 
-
-
-
+![package diagram](Diagrams/Design/packageDiagram.png)
 
 
 # Low level design
 
-<for each package, report class diagram>
+The Data package contains only the provided EZShopInterface file:
 
+![data package diagram](Diagrams/Design/dataPackage.png)
 
+This interface is implemented by the Shop class in the Model package, the structure of which is reported below:
 
+![model class diagram](Diagrams/Design/classDiagram.png)
 
-
-
-
-
+All classes except for UserSession are persistent.
 
 # Verification traceability matrix
 
-\<for each functional requirement from the requirement document, list which classes concur to implement it>
+| Class \ FR            | FR1  | FR3  | FR4  | FR5  | FR6  | FR7  | FR8  |
+| --------------------- | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| Shop                  |  X   |  X   |  X   |  X   |  X   |  X   |  X   |
+| User                  |  X   |      |      |      |      |      |      |
+| UserSession           |  X   |      |      |      |      |      |      |
+| BalanceOperation      |      |      |  X   |      |  X   |      |  X   |
+| ReturnTransaction     |      |      |      |      |  X   |      |  X   |
+| Order                 |      |      |  X   |      |      |      |  X   |
+| SaleTransaction       |      |      |      |      |  X   |      |  X   |
+| ProductType           |      |  X   |  X   |      |      |      |      |
+| Position              |      |  X   |  X   |      |      |      |      |
+| Sale_QuantityDiscount |      |      |      |      |  X   |      |  X   |
+| Customer              |      |      |      |  X   |      |      |      |
+| CustomerCard          |      |      |      |  X   |      |      |      |
 
+# Verification sequence diagrams
 
+#### Scenario 1.1: Create product type X
 
+![sequence 1.1](Diagrams/Design/1-1-CreateProductType.png)
 
+#### Scenario 2.1: Create user and define rights
 
+![sequence 2.1](Diagrams/Design/2-1-CreateNewUser.png)
 
+#### Scenario 3.3: Record order of product type X arrival
 
+![sequence 3.3](Diagrams/Design/3-3-RecordOrderArrival.png)
 
+#### Scenario 4.1: Create customer record
 
+![sequence 4.1](Diagrams/Design/4-1-CreateNewCustomer.png)
 
+#### Scenario 5.1: Login
 
-# Verification sequence diagrams 
-\<select key scenarios from the requirement document. For each of them define a sequence diagram showing that the scenario can be implemented by the classes and methods in the design>
+![sequence 5.1](Diagrams/Design/5-1-Login.png)
+
+#### Scenario 5.2: Logout
+
+![sequence 5.2](Diagrams/Design/5-2-Logout.png)
+
+#### Scenario 6.4: Sale of product type X with loyalty card update
+
+![sequence 6.4](Diagrams/Design/6-4-SaleTransactionCompleted-LoyaltyAccount.png)
+
+#### Scenario 7.1: Manage payment by valid credit card
+
+![sequence 7.1](Diagrams/Design/7-1-ManageSale-CreditCard.png)
+
+#### Scenario 8.1: Return transaction of product type X completed, credit card
+
+![sequence 8.1](Diagrams/Design/8-1-ReturnTransactionCompleted-CreditCard.png)
+
+#### Scenario 9.1: List credits and debits
+
+![sequence 9.1](Diagrams/Design/9-1-ListCreditsAndDebits.png)
+
+#### Scenario 10.1: Return payment by credit card
+
+![sequence 10.1](Diagrams/Design/10-1-ReturnPayment-CreditCard.png)
+
 
