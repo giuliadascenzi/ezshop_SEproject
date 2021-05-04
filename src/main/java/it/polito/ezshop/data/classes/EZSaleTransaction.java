@@ -4,6 +4,7 @@ import it.polito.ezshop.data.ProductType;
 import it.polito.ezshop.data.SaleTransaction;
 import it.polito.ezshop.data.TicketEntry;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class EZSaleTransaction implements SaleTransaction {
@@ -16,6 +17,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.transactionID = transactionID;
         this.discountRate = discountRate;
         this.price = price;
+        this.entryList = new ArrayList<>();
     }
 
     @Override
