@@ -5,6 +5,7 @@ import it.polito.ezshop.data.TicketEntry;
 
 import java.util.List;
 
+/*ANTONINO*/
 public class EZSaleTransaction implements SaleTransaction {
     @Override
     public Integer getTicketNumber() {

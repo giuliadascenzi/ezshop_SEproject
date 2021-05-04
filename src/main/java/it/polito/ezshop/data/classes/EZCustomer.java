@@ -2,6 +2,7 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Customer;
 
+/*Giulia*/
 public class EZCustomer implements Customer {
     @Override
     public String getCustomerName() {

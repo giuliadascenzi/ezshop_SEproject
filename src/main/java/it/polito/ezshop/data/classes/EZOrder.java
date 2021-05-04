@@ -1,8 +1,9 @@
 package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Order;
-
+/*Giulia*/
 public class EZOrder implements Order {
+
     @Override
     public Integer getBalanceId() {
         return null;

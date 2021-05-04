@@ -2,6 +2,7 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.User;
 
+/*Francesco*/
 public class EZUser implements User{
     @Override
     public Integer getId() {

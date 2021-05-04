@@ -2,6 +2,7 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.ProductType;
 
+/*Francesco*/
 public class EZProductType implements ProductType {
     @Override
     public Integer getQuantity() {
