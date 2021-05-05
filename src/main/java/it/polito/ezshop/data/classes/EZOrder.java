@@ -2,12 +2,29 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Order;
 /*Giulia*/
-public class EZOrder implements Order {
+public class EZOrder  implements Order  {
 
-    @Override
+    /*DOVREBBE ESTENDERE EZBALANCE OPERATION! ma conflitto con getBalanceId!*/
+
+
+    //CAMPO BALANCE ID!!
+    private String productCode;
+    private Integer balanceId;
+    private double pricePerUnit;
+    private int quantity;
+    private Integer id;
+    private String status;
+
+
+
+
+/* ERRORE -> getBalanceId di BalanceOperation ritorna un integer! */
+
+
     public Integer getBalanceId() {
         return null;
     }
+
 
     @Override
     public void setBalanceId(Integer balanceId) {
@@ -16,51 +33,54 @@ public class EZOrder implements Order {
 
     @Override
     public String getProductCode() {
-        return null;
+        return this.productCode;
     }
 
     @Override
     public void setProductCode(String productCode) {
+        this.productCode=productCode;
 
     }
 
     @Override
     public double getPricePerUnit() {
-        return 0;
+        return this.pricePerUnit;
     }
 
     @Override
     public void setPricePerUnit(double pricePerUnit) {
-
+        this.pricePerUnit=pricePerUnit;
     }
 
     @Override
     public int getQuantity() {
-        return 0;
+        return this.quantity;
     }
 
     @Override
     public void setQuantity(int quantity) {
+        this.quantity=quantity;
 
     }
 
     @Override
     public String getStatus() {
-        return null;
+        return this.status;
     }
 
     @Override
     public void setStatus(String status) {
-
+       this.status=status;
     }
 
     @Override
     public Integer getOrderId() {
-        return null;
+        return this.id;
     }
 
     @Override
     public void setOrderId(Integer orderId) {
+        this.id=orderId;
 
     }
 }
