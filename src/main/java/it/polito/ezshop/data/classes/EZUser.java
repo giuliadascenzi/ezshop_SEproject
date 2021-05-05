@@ -44,7 +44,7 @@ public class EZUser implements User{
     @Override
     public String getRole() {
 
-        return String.valueOf(role);
+        return role.toString();
     }
 
     @Override
@@ -55,5 +55,8 @@ public class EZUser implements User{
             this.role=UserRole.ADMINISTRATOR;
         if((role).equalsIgnoreCase("CASHIER"))
             this.role=UserRole.CASHIER;
+
+       // role=role.toUpperCase();
+        //this.role=UserRole.role;
     }
 }
