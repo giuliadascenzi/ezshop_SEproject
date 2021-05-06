@@ -10,6 +10,13 @@ public class EZUser implements User{
     private String password;
     private UserRole role;
 
+    public EZUser(Integer userId,String username, String password,String role){
+        this.userId=userId;
+        this.username=username;
+        this.password=password;
+        this.setRole(role);
+    }
+
     @Override
     public Integer getId() {
         return userId;
