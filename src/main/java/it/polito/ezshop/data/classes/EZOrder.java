@@ -1,7 +1,9 @@
 package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Order;
+
 /*Giulia*/
+
 public class EZOrder  implements Order  {
 
     private String productCode;
@@ -10,9 +12,6 @@ public class EZOrder  implements Order  {
     private int quantity;
     private Integer id;
     private String status;
-
-
-
 
     public Integer getBalanceId() {
         return this.balanceId;

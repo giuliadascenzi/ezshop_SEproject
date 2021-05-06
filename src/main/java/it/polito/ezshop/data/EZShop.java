@@ -1,26 +1,108 @@
 package it.polito.ezshop.data;
 
 import it.polito.ezshop.exceptions.*;
+import it.polito.ezshop.data.classes.*;
 
 import java.time.LocalDate;
-import java.util.List;
+
+import java.util.*;
 
 
 public class EZShop implements EZShopInterface {
 
+    List<User> userList = new ArrayList<>();
+    Map<Integer, Customer> customerMap =new HashMap<>();
+    Map<Integer, BalanceOperation> transactionMap = new HashMap<>();
+    Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
+    Map<Integer, Order> orderTransactionMap = new HashMap<>();
+    Map<Integer, ProductType> productTypeMap = new HashMap<>();
+    double balance=0;
+    EZUser userSession=null;
+    int idUsers=0;
+
+
+
 
     @Override
     public void reset() {
+        this.userList= null;
+        this.customerMap= null;
+        this.transactionMap =null;
+        this.saleTransactionMap= null;
+        this.orderTransactionMap = null;
+        this.productTypeMap = null;
+        this.balance=0;
+        this.userSession= null;
 
     }
+
+
+    /**
+     * This method creates a new user with given username, password and role. The returned value is a unique identifier
+     * for the new user.
+     *
+     * @param username the username of the new user. This value should be unique and not empty.
+     * @param password the password of the new user. This value should not be empty.
+     * @param role the role of the new user. This value should not be empty and it should assume
+     *             one of the following values : "Administrator", "Cashier", "ShopManager"
+     *
+     * @return The id of the new user ( > 0 ).
+     *          -1 if there is an error while saving the user or if another user with the same username exists
+     *
+     * @throws InvalidUsernameException If the username has an invalid value (empty or null)
+     * @throws InvalidPasswordException If the password has an invalid value (empty or null)
+     * @throws InvalidRoleException     If the role has an invalid value (empty, null or not among the set of admissible values)
+     */
 
     @Override
     public Integer createUser(String username, String password, String role) throws InvalidUsernameException, InvalidPasswordException, InvalidRoleException {
-        return null;
+        //username unique and not empty
+
+        if (username.trim()=="" || username==null)
+            throw new InvalidUsernameException();
+
+        for (User u : this.userList) {
+            if (u.getUsername().equals(username))
+            {
+                return (-1);
+            }
+        }
+        //password not empty
+        if (password.trim()=="" || password== null)
+            throw new InvalidPasswordException();
+        //Role not valid
+        if (role.trim() == "" || role==null || (!role.toUpperCase().equals("MANAGER") && !role.toUpperCase().equals("ADMINISTRATOR") && !role.toUpperCase().equals("CASHIER") ))
+            throw new InvalidRoleException();
+
+        int newuserId = this.idUsers;
+        userList.add(new EZUser(newuserId, username,password,role));
+        this.idUsers++;
+
+
+        return newuserId;
     }
 
+    // ------------------- ADMIN ------------------ //
+    /**
+     * This method deletes the user with given id. It can be invoked only after a user with role "Administrator" is
+     * logged in.
+     *
+     * @param id the user id, this value should not be less than or equal to 0 or null.
+     *
+     * @return  true if the user was deleted
+     *          false if the user cannot be deleted  (**PERCHE'??**)
+     *
+     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is null.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean deleteUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
+        if (id<=0 || id==null)
+            throw new InvalidUserIdException();
+        if (this.userSession==null || !this.userSession.getRole().toUpperCase().equals("ADMINISTRATOR" ))
+            throw new UnauthorizedException();
+
+        /*FAI IL DELETE*/
         return false;
     }
 
