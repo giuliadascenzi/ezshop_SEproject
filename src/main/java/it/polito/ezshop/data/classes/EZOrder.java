@@ -4,10 +4,6 @@ import it.polito.ezshop.data.Order;
 /*Giulia*/
 public class EZOrder  implements Order  {
 
-    /*DOVREBBE ESTENDERE EZBALANCE OPERATION! ma conflitto con getBalanceId!*/
-
-
-    //CAMPO BALANCE ID!!
     private String productCode;
     private Integer balanceId;
     private double pricePerUnit;
@@ -18,16 +14,14 @@ public class EZOrder  implements Order  {
 
 
 
-/* ERRORE -> getBalanceId di BalanceOperation ritorna un integer! */
-
-
     public Integer getBalanceId() {
-        return null;
+        return this.balanceId;
     }
 
 
     @Override
     public void setBalanceId(Integer balanceId) {
+        this.balanceId=balanceId;
 
     }
 
