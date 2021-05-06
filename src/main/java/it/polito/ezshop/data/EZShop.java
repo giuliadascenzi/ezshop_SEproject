@@ -29,9 +29,9 @@ public class EZShop implements EZShopInterface {
 
     /**
         checkUserRole(String expectedRole)
-        @param expectedRole: il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
+        @param expectedRole il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
 
-        @return:
+        @return
             true,  se l'utente è loggato e ha il permesso che ci si aspetta
             false, se l'utente non è loggato o non ha i permessi adatti
      */
@@ -607,29 +607,245 @@ public class EZShop implements EZShopInterface {
         return true;
     }
 
+    /**
+     * This method issues an order of <quantity> units of product with given <productCode>, each unit will be payed
+     * <pricePerUnit> to the supplier. <pricePerUnit> can differ from the re-selling price of the same product. The
+     * product might have no location assigned in this step.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param productCode the code of the product that we should order as soon as possible
+     * @param quantity the quantity of product that we should order
+     * @param pricePerUnit the price to correspond to the supplier (!= than the resale price of the shop) per unit of
+     *                     product
+     *
+     * @return  the id of the order (> 0)
+     *          -1 if the product does not exists, if there are problems with the db
+     *
+     * @throws InvalidProductCodeException if the productCode is not a valid bar code, if it is null or if it is empty
+     * @throws InvalidQuantityException if the quantity is less than or equal to 0
+     * @throws InvalidPricePerUnitException if the price per unit of product is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public Integer issueOrder(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
-        return null;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check barcode validity
+        if (productCode==null || productCode.trim().equals("")
+           // TODO check if the barcode is valid!
+            )
+            throw new InvalidProductCodeException();
+        // check quantity validity
+        if ( quantity <=0)
+            throw new InvalidQuantityException();
+        //check price per unit validity
+        if ( pricePerUnit <=0)
+            throw new InvalidPricePerUnitException();
+
+
+        //check if the product is in the map
+        if (!this.productTypeMap.containsKey(productCode))
+            return -1;
+
+        //Everything good. Create new order
+        int newID = ++this.counter_transactionID;
+
+        // insert order in the map (not also in the balance operation map because this order has still to be paid)
+        this.orderTransactionMap.put(newID, new EZOrder(newID, productCode, quantity, pricePerUnit));
+        // set status ISSUED
+        this.orderTransactionMap.get(newID).setStatus("ISSUED");
+
+        return newID;
+
     }
 
+    /**
+     * This method directly orders and pays <quantity> units of product with given <productCode>, each unit will be payed
+     * <pricePerUnit> to the supplier. <pricePerUnit> can differ from the re-selling price of the same product. The
+     * product might have no location assigned in this step.
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param productCode the code of the product to be ordered
+     * @param quantity the quantity of product to be ordered
+     * @param pricePerUnit the price to correspond to the supplier (!= than the resale price of the shop) per unit of
+     *                     product
+     *
+     * @return  the id of the order (> 0)
+     *          -1 if the product does not exists, if the balance is not enough to satisfy the order, if there are some
+     *          problems with the db
+     *
+     * @throws InvalidProductCodeException if the productCode is not a valid bar code, if it is null or if it is empty
+     * @throws InvalidQuantityException if the quantity is less than or equal to 0
+     * @throws InvalidPricePerUnitException if the price per unit of product is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public Integer payOrderFor(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
-        return null;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check barcode validity
+        if (productCode==null || productCode.trim().equals("")
+            // TODO check if the barcode is valid!
+        )
+            throw new InvalidProductCodeException();
+        // check quantity validity
+        if ( quantity <=0)
+            throw new InvalidQuantityException();
+        //check price per unit validity
+        if ( pricePerUnit <=0)
+            throw new InvalidPricePerUnitException();
+
+        //check if the product is in the map
+        if (!this.productTypeMap.containsKey(productCode))
+            return -1;
+        //check if the balance is enough for the order
+        double priceToPay=quantity*pricePerUnit;
+        if (this.balance< priceToPay)
+            return -1;
+
+
+        //Everything good. Create new order
+        int newID = ++this.counter_transactionID;
+
+        // insert order in the map (not also in the balance operation map because this order has still to be paid)
+        this.orderTransactionMap.put(newID, new EZOrder(newID, productCode, quantity, pricePerUnit));
+        // set status PAYED
+        this.orderTransactionMap.get(newID).setStatus("PAYED");
+
+        //insert order in the balance operation
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+
+        return newID;
+
     }
+
+    /**
+     * This method change the status the order with given <orderId> into the "PAYED" state. The order should be either
+     * issued (in this case the status changes) or payed (in this case the method has no effect).
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param orderId the id of the order to be ORDERED
+     *
+     * @return  true if the order has been successfully ordered
+     *          false if the order does not exist or if it was not in an ISSUED/ORDERED state
+     *
+     * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean payOrder(Integer orderId) throws InvalidOrderIdException, UnauthorizedException {
-        return false;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+
+        //look for the order
+        if (!this.orderTransactionMap.containsKey(orderId))
+            return false;
+        //check status
+        String orderStatus = this.orderTransactionMap.get(orderId).getStatus();
+        if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
+            return false;
+
+        //Everything good. Create new order
+        int newID = ++this.counter_transactionID;
+
+        // set status PAYED
+        this.orderTransactionMap.get(orderId).setStatus("PAYED");
+
+        // update balance
+        double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
+        this.balance=this.balance -toPay;
+
+        //insert order in the balance operation
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+
+        //set balanceId in order
+        this.orderTransactionMap.get(orderId).setBalanceId((newID));
+
+        return true;
+
     }
 
+    /**
+     * This method records the arrival of an order with given <orderId>. This method changes the quantity of available product.
+     * The product type affected must have a location registered. The order should be either in the PAYED state (in this
+     * case the state will change to the COMPLETED one and the quantity of product type will be updated) or in the
+     * COMPLETED one (in this case this method will have no effect at all).
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param orderId the id of the order that has arrived
+     *
+     * @return  true if the operation was successful
+     *          false if the order does not exist or if it was not in an ORDERED/COMPLETED state (payed no ordered!!!)
+     *
+     * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
+     * @throws InvalidLocationException if the ordered product type has not an assigned location.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean recordOrderArrival(Integer orderId) throws InvalidOrderIdException, UnauthorizedException, InvalidLocationException {
-        return false;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+        //check if the order exists
+        if (!this.orderTransactionMap.containsKey(orderId))
+            return false;
+        //check location productType
+        String productCode= this.orderTransactionMap.get(orderId).getProductCode();
+        if (this.productTypeMap.get(productCode).getLocation()==null)
+            throw new InvalidLocationException();
+
+        //check order status
+        String status =this.orderTransactionMap.get(orderId).getStatus();
+        if (!status.equalsIgnoreCase("completed") && !status.equalsIgnoreCase("payed"))
+            return false;
+        // if already completed do nothing
+        if (status.equalsIgnoreCase("completed"))
+            return true;
+
+        //state changes to completed
+        this.orderTransactionMap.get(orderId).setStatus("completed");
+        //update product Quantity
+        int quantity=this.orderTransactionMap.get(orderId).getQuantity();
+        int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
+        this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
+
+
+        return true;
     }
+
+    /**
+     * This method return the list of all orders ISSUED, ORDERED and COMLPETED.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @return a list containing all orders
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<Order> getAllOrders() throws UnauthorizedException {
-        return null;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+
+        return new ArrayList<>(this.orderTransactionMap.values());
     }
 
     /**
@@ -940,7 +1156,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null || transactionId <= 0  ) {
             throw new InvalidTransactionIdException();
         }
 
