@@ -5,10 +5,10 @@ import it.polito.ezshop.data.User;
 import java.util.Locale;
 
 public class EZUser implements User{
-    Integer userId;
-    String username;
-    String password;
-    UserRole role;
+    private Integer userId;
+    private String username;
+    private String password;
+    private UserRole role;
 
     @Override
     public Integer getId() {
@@ -43,8 +43,15 @@ public class EZUser implements User{
 
     @Override
     public String getRole() {
-
-        return role.toString();
+        if(this.role==UserRole.MANAGER){
+            return "MANAGER";
+        }
+        if(this.role==UserRole.ADMINISTRATOR){
+            return "ADMINISTRATOR";
+        }
+        if(this.role==UserRole.CASHIER)
+            return "CASHIER";
+        return "";
     }
 
     @Override
@@ -56,7 +63,5 @@ public class EZUser implements User{
         if((role).equalsIgnoreCase("CASHIER"))
             this.role=UserRole.CASHIER;
 
-       // role=role.toUpperCase();
-        //this.role=UserRole.role;
     }
 }

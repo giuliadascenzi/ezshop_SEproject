@@ -3,14 +3,14 @@ package it.polito.ezshop.data.classes;
 import it.polito.ezshop.data.ProductType;
 
 public class EZProductType implements ProductType {
-    String barCode;
-    String description;
-    Double sellPrice;
-    Integer quantity;
-    Integer productid;
-    Double discountRate;
-    String notes;
-    String location;
+    private String barCode;
+    private String description;
+    private Double sellPrice;
+    private Integer quantity;
+    private Integer productId;
+    //private Double discountRate;
+    private String notes;
+    private String location;
     @Override
     public Integer getQuantity() {
         return quantity;
@@ -75,11 +75,11 @@ public class EZProductType implements ProductType {
 
     @Override
     public Integer getId() {
-        return productid;
+        return productId;
     }
 
     @Override
     public void setId(Integer id) {
-        this.productid=id;
+        this.productId=id;
     }
 }
