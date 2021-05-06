@@ -428,7 +428,7 @@ public class EZShop implements EZShopInterface {
             // aggiorna la mappa
             saleTransactionMap.put(transactionId, s);
 
-            // aggiorna la quantità del prodotto e la mappa dei prodotti
+            // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() - amount);
             productTypeMap.put(productCode, p);
 
@@ -515,8 +515,9 @@ public class EZShop implements EZShopInterface {
             s.setPrice(this.computeSaleTransactionPrice(s));
             saleTransactionMap.put(transactionId, s);
 
-            // aggiorna la quantità del prodotto in magazzino
+            // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
+
             // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
 
@@ -712,6 +713,7 @@ public class EZShop implements EZShopInterface {
 
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
         // TODO: AGGIORNA DB CON NUOVA TRANSAZIONE
+        // TODO: AGGIORNA DB AGGIORNANDO LE QUANTITA' DEI PRODOTTI ACQUISTATI
 
         return true;
     }
