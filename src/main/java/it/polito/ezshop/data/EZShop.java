@@ -15,14 +15,28 @@ public class EZShop implements EZShopInterface {
     Map<Integer, BalanceOperation> transactionMap = new HashMap<>();
     Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
     Map<Integer, Order> orderTransactionMap = new HashMap<>();
-    Map<Integer, ProductType> productTypeMap = new HashMap<>();
+    Map<String, ProductType> productTypeMap = new HashMap<>();
     double balance=0;
     EZUser userSession=null;
     int idUsers=0;
     int idCustomer=0;
+    int counter_transactionID = 0;
 
+    /*
+        checkUserRole(String expectedRole)
+        @param expectedRole: il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
 
+        @return:
+            true,  se l'utente è loggato e ha il permesso che ci si aspetta
+            false, se l'utente non è loggato o non ha i permessi adatti
+     */
+    public boolean checkUserRole(String expectedRole) {
+        if (this.userSession == null || !this.userSession.getRole().equalsIgnoreCase(expectedRole)) {
+            return false;
+        }
 
+        return true;
+    }
 
     @Override
     public void reset() {
@@ -34,7 +48,8 @@ public class EZShop implements EZShopInterface {
         this.productTypeMap = null;
         this.balance=0;
         this.userSession= null;
-
+        this.idUsers = 0;
+        this.counter_transactionID = 0;
     }
 
 
@@ -281,19 +296,180 @@ public class EZShop implements EZShopInterface {
         return false;
     }
 
+    // --- Manage Sale Transactions --- //
+
+    /**
+     * This method starts a new sale transaction and returns its unique identifier.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @return the id of the transaction (greater than or equal to 0)
+     */
     @Override
     public Integer startSaleTransaction() throws UnauthorizedException {
-        return null;
+        if (this.userSession == null
+                || (this.userSession.getRole() != "MANAGER"
+                && this.userSession.getRole() != "ADMINISTRATOR"
+                && this.userSession.getRole() != "CASHIER" )) {
+            throw new UnauthorizedException();
+        }
+
+        int newID = ++this.counter_transactionID;
+        // TODO: AGGIORNA DB
+        // aggiungi BalanceOperation alla mappa generica
+        this.transactionMap.put(newID, new EZBalanceOperation(newID));
+        // TODO: AGGIORNA DB
+        // aggiungi SaleTransaction alla mappa specifica
+        this.saleTransactionMap.put(newID, new EZSaleTransaction(newID));
+
+        return newID;
     }
 
+    /**
+     * This method adds a product to a sale transaction decreasing the temporary amount of product available on the
+     * shelves for other customers.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param productCode the barcode of the product to be added
+     * @param amount the quantity of product to be added
+     * @return  true if the operation is successful
+     *          false   if the product code does not exist,
+     *                  if the quantity of product cannot satisfy the request,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidProductCodeException if the product code is empty, null or invalid
+     * @throws InvalidQuantityException if the quantity is less than 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean addProductToSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        return false;
+        if (this.userSession == null
+                || (this.userSession.getRole() != "MANAGER"
+                && this.userSession.getRole() != "ADMINISTRATOR"
+                && this.userSession.getRole() != "CASHIER" )) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (amount < 0) {
+            throw new InvalidQuantityException();
+        }
+
+        productCode = productCode.trim();
+        if (productCode == null || productCode == ""/* || !this.checkBarCodeValidity(productCode)*/) {
+            throw new InvalidProductCodeException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return false;
+        }
+
+        if (!productTypeMap.containsKey(productCode)) {
+            return false;
+        }
+        else {
+            ProductType p = productTypeMap.get(productCode);
+            if (p.getQuantity() < amount) {
+                return false;
+            }
+
+            EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
+
+            s.addEntry(p, amount, s.getDiscountRate());
+            // TODO: AGGIORNA DB
+            saleTransactionMap.put(transactionId, s);
+
+            p.setQuantity(p.getQuantity() - amount);
+            // TODO: AGGIORNA DB
+            productTypeMap.put(productCode, p);
+
+            return true;
+        }
     }
 
+    /**
+     * This method deletes a product from a sale transaction increasing the temporary amount of product available on the
+     * shelves for other customers.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param productCode the barcode of the product to be deleted
+     * @param amount the quantity of product to be deleted
+     *
+     * @return  true if the operation is successful
+     *          false   if the product code does not exist,
+     *                  if the quantity of product cannot satisfy the request,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidProductCodeException if the product code is empty, null or invalid
+     * @throws InvalidQuantityException if the quantity is less than 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        return false;
+        if (this.userSession == null
+                || (this.userSession.getRole() != "MANAGER"
+                && this.userSession.getRole() != "ADMINISTRATOR"
+                && this.userSession.getRole() != "CASHIER" )) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (amount < 0) {
+            throw new InvalidQuantityException();
+        }
+
+        productCode = productCode.trim();
+        if (productCode == null || productCode == "" /*|| !this.checkBarCodeValidity(productCode)*/) {
+            throw new InvalidProductCodeException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return false;
+        }
+
+        if (!productTypeMap.containsKey(productCode)) {
+            return false;
+        }
+        else {
+            ProductType p = productTypeMap.get(productCode);
+
+            EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
+
+            List<TicketEntry> l = s.getEntries();
+
+            boolean found = false;
+
+            for (TicketEntry e : l) {
+                if (e.getBarCode() == productCode) {
+                    if (e.getAmount() < amount) {
+                        return false;
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+
+            s.deleteProductFromEntry(productCode, amount);
+            // TODO: AGGIORNA DB
+            saleTransactionMap.put(transactionId, s);
+            p.setQuantity(p.getQuantity() + amount);
+            // TODO: AGGIORNA DB
+            productTypeMap.put(productCode, p);
+
+            return true;
+        }
     }
 
     @Override
