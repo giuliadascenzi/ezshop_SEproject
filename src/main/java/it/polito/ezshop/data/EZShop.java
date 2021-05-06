@@ -20,6 +20,7 @@ public class EZShop implements EZShopInterface {
     EZUser userSession=null;
     int idUsers=0;
     int idCustomer=0;
+    Integer idCustomerCard=0; //
     int counter_transactionID = 0;
 
     /*
@@ -113,7 +114,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
-        if (id<=0 || id==null)
+        if (id==null || id<=0)
             throw new InvalidUserIdException();
         if (this.userSession==null || !this.userSession.getRole().toUpperCase().equals("ADMINISTRATOR" ))
             throw new UnauthorizedException();
@@ -226,14 +227,14 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public Integer defineCustomer(String customerName) throws InvalidCustomerNameException, UnauthorizedException {
-        if (customerName.trim().equals("") || customerName==null)
+        if (customerName==null || customerName.trim().equals(""))
             throw new InvalidCustomerNameException();
         if ( userSession==null )
             throw new UnauthorizedException();
         int newCustomerId = this.idCustomer;
-        customerMap.put(newCustomerId,new EZCustomer(customerName,newCustomerId));
-        if (!customerMap.containsKey(newCustomerId))
-            return -1;
+        customerMap.put(newCustomerId,new EZCustomer(customerName, newCustomerId));
+        //TODO: if ( UPDATE DATABASE) //devo controllare anche altro per verificarne il corretto inserimento?
+        //return -1;
         this.idCustomer++;
         return newCustomerId;
     }
@@ -260,40 +261,215 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public boolean modifyCustomer(Integer id, String newCustomerName, String newCustomerCard) throws InvalidCustomerNameException, InvalidCustomerCardException, InvalidCustomerIdException, UnauthorizedException {
-        if (newCustomerName.trim().equals("") || newCustomerName==null)
+        if (newCustomerName==null || newCustomerName.trim().equals(""))  // Check if the newCustomerName is valid.
             throw new InvalidCustomerNameException();
-        if(newCustomerCard==null || newCustomerCard.trim().equals("") || newCustomerCard.length()!= 10)
+
+        if(!customerMap.containsKey(id))                                 //If the Customer id doesn't exist or the customerMap doesn't contain the id
+            throw new InvalidCustomerIdException();
+
+        if(userSession == null)                                         //if the user is not logged
+            throw new UnauthorizedException();
+
+        if( newCustomerCard==null || !newCustomerCard.matches( "[0-9]{10}" ))             //newCustomerCard is not in a valid format
             throw new InvalidCustomerCardException();
+
+        for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
+            if (c.getCustomerCard().equals(newCustomerCard))
+            {
+                return false;
+            }
+        }
+
+        if (newCustomerCard.trim().equals("")){                     // if the customerCard is empty, delete the Card
+            EZCustomer s = (EZCustomer) customerMap.get(id);
+            s.removeCustomerCard();
+            //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+            throw new InvalidCustomerCardException();
+        }
+
+        EZCustomer c = (EZCustomer) customerMap.get(id);
+        c.setCustomerName(newCustomerName);
+        //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+
+        if(newCustomerCard.matches( "[0-9]{10}" )){
+            c.setCustomerCard(newCustomerCard);
+            //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+        }
+
+    return true;
     }
+    /**
+     * This method deletes a customer with given id from the system.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param id the id of the customer to be deleted
+     * @return true if the customer was successfully deleted
+     *          false if the user does not exists or if we have problems to reach the db
+     *
+     * @throws InvalidCustomerIdException if the id is null, less than or equal to 0.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean deleteCustomer(Integer id) throws InvalidCustomerIdException, UnauthorizedException {
-        return false;
+        if(id==null || id<=0)
+            throw new InvalidCustomerIdException();
+        if(userSession==null)
+            throw new UnauthorizedException();
+        if(!customerMap.containsKey(id))
+            return false;
+        EZCustomer c = (EZCustomer) customerMap.get(id);
+        customerMap.remove(id);
+        c.removeCustomerCard();
+        c=null;
+        //Todo: aggiorna il DB, return false nel caso in cui ci siano problemi.
+
+        return true;
+
+
     }
+    /**
+     * This method returns a customer with given id.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param id the id of the customer
+     *
+     * @return the customer with given id
+     *          null if that user does not exists
+     *
+     * @throws InvalidCustomerIdException if the id is null, less than or equal to 0.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public Customer getCustomer(Integer id) throws InvalidCustomerIdException, UnauthorizedException {
-        return null;
+        if(id==null || id<=0)
+            throw new InvalidCustomerIdException();
+        if(userSession==null || !customerMap.containsKey(id))
+            throw new UnauthorizedException();
+        return customerMap.get(id);
     }
+
+    /**
+     * This method returns a list containing all registered users.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @return the list of all the customers registered
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<Customer> getAllCustomers() throws UnauthorizedException {
-        return null;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        return (new ArrayList<Customer>(customerMap.values()));
     }
+    /**
+     * This method returns a string containing the code of a new assignable card.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @return the code of a new available card. An empty string if the db is unreachable
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public String createCard() throws UnauthorizedException {
-        return null;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        Integer newCustomerCard = idCustomerCard;
+        String customerCardString = newCustomerCard.toString();
+        if(customerCardString.length()!= 10){                                  //CustomerCardString must be 10 characters long.
+            String tmp = new String("") ;                               // I convert the number to a string and add the amount of zeros needed to get to 10 characters
+            String str1 = "0";                                                 // ex. idCustomerCard = 3 -> String CustomerCardString="0000000003"
+            for(int i=0; i<(10-customerCardString.length()); i++){              // Integer max value is 2ˆ32 -1 . Integer cannot be used for 10-digit numbers. LONG?
+                tmp = tmp + str1;
+            }
+            customerCardString = tmp + customerCardString;
+        }
+        this.idCustomerCard++;
+        return customerCardString;
     }
+
+    /**
+     * This method assigns a card with given card code to a customer with given identifier. A card with given card code
+     * can be assigned to one customer only.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param customerCard the number of the card to be attached to a customer
+     * @param customerId the id of the customer the card should be assigned to
+     *
+     * @return true if the operation was successful
+     *          false if the card is already assigned to another user, if there is no customer with given id, if the db is unreachable
+     *
+     * @throws InvalidCustomerIdException if the id is null, less than or equal to 0.
+     * @throws InvalidCustomerCardException if the card is null, empty or in an invalid format
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean attachCardToCustomer(String customerCard, Integer customerId) throws InvalidCustomerIdException, InvalidCustomerCardException, UnauthorizedException {
-        return false;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        if(customerId==null || customerId<=0)
+            throw new InvalidCustomerIdException();
+        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+            throw new InvalidCustomerCardException();
+
+        for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
+            if (c.getCustomerCard().equals(customerCard))
+            {
+                return false;
+            }
+        }
+        if(!customerMap.containsKey(customerId))
+            return false;
+
+        customerMap.get(customerId).setCustomerCard(customerCard);
+        //todo:update db. if database is unreachable return false
+
+        return true;
     }
+    /**
+     * This method updates the points on a card adding to the number of points available on the card the value assumed by
+     * <pointsToBeAdded>. The points on a card should always be greater than or equal to 0.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param customerCard the card the points should be added to
+     * @param pointsToBeAdded the points to be added or subtracted ( this could assume a negative value)
+     *
+     * @return true if the operation is successful
+     *          false   if there is no card with given code,
+     *                  if pointsToBeAdded is negative and there were not enough points on that card before this operation,
+     *                  if we cannot reach the db.
+     *
+     * @throws InvalidCustomerCardException if the card is null, empty or in an invalid format
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean modifyPointsOnCard(String customerCard, int pointsToBeAdded) throws InvalidCustomerCardException, UnauthorizedException {
-        return false;
+        int counter=0;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+            throw new InvalidCustomerCardException();
+        for (Customer c : customerMap.values()){
+            if (c.getCustomerCard().equals(customerCard))
+            {
+                counter++;
+                if(c.getPoints()<Math.abs(pointsToBeAdded) && pointsToBeAdded < 0)   // if pointsToBeAdded is negative and there were not enough points on that card before this operation
+                    return false;
+                c.setPoints(c.getPoints()+pointsToBeAdded);
+                //todo:UPDATE DB
+            }
+        }
+        if (counter==0)
+            return false;   //it means that there is no card with code linked to a Customer
+
+
+        return true;
     }
 
     // --- Manage Sale Transactions --- //
