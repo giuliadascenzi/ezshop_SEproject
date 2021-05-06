@@ -17,7 +17,7 @@ public class EZShop implements EZShopInterface {
     Map<Integer, Order> orderTransactionMap = new HashMap<>();
     Map<String, ProductType> productTypeMap = new HashMap<>();
     double balance=0;
-    EZUser userSession=null;
+    User userSession=null;
     int idUsers=0;
     int idCustomer=0;
     Integer idCustomerCard=0; //
@@ -482,18 +482,14 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public Integer startSaleTransaction() throws UnauthorizedException {
-        if (this.userSession == null
-                || (this.userSession.getRole() != "MANAGER"
-                && this.userSession.getRole() != "ADMINISTRATOR"
-                && this.userSession.getRole() != "CASHIER" )) {
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
 
         int newID = ++this.counter_transactionID;
-        // TODO: AGGIORNA DB
         // aggiungi BalanceOperation alla mappa generica
-        this.transactionMap.put(newID, new EZBalanceOperation(newID));
-        // TODO: AGGIORNA DB
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "CREDIT"));
         // aggiungi SaleTransaction alla mappa specifica
         this.saleTransactionMap.put(newID, new EZSaleTransaction(newID));
 
@@ -520,10 +516,8 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean addProductToSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (this.userSession == null
-                || (this.userSession.getRole() != "MANAGER"
-                && this.userSession.getRole() != "ADMINISTRATOR"
-                && this.userSession.getRole() != "CASHIER" )) {
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
 
@@ -536,7 +530,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
-        if (productCode == null || productCode == ""/* || !this.checkBarCodeValidity(productCode)*/) {
+        if (productCode == null || productCode.equals("")/* || !this.checkBarCodeValidity(productCode)*/) {
             throw new InvalidProductCodeException();
         }
 
@@ -556,11 +550,10 @@ public class EZShop implements EZShopInterface {
             EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
             s.addEntry(p, amount, s.getDiscountRate());
-            // TODO: AGGIORNA DB
+
             saleTransactionMap.put(transactionId, s);
 
             p.setQuantity(p.getQuantity() - amount);
-            // TODO: AGGIORNA DB
             productTypeMap.put(productCode, p);
 
             return true;
@@ -588,10 +581,8 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (this.userSession == null
-                || (this.userSession.getRole() != "MANAGER"
-                && this.userSession.getRole() != "ADMINISTRATOR"
-                && this.userSession.getRole() != "CASHIER" )) {
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+         && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
 
@@ -604,7 +595,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
-        if (productCode == null || productCode == "" /*|| !this.checkBarCodeValidity(productCode)*/) {
+        if (productCode == null || productCode.equals("") /*|| !this.checkBarCodeValidity(productCode)*/) {
             throw new InvalidProductCodeException();
         }
 
@@ -625,7 +616,7 @@ public class EZShop implements EZShopInterface {
             boolean found = false;
 
             for (TicketEntry e : l) {
-                if (e.getBarCode() == productCode) {
+                if (e.getBarCode().equals(productCode)) {
                     if (e.getAmount() < amount) {
                         return false;
                     }
@@ -638,29 +629,164 @@ public class EZShop implements EZShopInterface {
             }
 
             s.deleteProductFromEntry(productCode, amount);
-            // TODO: AGGIORNA DB
+
             saleTransactionMap.put(transactionId, s);
             p.setQuantity(p.getQuantity() + amount);
-            // TODO: AGGIORNA DB
+
             productTypeMap.put(productCode, p);
 
             return true;
         }
     }
 
+    /**
+     * This method applies a discount rate to all units of a product type with given type in a sale transaction. The
+     * discount rate should be greater than or equal to 0 and less than 1.
+     * The sale transaction should be started and open.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param productCode the barcode of the product to be discounted
+     * @param discountRate the discount rate of the product
+     *
+     * @return  true if the operation is successful
+     *          false   if the product code does not exist,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidProductCodeException if the product code is empty, null or invalid
+     * @throws InvalidDiscountRateException if the discount rate is less than 0 or if it greater than or equal to 1.00
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean applyDiscountRateToProduct(Integer transactionId, String productCode, double discountRate) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidDiscountRateException, UnauthorizedException {
-        return false;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (discountRate < 0 || discountRate > 1) {
+            throw new InvalidDiscountRateException();
+        }
+
+        productCode = productCode.trim();
+        if (productCode == null || productCode.equals("") /*|| !this.checkBarCodeValidity(productCode)*/) {
+            throw new InvalidProductCodeException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return false;
+        }
+
+        if (!productTypeMap.containsKey(productCode)) {
+            return false;
+        }
+        else {
+            ProductType p = productTypeMap.get(productCode);
+
+            EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
+
+            List<TicketEntry> l = s.getEntries();
+
+            boolean found = false;
+
+            for (TicketEntry e : l) {
+                if (e.getBarCode().equals(productCode)) {
+                    found = true;
+                    e.setDiscountRate(discountRate);
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+
+            saleTransactionMap.put(transactionId, s);
+
+            return true;
+        }
     }
 
+    /**
+     * This method applies a discount rate to the whole sale transaction.
+     * The discount rate should be greater than or equal to 0 and less than 1.
+     * The sale transaction can be either started or closed but not already payed.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param discountRate the discount rate of the sale
+     *
+     * @return  true if the operation is successful
+     *          false if the transaction does not exists
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidDiscountRateException if the discount rate is less than 0 or if it greater than or equal to 1.00
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean applyDiscountRateToSale(Integer transactionId, double discountRate) throws InvalidTransactionIdException, InvalidDiscountRateException, UnauthorizedException {
-        return false;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (discountRate < 0 || discountRate > 1) {
+            throw new InvalidDiscountRateException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return false;
+        }
+
+        EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
+
+        s.setDiscountRate(discountRate);
+
+        saleTransactionMap.put(transactionId, s);
+
+        return true;
     }
 
+    /**
+     * This method returns the number of points granted by a specific sale transaction.
+     * Every 10€ the number of points is increased by 1 (i.e. 19.99€ returns 1 point, 20.00€ returns 2 points).
+     * If the transaction with given id does not exist then the number of points returned should be -1.
+     * The transaction may be in any state (open, closed, payed).
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     *
+     * @return the points of the sale (1 point for each 10€) or -1 if the transaction does not exists
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public int computePointsForSale(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        return 0;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return -1;
+        }
+
+        EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
+
+        return (int) (s.getPrice() / 10);
     }
 
     @Override

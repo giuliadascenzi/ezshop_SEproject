@@ -12,8 +12,11 @@ public class EZBalanceOperation implements BalanceOperation {
     double money;
     String type;
 
-    public EZBalanceOperation(int balanceId) {
+    public EZBalanceOperation(int balanceId, LocalDate date, String type) {
         this.balanceId = balanceId;
+        this.date = date;
+        this.money = 0;
+        this.type = "";
     }
 
     @Override
