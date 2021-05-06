@@ -80,7 +80,7 @@ public class EZSaleTransaction implements SaleTransaction {
     /*
         deleteProductFromEntry(String barCode, int amountToRemove)
         * Deletes a certain amount of products from the entry with
-            the specified bar code. If the new amount is < 0, then the
+            the specified bar code. If the new amount is <= 0, then the
             entry is deleted from the list.
      */
     public boolean deleteProductFromEntry(String barCode, int amountToRemove) {
