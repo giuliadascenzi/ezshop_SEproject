@@ -19,6 +19,7 @@ public class EZShop implements EZShopInterface {
     double balance=0;
     EZUser userSession=null;
     int idUsers=0;
+    int idCustomer=0;
 
 
 
@@ -196,16 +197,58 @@ public class EZShop implements EZShopInterface {
         return null;
     }
 
+    /**
+     * This method saves a new customer into the system. The customer's name should be unique.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param customerName the name of the customer to be registered
+     *
+     * @return the id (>0) of the new customer if successful, -1 otherwise
+     *
+     * @throws InvalidCustomerNameException if the customer name is empty or null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+
     @Override
     public Integer defineCustomer(String customerName) throws InvalidCustomerNameException, UnauthorizedException {
-
-
-        return null;
+        if (customerName.trim().equals("") || customerName==null)
+            throw new InvalidCustomerNameException();
+        if ( userSession==null )
+            throw new UnauthorizedException();
+        int newCustomerId = this.idCustomer;
+        customerMap.put(newCustomerId,new EZCustomer(customerName,newCustomerId));
+        if (!customerMap.containsKey(newCustomerId))
+            return -1;
+        this.idCustomer++;
+        return newCustomerId;
     }
+    /**
+     * This method updates the data of a customer with given <id>. This method can be used to assign/delete a card to a
+     * customer. If <newCustomerCard> has a numeric value than this value will be assigned as new card code, if it is an
+     * empty string then any existing card code connected to the customer will be removed and, finally, it assumes the
+     * null value then the card code related to the customer should not be affected from the update. The card code should
+     * be unique and should be a string of 10 digits.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param id the id of the customer to be updated
+     * @param newCustomerName the new name to be assigned
+     * @param newCustomerCard the new card code to be assigned. If it is empty it means that the card must be deleted,
+     *                        if it is null then we don't want to update the cardNumber
+     *
+     * @return true if the update is successful
+     *          false if the update fails ( cardCode assigned to another user, db unreacheable)
+     *
+     * @throws InvalidCustomerNameException if the customer name is empty or null
+     * @throws InvalidCustomerCardException if the customer card is empty, null or if it is not in a valid format (string with 10 digits)
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean modifyCustomer(Integer id, String newCustomerName, String newCustomerCard) throws InvalidCustomerNameException, InvalidCustomerCardException, InvalidCustomerIdException, UnauthorizedException {
-        return false;
+        if (newCustomerName.trim().equals("") || newCustomerName==null)
+            throw new InvalidCustomerNameException();
+        if(newCustomerCard==null || newCustomerCard.trim().equals("") || newCustomerCard.length()!= 10)
+            throw new InvalidCustomerCardException();
     }
 
     @Override

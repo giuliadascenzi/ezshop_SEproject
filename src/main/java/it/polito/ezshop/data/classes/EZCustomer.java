@@ -11,15 +11,10 @@ public class EZCustomer implements Customer {
     private EZCustomerCard customerCard;
 
     /*Class constructor*/
-    public EZCustomer ()
-    {
-        this.customerCard =new EZCustomerCard();
-
-    }
-    public EZCustomer (String customerName, String customerCardId, Integer id)
+    public EZCustomer (String customerName, Integer id)
     {
         this.customerName=customerName;
-        this.customerCard =new EZCustomerCard(customerCardId);
+        this.customerCard =new EZCustomerCard("");
         this.id=id;
         this.customerCard.setPoints(0);
 
