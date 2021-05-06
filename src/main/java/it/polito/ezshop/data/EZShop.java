@@ -255,6 +255,26 @@ public class EZShop implements EZShopInterface {
 
     // --- Manage Sale Transactions --- //
 
+    /*
+        computeSaleTransactionPrice(Integer transactionId)
+        Calcola il prezzo totale di una singola transazione, iterando tutti i prodotti
+        presenti al suo interno e applicando i relativi sconti. Non viene applicato
+        lo sconto totale della transazione.
+        @param transactionId: l'id della transazione di cui calcolare il prezzo
+
+        @return il prezzo calcolato
+     */
+    public double computeSaleTransactionPrice(SaleTransaction st) {
+        List<TicketEntry> list = st.getEntries();
+        double total = 0;
+
+        for (TicketEntry e : list) {
+            total += e.getPricePerUnit() * e.getAmount() * e.getDiscountRate();
+        }
+
+        return total;
+    }
+
     /**
      * This method starts a new sale transaction and returns its unique identifier.
      * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
@@ -330,10 +350,14 @@ public class EZShop implements EZShopInterface {
 
             EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
+            // aggiorna la lista di prodotti della transazione e ricalcola il prezzo totale
             s.addEntry(p, amount, s.getDiscountRate());
+            s.setPrice(this.computeSaleTransactionPrice(s));
 
+            // aggiorna la mappa
             saleTransactionMap.put(transactionId, s);
 
+            // aggiorna la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() - amount);
             productTypeMap.put(productCode, p);
 
@@ -376,6 +400,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
+        // TODO: IMPLEMENTARE FUNZIONE PER VALIDITA' CODICE A BARRE
         if (productCode == null || productCode.equals("") /*|| !this.checkBarCodeValidity(productCode)*/) {
             throw new InvalidProductCodeException();
         }
@@ -396,8 +421,11 @@ public class EZShop implements EZShopInterface {
 
             boolean found = false;
 
+            // cerca l'elemento corrispondente al prodotto nella lista dei prodotti
+            // della transazione
             for (TicketEntry e : l) {
                 if (e.getBarCode().equals(productCode)) {
+                    // se non vi sono abbastanza unità del prodotto in magazzino, ritorna false
                     if (e.getAmount() < amount) {
                         return false;
                     }
@@ -405,15 +433,21 @@ public class EZShop implements EZShopInterface {
                     break;
                 }
             }
+            // se non viene trovato, ritorna false
             if (!found) {
                 return false;
             }
 
+            // elimina il prodotto dalla lista
             s.deleteProductFromEntry(productCode, amount);
 
+            // aggiorna il prezzo della transazione e la mappa
+            s.setPrice(this.computeSaleTransactionPrice(s));
             saleTransactionMap.put(transactionId, s);
-            p.setQuantity(p.getQuantity() + amount);
 
+            // aggiorna la quantità del prodotto in magazzino
+            p.setQuantity(p.getQuantity() + amount);
+            // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
 
             return true;
@@ -455,6 +489,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
+        // TODO: IMPLEMENTARE FUNZIONE PER VALIDITA' CODICE A BARRE
         if (productCode == null || productCode.equals("") /*|| !this.checkBarCodeValidity(productCode)*/) {
             throw new InvalidProductCodeException();
         }
@@ -475,6 +510,8 @@ public class EZShop implements EZShopInterface {
 
             boolean found = false;
 
+            // trova l'elemento corrispondente nella lista di prodotti della transazione
+            // e ne cambia il tasso di sconto
             for (TicketEntry e : l) {
                 if (e.getBarCode().equals(productCode)) {
                     found = true;
@@ -486,6 +523,8 @@ public class EZShop implements EZShopInterface {
                 return false;
             }
 
+            // Aggiorna il prezzo della transazione e la mappa
+            s.setPrice(this.computeSaleTransactionPrice(s));
             saleTransactionMap.put(transactionId, s);
 
             return true;
@@ -529,8 +568,9 @@ public class EZShop implements EZShopInterface {
 
         EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
+        // aggiorna il tasso di sconto per la transazione
         s.setDiscountRate(discountRate);
-
+        // aggiorna la mappa delle transazioni
         saleTransactionMap.put(transactionId, s);
 
         return true;
@@ -567,23 +607,130 @@ public class EZShop implements EZShopInterface {
 
         EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
+        // calcola e ritorna il numero di punti
         return (int) (s.getPrice() / 10);
     }
 
+    /**
+     * This method closes an opened transaction. After this operation the
+     * transaction is persisted in the system's memory.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     *
+     * @return  true    if the transaction was successfully closed
+     *          false   if the transaction does not exist,
+     *                  if it has already been closed,
+     *                  if there was a problem in registering the data
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean endSaleTransaction(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        return false;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId) || !transactionMap.containsKey(transactionId)) {
+            return false;
+        }
+
+        BalanceOperation bo = this.transactionMap.get(transactionId);
+        SaleTransaction st = this.saleTransactionMap.get(transactionId);
+
+        // il prezzo di ogni vendita viene aggiornato automaticamente ogni
+        // volta che viene aggiunto/rimosso un prodotto o quando ne viene
+        // modificato il tasso di sconto
+        bo.setMoney(st.getPrice() * st.getDiscountRate());
+        // aggiorna la mappa
+        this.transactionMap.put(transactionId, bo);
+        // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
+        // TODO: AGGIORNA DB CON NUOVE TRANSAZIONI
+
+        return true;
     }
 
+    /**
+     * This method deletes a sale transaction with given unique identifier from the system's data store.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param saleNumber the number of the transaction to be deleted
+     *
+     * @return  true if the transaction has been successfully deleted,
+     *          false   if the transaction doesn't exist,
+     *                  if it has been payed,
+     *                  if there are some problems with the db
+     *
+     * @throws InvalidTransactionIdException if the transaction id number is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean deleteSaleTransaction(Integer saleNumber) throws InvalidTransactionIdException, UnauthorizedException {
-        return false;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (saleNumber <= 0 || saleNumber == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!saleTransactionMap.containsKey(saleNumber) || !transactionMap.containsKey(saleNumber)) {
+            return false;
+        }
+
+        this.transactionMap.remove(saleNumber);
+        this.saleTransactionMap.remove(saleNumber);
+
+        // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONI
+
+        return true;
     }
 
+    /**
+     * This method returns  a closed sale transaction.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the CLOSED Sale transaction
+     *
+     * @return the transaction if it is available (transaction closed), null otherwise
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public SaleTransaction getSaleTransaction(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        return null;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (transactionId <= 0 || transactionId == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return null;
+        }
+
+        // Why get the transaction from the DB? Because if a transaction is saved in the DB, then
+        // it has certainly been closed. There's no way to know whether a transaction contained
+        // in one of the maps has been closed or not.
+        // TODO: PRENDI TRANSAZIONE DAL DB
+
+        // Placeholder value until DB is implemented
+        EZSaleTransaction e = new EZSaleTransaction(99999);
+
+        return this.saleTransactionMap.get(transactionId);
     }
+
+    // --- Manage Return Transactions --- //
 
     @Override
     public Integer startReturnTransaction(Integer saleNumber) throws /*InvalidTicketNumberException,*/InvalidTransactionIdException, UnauthorizedException {
@@ -605,18 +752,113 @@ public class EZShop implements EZShopInterface {
         return false;
     }
 
+    // --- Manage Payments --- //
+
+    /**
+     * This method record the payment of a sale transaction with cash and returns the change (if present).
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param ticketNumber the number of the transaction that the customer wants to pay
+     * @param cash the cash received by the cashier
+     *
+     * @return the change (cash - sale price)
+     *         -1   if the sale does not exists,
+     *              if the cash is not enough,
+     *              if there is some problemi with the db
+     *
+     * @throws InvalidTransactionIdException if the  number is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     * @throws InvalidPaymentException if the cash is less than or equal to 0
+     */
     @Override
     public double receiveCashPayment(Integer ticketNumber, double cash) throws InvalidTransactionIdException, InvalidPaymentException, UnauthorizedException {
-        return 0;
+        if (cash <= 0) {
+            throw new InvalidPaymentException();
+        }
+
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (ticketNumber <= 0 || ticketNumber == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        // TODO: PRENDI TRANSAZIONE DAL DB
+        // placeholder
+        EZSaleTransaction result = new EZSaleTransaction(99999);
+
+        if (cash < result.getPrice()) {
+            return -1;
+        }
+
+        return (cash - result.getPrice());
     }
 
+    /**
+     * This method record the payment of a sale with credit card. If the card has not enough money the payment should
+     * be refused.
+     * The credit card number validity should be checked. It should follow the luhn algorithm.
+     * The credit card should be registered in the system.
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param ticketNumber the number of the sale that the customer wants to pay
+     * @param creditCard the credit card number of the customer
+     *
+     * @return  true if the operation is successful
+     *          false   if the sale does not exists,
+     *                  if the card has not enough money,
+     *                  if the card is not registered,
+     *                  if there is some problem with the db connection
+     *
+     * @throws InvalidTransactionIdException if the sale number is less than or equal to 0 or if it is null
+     * @throws InvalidCreditCardException if the credit card number is empty, null or if luhn algorithm does not
+     *                                      validate the credit card
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean receiveCreditCardPayment(Integer ticketNumber, String creditCard) throws InvalidTransactionIdException, InvalidCreditCardException, UnauthorizedException {
+        // TODO: IMPLEMENTARE FUNZIONE PER VALIDITA' CARTA DI CREDITO
+        /*if (!this.checkCreditCardValidity(creditCard)) {
+            return false;
+        }*/
+
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (ticketNumber <= 0 || ticketNumber == null) {
+            throw new InvalidTransactionIdException();
+        }
+
+        // TODO: IMPLEMENTARE INSERIMENTO DEL PAGAMENTO NEL DB
+
         return false;
     }
 
+    /**
+     * This method record the payment of a closed return transaction with given id. The return value of this method is the
+     * amount of money to be returned.
+     * This method affects the balance of the application.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the return transaction
+     *
+     * @return  the money returned to the customer
+     *          -1  if the return transaction is not ended,
+     *              if it does not exist,
+     *              if there is a problem with the db
+     *
+     * @throws InvalidTransactionIdException if the return id is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public double returnCashPayment(Integer returnId) throws InvalidTransactionIdException, UnauthorizedException {
+        // TODO: PAGAMENTI NEL DB
         return 0;
     }
 
@@ -625,9 +867,43 @@ public class EZShop implements EZShopInterface {
         return 0;
     }
 
+    // --- Manage Accounting --- //
+    /**
+     * This method record a balance update. <toBeAdded> can be both positive and nevative. If positive the balance entry
+     * should be recorded as CREDIT, if negative as DEBIT. The final balance after this operation should always be
+     * positive.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" is logged in.
+     *
+     * @param toBeAdded the amount of money (positive or negative) to be added to the current balance. If this value
+     *                  is >= 0 than it should be considered as a CREDIT, if it is < 0 as a DEBIT
+     *
+     * @return  true if the balance has been successfully updated
+     *          false if toBeAdded + currentBalance < 0.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean recordBalanceUpdate(double toBeAdded) throws UnauthorizedException {
-        return false;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+            throw new UnauthorizedException();
+        }
+        String type = "";
+        if (toBeAdded >= 0) {
+            type = "CREDIT";
+        }
+        else {
+            type = "DEBIT";
+        }
+
+        BalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), type);
+
+        if (this.balance + toBeAdded < 0) {
+            return false;
+        }
+
+        // TODO: RIVEDERE GESTIONE DI BalanceOperation NELLA GESTIONE DELLE TRANSAZIONI DI VENDITA
+        this.balance += toBeAdded;
+
+        return true;
     }
 
     @Override
