@@ -19,6 +19,7 @@ public class EZShop implements EZShopInterface {
     double balance=0;
     User userSession=null;
     int idUsers=0;
+    int counter_saleTransactionID = 0;
     int counter_transactionID = 0;
 
     /*
@@ -30,11 +31,82 @@ public class EZShop implements EZShopInterface {
             false, se l'utente non è loggato o non ha i permessi adatti
      */
     public boolean checkUserRole(String expectedRole) {
-        if (this.userSession == null || !this.userSession.getRole().equalsIgnoreCase(expectedRole)) {
+        return (this.userSession != null && this.userSession.getRole().equalsIgnoreCase(expectedRole));
+    }
+
+    /*
+        checkBarCodeValidity(String barCode)
+        @param barCode: il codice a barre da controllare
+
+        @return:
+            true,  se il codice è valido
+            false, se il codice non è valido o ci sono problemi
+     */
+    public boolean checkBarCodeValidity(String barCode) {
+        if (!barCode.matches("[0-9]{13}")) {
+            // se in input non abbiamo un codice con 13 interi, ritorna false
             return false;
         }
 
-        return true;
+        int digits[] = new int[12];
+
+        char barCode_arr[] = barCode.toCharArray();
+
+        // converti la stringa in un vettore di interi da 0 a 9
+        for (int i = 0; i < 12; i++) {
+            digits[i] = Character.getNumericValue(barCode_arr[i]);
+        }
+
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            sum += (digits[i] % 2 == 1)? digits[i] : digits[i] * 3;
+        }
+
+        int i = 0;
+        // prendi il multiplo di 10 uguale o subito più grande di sum
+        while(i < sum) {
+            i += 10;
+        }
+        // sottrai sum a questo numero
+        int checkVal = i - sum;
+
+        // confronta il risultato con l'ultima cifra del codice a barre
+        return (checkVal == Character.getNumericValue(barCode_arr[12]));
+    }
+
+    /*
+        checkCreditCardValidity(String cardCode)
+        Controlla la validità del codice di una carta di credito tramite l'algoritmo di Luhn.
+
+        @param cardCode: codice da controllare
+
+        @return:
+            true,  se il codice è valido
+            false, se il codice non è valido
+     */
+    public boolean checkCreditCardValidity(String cardCode) {
+        // se la carta non è formata da soli numeri, ritorna false
+        if (!cardCode.matches("[0-9]+")) {
+            return false;
+        }
+
+        int nDigits = cardCode.length();
+        char cardCode_arr[] = cardCode.toCharArray();
+        int sum = Character.getNumericValue(cardCode_arr[nDigits - 1]);
+        int parity = nDigits % 2;
+
+        for (int i = 0; i < nDigits - 1; i++) {
+            int digit = Character.getNumericValue(cardCode_arr[i]);
+            if (i % 2 == parity) {
+                digit *= 2;
+            }
+            if (digit > 9) {
+                digit = digit - 9;
+            }
+            sum += digit;
+        }
+
+        return (sum % 10 == 0);
     }
 
     @Override
@@ -288,11 +360,10 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        int newID = ++this.counter_transactionID;
-        // aggiungi BalanceOperation alla mappa generica
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "CREDIT"));
+        int newID = ++this.counter_saleTransactionID;
         // aggiungi SaleTransaction alla mappa specifica
         this.saleTransactionMap.put(newID, new EZSaleTransaction(newID));
+        // l'oggetto BalanceOperation verrà aggiunto solo quando verrà chiusa la transazione
 
         return newID;
     }
@@ -331,7 +402,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
-        if (productCode == null || productCode.equals("")/* || !this.checkBarCodeValidity(productCode)*/) {
+        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
             throw new InvalidProductCodeException();
         }
 
@@ -400,8 +471,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
-        // TODO: IMPLEMENTARE FUNZIONE PER VALIDITA' CODICE A BARRE
-        if (productCode == null || productCode.equals("") /*|| !this.checkBarCodeValidity(productCode)*/) {
+        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
             throw new InvalidProductCodeException();
         }
 
@@ -489,8 +559,7 @@ public class EZShop implements EZShopInterface {
         }
 
         productCode = productCode.trim();
-        // TODO: IMPLEMENTARE FUNZIONE PER VALIDITA' CODICE A BARRE
-        if (productCode == null || productCode.equals("") /*|| !this.checkBarCodeValidity(productCode)*/) {
+        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
             throw new InvalidProductCodeException();
         }
 
@@ -502,8 +571,6 @@ public class EZShop implements EZShopInterface {
             return false;
         }
         else {
-            ProductType p = productTypeMap.get(productCode);
-
             EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
             List<TicketEntry> l = s.getEntries();
@@ -637,21 +704,14 @@ public class EZShop implements EZShopInterface {
             throw new InvalidTransactionIdException();
         }
 
-        if (!saleTransactionMap.containsKey(transactionId) || !transactionMap.containsKey(transactionId)) {
+        if (!saleTransactionMap.containsKey(transactionId)) {
             return false;
         }
 
-        BalanceOperation bo = this.transactionMap.get(transactionId);
         SaleTransaction st = this.saleTransactionMap.get(transactionId);
 
-        // il prezzo di ogni vendita viene aggiornato automaticamente ogni
-        // volta che viene aggiunto/rimosso un prodotto o quando ne viene
-        // modificato il tasso di sconto
-        bo.setMoney(st.getPrice() * st.getDiscountRate());
-        // aggiorna la mappa
-        this.transactionMap.put(transactionId, bo);
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
-        // TODO: AGGIORNA DB CON NUOVE TRANSAZIONI
+        // TODO: AGGIORNA DB CON NUOVA TRANSAZIONE
 
         return true;
     }
@@ -681,14 +741,13 @@ public class EZShop implements EZShopInterface {
             throw new InvalidTransactionIdException();
         }
 
-        if (!saleTransactionMap.containsKey(saleNumber) || !transactionMap.containsKey(saleNumber)) {
+        if (!saleTransactionMap.containsKey(saleNumber)) {
             return false;
         }
 
-        this.transactionMap.remove(saleNumber);
         this.saleTransactionMap.remove(saleNumber);
 
-        // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONI
+        // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONE
 
         return true;
     }
@@ -719,15 +778,13 @@ public class EZShop implements EZShopInterface {
             return null;
         }
 
-        // Why get the transaction from the DB? Because if a transaction is saved in the DB, then
-        // it has certainly been closed. There's no way to know whether a transaction contained
-        // in one of the maps has been closed or not.
+        // Get transaction from the data base
         // TODO: PRENDI TRANSAZIONE DAL DB
 
         // Placeholder value until DB is implemented
         EZSaleTransaction e = new EZSaleTransaction(99999);
 
-        return this.saleTransactionMap.get(transactionId);
+        return e;
     }
 
     // --- Manage Return Transactions --- //
@@ -794,6 +851,10 @@ public class EZShop implements EZShopInterface {
             return -1;
         }
 
+        // registra la modifica del conto, aggiungendo una nuova BalanceOperation
+        // richiamando un metodo dell'API
+        this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+
         return (cash - result.getPrice());
     }
 
@@ -821,10 +882,9 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean receiveCreditCardPayment(Integer ticketNumber, String creditCard) throws InvalidTransactionIdException, InvalidCreditCardException, UnauthorizedException {
-        // TODO: IMPLEMENTARE FUNZIONE PER VALIDITA' CARTA DI CREDITO
-        /*if (!this.checkCreditCardValidity(creditCard)) {
+        if (!this.checkCreditCardValidity(creditCard)) {
             return false;
-        }*/
+        }
 
         if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
@@ -835,7 +895,12 @@ public class EZShop implements EZShopInterface {
             throw new InvalidTransactionIdException();
         }
 
-        // TODO: IMPLEMENTARE INSERIMENTO DEL PAGAMENTO NEL DB
+        // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
+        EZSaleTransaction result = new EZSaleTransaction(99999);
+
+        // registra il pagamento aggiungendo una nuova BalanceOperation
+        // tramite metodo dell'API
+        this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
 
         return false;
     }
@@ -862,8 +927,35 @@ public class EZShop implements EZShopInterface {
         return 0;
     }
 
+    /**
+     * This method record the payment of a return transaction to a credit card.
+     * The credit card number validity should be checked. It should follow the luhn algorithm.
+     * The credit card should be registered and its balance will be affected.
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the return transaction
+     * @param creditCard the credit card number of the customer
+     *
+     * @return  the money returned to the customer
+     *          -1  if the return transaction is not ended,
+     *              if it does not exist,
+     *              if the card is not registered,
+     *              if there is a problem with the db
+     *
+     * @throws InvalidTransactionIdException if the return id is less than or equal to 0
+     * @throws InvalidCreditCardException if the credit card number is empty, null or if luhn algorithm does not
+     *                                      validate the credit card
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public double returnCreditCardPayment(Integer returnId, String creditCard) throws InvalidTransactionIdException, InvalidCreditCardException, UnauthorizedException {
+        if (!this.checkCreditCardValidity(creditCard)) {
+            throw new InvalidCreditCardException();
+        }
+
+        // TODO: METODO
+
         return 0;
     }
 
@@ -886,7 +978,7 @@ public class EZShop implements EZShopInterface {
         if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
-        String type = "";
+        String type;
         if (toBeAdded >= 0) {
             type = "CREDIT";
         }
@@ -900,19 +992,68 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        // TODO: RIVEDERE GESTIONE DI BalanceOperation NELLA GESTIONE DELLE TRANSAZIONI DI VENDITA
-        this.balance += toBeAdded;
+        // TODO: AGGIUNGI OPERAZIONE AL DB
+
+        this.transactionMap.put(bo.getBalanceId(), bo);
 
         return true;
     }
 
+    /**
+     * This method returns a list of all the balance operations (CREDIT,DEBIT,ORDER,SALE,RETURN) performed between two
+     * given dates.
+     * This method should understand if a user exchanges the order of the dates and act consequently to correct
+     * them.
+     * Both <from> and <to> are included in the range of dates and might be null. This means the absence of one (or
+     * both) temporal constraints.
+     *
+     *
+     * @param from the start date : if null it means that there should be no constraint on the start date
+     * @param to the end date : if null it means that there should be no constraint on the end date
+     *
+     * @return All the operations on the balance whose date is <= to and >= from
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public List<BalanceOperation> getCreditsAndDebits(LocalDate from, LocalDate to) throws UnauthorizedException {
-        return null;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+            throw new UnauthorizedException();
+        }
+
+        List<BalanceOperation> returnList = (List<BalanceOperation>) this.transactionMap.values();
+
+        // Filtra la lista rimuovendo tutte le transazioni al di fuori dell'intervallo di tempo
+        for (int i = 0; i < returnList.size(); i++) {
+            if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
+                returnList.remove(i);
+            }
+        }
+
+        return returnList;
     }
 
+    /**
+     * This method returns the actual balance of the system.
+     *
+     * @return the value of the current balance
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public double computeBalance() throws UnauthorizedException {
-        return 0;
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+            throw new UnauthorizedException();
+        }
+
+        double total = 0;
+
+        List<BalanceOperation> list = new ArrayList<BalanceOperation>(this.transactionMap.values());
+
+        for (BalanceOperation bo : list) {
+            total += bo.getMoney();
+        }
+
+        return total;
     }
 }
