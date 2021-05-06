@@ -7,6 +7,8 @@ import it.polito.ezshop.data.TicketEntry;
 import java.util.ArrayList;
 import java.util.List;
 
+/*ANTONINO*/
+
 public class EZSaleTransaction implements SaleTransaction {
     Integer transactionID;
     List<TicketEntry> entryList;
