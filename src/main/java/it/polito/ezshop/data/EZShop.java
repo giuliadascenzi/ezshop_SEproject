@@ -1089,10 +1089,10 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         Integer newCustomerCard = idCustomerCard;
         String customerCardString = newCustomerCard.toString();
-        if(customerCardString.length()!= 10){                                  //CustomerCardString must be 10 characters long.
-            String tmp = new String("") ;                               // I convert the number to a string and add the amount of zeros needed to get to 10 characters
+        if (customerCardString.length() != 10){                                  //CustomerCardString must be 10 characters long.
+            String tmp = new String("5") ;                               // I convert the number to a string and add the amount of zeros needed to get to 10 characters
             String str1 = "0";                                                 // ex. idCustomerCard = 3 -> String CustomerCardString="0000000003"
-            for(int i=0; i<(10-customerCardString.length()); i++){              // Integer max value is 2ˆ32 -1 . Integer cannot be used for 10-digit numbers. LONG?
+            for(int i=0; i<(9-customerCardString.length()); i++){              // Integer max value is 2ˆ32 -1 . Integer cannot be used for 10-digit numbers. LONG?
                 tmp = tmp + str1;
             }
             customerCardString = tmp + customerCardString;
@@ -1159,7 +1159,7 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public boolean modifyPointsOnCard(String customerCard, int pointsToBeAdded) throws InvalidCustomerCardException, UnauthorizedException {
-        int counter=0;
+        boolean found = false;
         if(userSession==null)
             throw new UnauthorizedException();
         if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
@@ -1167,28 +1167,25 @@ public class EZShop implements EZShopInterface {
         for (Customer c : customerMap.values()){
             if (c.getCustomerCard().equals(customerCard))
             {
-                counter++;
+                found = true;
                 if(c.getPoints()<Math.abs(pointsToBeAdded) && pointsToBeAdded < 0)   // if pointsToBeAdded is negative and there were not enough points on that card before this operation
                     return false;
-                c.setPoints(c.getPoints()+pointsToBeAdded);
+                c.setPoints(c.getPoints() + pointsToBeAdded);
                 //todo:UPDATE DB
+                break;
             }
         }
-        if (counter==0)
-            return false;   //it means that there is no card with code linked to a Customer
-
-
-        return true;
+        return found;
     }
 
     // --- Manage Sale Transactions --- //
 
-    /*
+    /**
         computeSaleTransactionPrice(Integer transactionId)
         Calcola il prezzo totale di una singola transazione, iterando tutti i prodotti
         presenti al suo interno e applicando i relativi sconti. Non viene applicato
         lo sconto totale della transazione.
-        @param transactionId: l'id della transazione di cui calcolare il prezzo
+        @param st: la transazione da controllare
 
         @return il prezzo calcolato
      */
