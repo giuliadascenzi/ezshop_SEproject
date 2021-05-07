@@ -384,8 +384,8 @@ public class EZShop implements EZShopInterface {
         Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
         if (productCode==null ||
                 productCode.trim().equals("") ||
-                     !pattern.matcher(productCode).matches()) //check if the product code is not a number
-            // TODO check se il barcode è valido
+                !pattern.matcher(productCode).matches() ||
+                !this.checkBarCodeValidity(productCode)) //check if the product code is not a number
             throw new InvalidProductCodeException();
         //check price validity
         if (pricePerUnit<=0 )
@@ -439,8 +439,8 @@ public class EZShop implements EZShopInterface {
         Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
         if (newCode==null ||
                 newCode.trim().equals("") ||
-                !pattern.matcher(newCode).matches()) //check if the product code is not a number
-            // TODO check se il barcode è valido
+                !pattern.matcher(newCode).matches() ||
+                !this.checkBarCodeValidity(newCode)) //check if the product code is not a number
             throw new InvalidProductCodeException();
         //check price per unit validity
         if (newPrice<=0 || newDescription.trim().equals(""))
@@ -536,7 +536,7 @@ public class EZShop implements EZShopInterface {
         //check product code validity
         if (barCode== null
                 || barCode.trim().equals("")
-                // TODO insert validity barcode
+                || !this.checkBarCodeValidity(barCode.trim())
         )
             throw new InvalidProductCodeException();
 
@@ -654,9 +654,11 @@ public class EZShop implements EZShopInterface {
         if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
             throw new UnauthorizedException();
 
-        //TODO check validity format <aisleNumber>-<rackAlphabeticIdentifier>-<levelNumber>
-        // if (formatosbagliato)
-        // throw new InvalidLocationException();
+        // Nota: assicurarsi che quello nell'espressione regolare sia effettivamente
+        // il pattern corretto. In questo momento è generico
+        if (!newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
+            throw new InvalidLocationException();
+        }
 
         //check if the product does not exist
         String barcodeProduct= null;
@@ -706,7 +708,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         // check barcode validity
         if (productCode==null || productCode.trim().equals("")
-           // TODO check if the barcode is valid!
+           || !this.checkBarCodeValidity(productCode.trim())
             )
             throw new InvalidProductCodeException();
         // check quantity validity
@@ -762,7 +764,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         // check barcode validity
         if (productCode==null || productCode.trim().equals("")
-            // TODO check if the barcode is valid!
+            || !this.checkBarCodeValidity(productCode.trim())
         )
             throw new InvalidProductCodeException();
         // check quantity validity
