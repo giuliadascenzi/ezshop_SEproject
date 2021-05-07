@@ -1,11 +1,14 @@
 package it.polito.ezshop.data;
 
+import com.sun.xml.internal.bind.v2.TODO;
 import it.polito.ezshop.exceptions.*;
 import it.polito.ezshop.data.classes.*;
 
 import java.time.LocalDate;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 public class EZShop implements EZShopInterface {
@@ -15,18 +18,21 @@ public class EZShop implements EZShopInterface {
     Map<Integer, BalanceOperation> transactionMap = new HashMap<>();
     Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
     Map<Integer, Order> orderTransactionMap = new HashMap<>();
-    Map<String, ProductType> productTypeMap = new HashMap<>();
+    Map<String, ProductType> productTypeMap = new HashMap<>(); //Key= barcode, value= ProductType
     double balance=0;
     User userSession=null;
     int idUsers=0;
+    int idCustomer=0;
+    Integer idCustomerCard=0; //
     int counter_saleTransactionID = 0;
     int counter_transactionID = 0;
+    private int productIds=0;
 
-    /*
+    /**
         checkUserRole(String expectedRole)
-        @param expectedRole: il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
+        @param expectedRole il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
 
-        @return:
+        @return
             true,  se l'utente è loggato e ha il permesso che ci si aspetta
             false, se l'utente non è loggato o non ha i permessi adatti
      */
@@ -145,7 +151,7 @@ public class EZShop implements EZShopInterface {
     public Integer createUser(String username, String password, String role) throws InvalidUsernameException, InvalidPasswordException, InvalidRoleException {
         //username unique and not empty
 
-        if (username.trim()=="" || username==null)
+        if ( username==null|| username.trim().equals("") )
             throw new InvalidUsernameException();
 
         for (User u : this.userList) {
@@ -155,14 +161,14 @@ public class EZShop implements EZShopInterface {
             }
         }
         //password not empty
-        if (password.trim()=="" || password== null)
+        if (password== null||password.trim().equals("")  )
             throw new InvalidPasswordException();
         //Role not valid
-        if (role.trim() == "" || role==null || (!role.toUpperCase().equals("MANAGER") && !role.toUpperCase().equals("ADMINISTRATOR") && !role.toUpperCase().equals("CASHIER") ))
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("MANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
 
         int newuserId = this.idUsers;
-        userList.add(new EZUser(newuserId, username,password,role));
+        userList.add(new EZUser(newuserId, username,password,role)); //TODO Aggiorna DB
         this.idUsers++;
 
 
@@ -179,150 +185,998 @@ public class EZShop implements EZShopInterface {
      * @return  true if the user was deleted
      *          false if the user cannot be deleted  (**PERCHE'??**)
      *
-     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is null.
+     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is
+     *
+     * .
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
     @Override
     public boolean deleteUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
-        if (id<=0 || id==null)
+        if (id==null ||id<=0 )
             throw new InvalidUserIdException();
-        if (this.userSession==null || !this.userSession.getRole().toUpperCase().equals("ADMINISTRATOR" ))
+        if (!checkUserRole("Administrator"))
             throw new UnauthorizedException();
 
-        /*FAI IL DELETE*/
+        /*Look for the user with the same id*/
+        for (User u : this.userList)
+            if (u.getId().equals(id))
+            {
+                this.userList.remove(u); //TODO Aggiorna DB
+                return true;
+            }
+        // if no user has been found return false
         return false;
     }
+
+    /**
+     * This method returns the list of all registered users. It can be invoked only after a user with role "Administrator" is
+     * logged in.
+     *
+     * @return  a list of all registered users. If there are no users the list should be empty
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<User> getAllUsers() throws UnauthorizedException {
-        return null;
+        if (!checkUserRole("Administrator"))
+            throw new UnauthorizedException();
+        else
+            return this.userList;
     }
 
+    /**
+     * This method returns a User object with given id. It can be invoked only after a user with role "Administrator" is
+     * logged in.
+     *
+     * @param id the id of the user
+     *
+     * @return  the requested user if it exists, null otherwise
+     *
+     * @throws InvalidUserIdException if id is less than or equal to zero or if it is null
+     * @throws UnauthorizedException  if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public User getUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
+        //check userSession
+        if (!checkUserRole("Administrator"))
+            throw new UnauthorizedException();
+        //Check id validity
+        if (id==null ||id<=0 )
+            throw new InvalidUserIdException();
+
+        /*Look for the user with the same id*/
+        for (User u : this.userList)
+            if (u.getId().equals(id))
+            {
+                return u;
+            }
+        // if no user has been found return null
         return null;
     }
 
+
+    /**
+     * This method updates the role of a user with given id. It can be invoked only after a user with role "Administrator" is
+     * logged in.
+     *
+     * @param id the id of the user
+     * @param role the new role the user should be assigned to
+     *
+     * @return true if the update was successful, false if the user does not exist
+     *
+     * @throws InvalidUserIdException   if the user Id is less than or equal to 0 or if it is null
+     * @throws InvalidRoleException     if the new role is empty, null or not among one of the following : {"Administrator", "Cashier", "ShopManager"}
+     * @throws UnauthorizedException    if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean updateUserRights(Integer id, String role) throws InvalidUserIdException, InvalidRoleException, UnauthorizedException {
+        //check userSession
+        if (!checkUserRole("Administrator"))
+            throw new UnauthorizedException();
+        //Check id validity
+        if (id==null ||id<=0 )
+            throw new InvalidUserIdException();
+        //Check role validity
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("MANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
+            throw new InvalidRoleException();
+
+
+        /*Look for the user with the same id*/
+        for (User u : this.userList)
+            if (u.getId().equals(id))
+            {   u.setRole(role); //TODO Update DB
+                if (u.getId().equals(this.userSession.getId())) //I'm asking to modify the role of the user logged in in this moment
+                    this.userSession.setRole(role);
+
+                return true;
+            }
+        // if no user has been found return false
         return false;
     }
+
+    // -------------------- LOGIN ----------------- //
+
+    /**
+     * This method lets a user with given username and password login into the system
+     *
+     * @param username the username of the user
+     * @param password the password of the user
+     *
+     * @return an object of class User filled with the logged user's data if login is successful, null otherwise ( wrong credentials or db problems)
+     *
+     * @throws InvalidUsernameException if the username is empty or null
+     * @throws InvalidPasswordException if the password is empty or null
+     */
 
     @Override
     public User login(String username, String password) throws InvalidUsernameException, InvalidPasswordException {
+        // username validity
+        if (username==null || username.trim().equals(""))
+            throw new InvalidUsernameException();
+        // password validity
+        if (password==null || password.trim().equals(""))
+            throw new InvalidPasswordException();
+
+        //look for user
+
+        /*Look for the user with the same id*/
+        for (User u : this.userList)
+            if (u.getUsername().equals(username))
+            {
+                if (!u.getPassword().equals(password)) return null; //wrong credentials
+                else  //Found user
+                {
+                    this.userSession= u; //Add the user as user session
+                    return u;
+                }
+
+            }
+        // if no user has been found return null
         return null;
+
     }
+
+    /**
+     * This method makes a user to logout from the system
+     *
+     * @return true if the logout is successful, false otherwise (there is no logged user)
+     */
 
     @Override
     public boolean logout() {
-        return false;
+        if (this.userSession==null) //no logged user
+            return false;
+        else
+        {   this.userSession=null; //user logs out
+            return true;
+        }
     }
+
+    /**
+     * This method creates a product type and returns its unique identifier. It can be invoked only after a user with role "Administrator"
+     * or "ShopManager" is logged in.
+     *
+     * @param description the description of product to be created
+     * @param productCode  the unique barcode of the product
+     * @param pricePerUnit the price per single unit of product
+     * @param note the notes on the product (if null an empty string should be saved as description)
+     *
+     * @return The unique identifier of the new product type ( > 0 ).
+     *         -1 if there is an error while saving the product type or if it exists a product with the same barcode
+     *
+     * @throws InvalidProductDescriptionException if the product description is null or empty
+     * @throws InvalidProductCodeException if the product code is
+     * or empty, if it is not a number or if it is not a valid barcode
+     * @throws InvalidPricePerUnitException if the price per unit si less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public Integer createProductType(String description, String productCode, double pricePerUnit, String note) throws InvalidProductDescriptionException, InvalidProductCodeException, InvalidPricePerUnitException, UnauthorizedException {
-        return null;
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+        // check description validity
+        if (description==null || description.trim().equals(""))
+            throw new InvalidProductDescriptionException();
+        // check product code validity
+        Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
+        if (productCode==null ||
+                productCode.trim().equals("") ||
+                     !pattern.matcher(productCode).matches()) //check if the product code is not a number
+            // TODO check se il barcode è valido
+            throw new InvalidProductCodeException();
+        //check price validity
+        if (pricePerUnit<=0 )
+            throw new InvalidPricePerUnitException();
+
+        //check if exists a productType with the same barcode
+        if (this.productTypeMap.containsKey(productCode))
+                return -1;
+        //create new ProductType
+        int newProductId=this.productIds;
+        ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
+        this.productIds++;
+        this.productTypeMap.put(productCode, pt); //TODO update db
+
+        return newProductId;
     }
 
+    /**
+     * This method updates the product id with given barcode and id. It can be invoked only after a user with role "Administrator"
+     * or "ShopManager" is logged in.
+     *
+     * @param id the type of product to be updated
+     * @param newDescription the new product type
+     * @param newCode the new product code
+     * @param newPrice the new product price
+     * @param newNote the new product notes
+     *
+     * @return  true if the update is successful
+     *          false if the update is not successful (no products with given product id or another product already has
+     *              the same barcode)
+     *
+     * @throws InvalidProductIdException if the product id is less than or equal to 0 or if it is null
+     * @throws InvalidProductDescriptionException if the product description is null or empty
+     * @throws InvalidProductCodeException if the product code is null or empty, if it is not a number or if it is not a valid barcode
+     * @throws InvalidPricePerUnitException if the price per unit si less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean updateProduct(Integer id, String newDescription, String newCode, double newPrice, String newNote) throws InvalidProductIdException, InvalidProductDescriptionException, InvalidProductCodeException, InvalidPricePerUnitException, UnauthorizedException {
-        return false;
-    }
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
 
+        //check product validity
+        if (id==null || id<=0)
+            throw new InvalidProductIdException();
+        //check description validity
+        if (newDescription==null || newDescription.trim().equals(""))
+            throw new InvalidProductDescriptionException();
+        //check product validity
+        Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
+        if (newCode==null ||
+                newCode.trim().equals("") ||
+                !pattern.matcher(newCode).matches()) //check if the product code is not a number
+            // TODO check se il barcode è valido
+            throw new InvalidProductCodeException();
+        //check price per unit validity
+        if (newPrice<=0 || newDescription.trim().equals(""))
+            throw new InvalidPricePerUnitException();
+
+        //check if it already exists a product with that given barcode
+        if (this.productTypeMap.containsKey(newCode))
+            return false;
+        //check if there is already a product with the same id
+        for (ProductType p: this.productTypeMap.values())
+            if (p.getId().equals(id))
+            { //Found
+                //update map product type, deleting the record with the barcode to update
+                this.productTypeMap.remove(p.getBarCode());
+                p.setBarCode(newCode);
+                p.setProductDescription(newDescription);
+                p.setPricePerUnit(newPrice);
+                p.setNote(newNote);
+                //update map product type with the item associated with the new barcode
+                this.productTypeMap.put(p.getBarCode(), p);
+                return true; //TODO update db
+            }
+
+        return false; //No product with that id found
+
+    }
+    /**
+     * This method deletes a product with given product id. It can be invoked only after a user with role "Administrator"
+     * or "ShopManager" is logged in.
+     *
+     * @param id the id of the product to be deleted
+     *
+     * @return true if the product was deleted, false otherwise
+     *
+     * @throws InvalidProductIdException if the product id is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean deleteProductType(Integer id) throws InvalidProductIdException, UnauthorizedException {
-        return false;
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+        //check product validity
+        if (id==null || id<=0)
+            throw new InvalidProductIdException();
+
+        //check if there is already a product with the same id
+        for (ProductType p: this.productTypeMap.values())
+            if (p.getId().equals(id))
+            { //Found
+                this.productTypeMap.remove(p.getBarCode());
+                return true; //TODO update db
+            }
+
+        return false; //No product with that id found
+
     }
+
+    /**
+     * This method returns the list of all registered product types. It can be invoked only after a user with role "Administrator",
+     * "ShopManager" or "Cashier" is logged in.
+     *
+     * @return a list containing all saved product types
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<ProductType> getAllProductTypes() throws UnauthorizedException {
-        return null;
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+
+        return new ArrayList<>(this.productTypeMap.values());
     }
+    /**
+     * This method returns a product type with given barcode. It can be invoked only after a user with role "Administrator"
+     * or "ShopManager" is logged in.
+     *
+     * @param barCode the unique barCode of a product
+     *
+     * @return the product type with given barCode if present, null otherwise
+     *
+     * @throws InvalidProductCodeException if barCode is not a valid bar code, if is it empty or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public ProductType getProductTypeByBarCode(String barCode) throws InvalidProductCodeException, UnauthorizedException {
-        return null;
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+        //check product code validity
+        if (barCode== null
+                || barCode.trim().equals("")
+                // TODO insert validity barcode
+        )
+            throw new InvalidProductCodeException();
+
+        if (this.productTypeMap.containsKey(barCode))
+            return this.productTypeMap.get(barCode);
+
+        else
+           return null;
     }
+
+    /**
+     * This method returns a list of all products with a description containing the string received as parameter. It can be invoked only after a user with role "Administrator"
+     * or "ShopManager" is logged in.
+     *
+     * @param description the description (or part of it) of the products we are searching for.
+     *                    Null should be considered as the empty string.
+     *
+     * @return a list of products containing the requested string in their description
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<ProductType> getProductTypesByDescription(String description) throws UnauthorizedException {
-        return null;
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+
+        // Null should be considered as the empty string.
+
+        if (description==null) description="";
+
+        String stringToFind = description;
+        return this.productTypeMap.values()
+                .stream()
+                .filter((ProductType p) -> p.getProductDescription().contains(stringToFind) )
+                .collect(Collectors.toList());
+
+
     }
+
+
+    // -------------------- FR4 ------------------- //
+    // ------------------- ADMIN ------------------ //
+    // --------------- SHOP MANAGER --------------- //
+
+    /**
+     * This method updates the quantity of product available in store. <toBeAdded> can be negative but the final updated
+     * quantity cannot be negative. The product should have a location assigned to it.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param productId the id of the product to be updated
+     * @param toBeAdded the quantity to be added. If negative it decrease the available quantity of <toBeAdded> elements.
+     *
+     * @return  true if the update was successful
+     *          false if the product does not exists, if <toBeAdded> is negative and the resulting amount would be
+     *          negative too or if the product type has not an assigned location.
+     *
+     * @throws InvalidProductIdException if the product id is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean updateQuantity(Integer productId, int toBeAdded) throws InvalidProductIdException, UnauthorizedException {
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+        // check product validity
+        if (productId==null || productId<=0)
+            throw new InvalidProductIdException();
+
+        //check if the product exists in the map
+        for (ProductType p: this.productTypeMap.values())
+        {
+            if (p.getId().equals(productId)) //Found
+            {
+                int newQuantity =p.getQuantity() + toBeAdded;
+
+                if (toBeAdded<0 && newQuantity<0)
+                    return false;
+                if (p.getLocation()==null)  //not assigned to a location
+                    return false;
+                //all good, update quantity
+                p.setQuantity(newQuantity);
+                return true;
+            }
+        }
         return false;
     }
+
+    /**
+     * This method assign a new position to the product with given product id. The position has the following format :
+     * <aisleNumber>-<rackAlphabeticIdentifier>-<levelNumber>
+     * The position should be unique (unless it is an empty string, in this case this means that the product type
+     * has not an assigned location). If <newPos> is null or empty it should reset the position of given product type.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param productId the id of the product to be updated
+     * @param newPos the new position the product should be placed to.
+     *
+     * @return true if the update was successful
+     *          false if the product does not exists or if <newPos> is already assigned to another product
+     *
+     * @throws InvalidProductIdException if the product id is less than or equal to 0 or if it is null
+     * @throws InvalidLocationException if the product location is in an invalid format (not <aisleNumber>-<rackAlphabeticIdentifier>-<levelNumber>)
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean updatePosition(Integer productId, String newPos) throws InvalidProductIdException, InvalidLocationException, UnauthorizedException {
-        return false;
+        // check product validity
+        if (productId==null || productId<=0)
+            throw new InvalidProductIdException();
+        // check role administrator/shop manager
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+            throw new UnauthorizedException();
+
+        //TODO check validity format <aisleNumber>-<rackAlphabeticIdentifier>-<levelNumber>
+        // if (formatosbagliato)
+        // throw new InvalidLocationException();
+
+        //check if the product does not exist
+        String barcodeProduct= null;
+
+        for (ProductType p : this.productTypeMap.values()) {
+            if (p.getId().equals(productId)) { //check if the producttype exists
+                barcodeProduct=p.getProductDescription();
+            }
+            if (p.getLocation().equals(newPos)) //check whether the position has already been assigned
+                return false;
+        }
+
+        if (barcodeProduct==null) //product not found
+            return false;
+
+        //Everything good
+        // TODO update db
+        this.productTypeMap.get(barcodeProduct).setProductDescription(newPos);
+
+        return true;
     }
 
+    /**
+     * This method issues an order of <quantity> units of product with given <productCode>, each unit will be payed
+     * <pricePerUnit> to the supplier. <pricePerUnit> can differ from the re-selling price of the same product. The
+     * product might have no location assigned in this step.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param productCode the code of the product that we should order as soon as possible
+     * @param quantity the quantity of product that we should order
+     * @param pricePerUnit the price to correspond to the supplier (!= than the resale price of the shop) per unit of
+     *                     product
+     *
+     * @return  the id of the order (> 0)
+     *          -1 if the product does not exists, if there are problems with the db
+     *
+     * @throws InvalidProductCodeException if the productCode is not a valid bar code, if it is null or if it is empty
+     * @throws InvalidQuantityException if the quantity is less than or equal to 0
+     * @throws InvalidPricePerUnitException if the price per unit of product is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public Integer issueOrder(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
-        return null;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check barcode validity
+        if (productCode==null || productCode.trim().equals("")
+           // TODO check if the barcode is valid!
+            )
+            throw new InvalidProductCodeException();
+        // check quantity validity
+        if ( quantity <=0)
+            throw new InvalidQuantityException();
+        //check price per unit validity
+        if ( pricePerUnit <=0)
+            throw new InvalidPricePerUnitException();
+
+
+        //check if the product is in the map
+        if (!this.productTypeMap.containsKey(productCode))
+            return -1;
+
+        //Everything good. Create new order
+        int newID = ++this.counter_transactionID;
+
+        // insert order in the map (not also in the balance operation map because this order has still to be paid)
+        this.orderTransactionMap.put(newID, new EZOrder(newID, productCode, quantity, pricePerUnit));
+        // set status ISSUED
+        this.orderTransactionMap.get(newID).setStatus("ISSUED");
+
+        return newID;
+
     }
 
+    /**
+     * This method directly orders and pays <quantity> units of product with given <productCode>, each unit will be payed
+     * <pricePerUnit> to the supplier. <pricePerUnit> can differ from the re-selling price of the same product. The
+     * product might have no location assigned in this step.
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param productCode the code of the product to be ordered
+     * @param quantity the quantity of product to be ordered
+     * @param pricePerUnit the price to correspond to the supplier (!= than the resale price of the shop) per unit of
+     *                     product
+     *
+     * @return  the id of the order (> 0)
+     *          -1 if the product does not exists, if the balance is not enough to satisfy the order, if there are some
+     *          problems with the db
+     *
+     * @throws InvalidProductCodeException if the productCode is not a valid bar code, if it is null or if it is empty
+     * @throws InvalidQuantityException if the quantity is less than or equal to 0
+     * @throws InvalidPricePerUnitException if the price per unit of product is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public Integer payOrderFor(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
-        return null;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check barcode validity
+        if (productCode==null || productCode.trim().equals("")
+            // TODO check if the barcode is valid!
+        )
+            throw new InvalidProductCodeException();
+        // check quantity validity
+        if ( quantity <=0)
+            throw new InvalidQuantityException();
+        //check price per unit validity
+        if ( pricePerUnit <=0)
+            throw new InvalidPricePerUnitException();
+
+        //check if the product is in the map
+        if (!this.productTypeMap.containsKey(productCode))
+            return -1;
+        //check if the balance is enough for the order
+        double priceToPay=quantity*pricePerUnit;
+        if (this.balance< priceToPay)
+            return -1;
+
+
+        //Everything good. Create new order
+        int newID = ++this.counter_transactionID;
+
+        // insert order in the map (not also in the balance operation map because this order has still to be paid)
+        this.orderTransactionMap.put(newID, new EZOrder(newID, productCode, quantity, pricePerUnit));
+        // set status PAYED
+        this.orderTransactionMap.get(newID).setStatus("PAYED");
+
+        //insert order in the balance operation
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+
+        return newID;
+
     }
+
+    /**
+     * This method change the status the order with given <orderId> into the "PAYED" state. The order should be either
+     * issued (in this case the status changes) or payed (in this case the method has no effect).
+     * This method affects the balance of the system.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param orderId the id of the order to be ORDERED
+     *
+     * @return  true if the order has been successfully ordered
+     *          false if the order does not exist or if it was not in an ISSUED/ORDERED state
+     *
+     * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean payOrder(Integer orderId) throws InvalidOrderIdException, UnauthorizedException {
-        return false;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+
+        //look for the order
+        if (!this.orderTransactionMap.containsKey(orderId))
+            return false;
+        //check status
+        String orderStatus = this.orderTransactionMap.get(orderId).getStatus();
+        if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
+            return false;
+
+        //Everything good. Create new order
+        int newID = ++this.counter_transactionID;
+
+        // set status PAYED
+        this.orderTransactionMap.get(orderId).setStatus("PAYED");
+
+        // update balance
+        double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
+        this.balance=this.balance -toPay;
+
+        //insert order in the balance operation
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+
+        //set balanceId in order
+        this.orderTransactionMap.get(orderId).setBalanceId((newID));
+
+        return true;
+
     }
 
+    /**
+     * This method records the arrival of an order with given <orderId>. This method changes the quantity of available product.
+     * The product type affected must have a location registered. The order should be either in the PAYED state (in this
+     * case the state will change to the COMPLETED one and the quantity of product type will be updated) or in the
+     * COMPLETED one (in this case this method will have no effect at all).
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param orderId the id of the order that has arrived
+     *
+     * @return  true if the operation was successful
+     *          false if the order does not exist or if it was not in an ORDERED/COMPLETED state (payed no ordered!!!)
+     *
+     * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
+     * @throws InvalidLocationException if the ordered product type has not an assigned location.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean recordOrderArrival(Integer orderId) throws InvalidOrderIdException, UnauthorizedException, InvalidLocationException {
-        return false;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+        //check if the order exists
+        if (!this.orderTransactionMap.containsKey(orderId))
+            return false;
+        //check location productType
+        String productCode= this.orderTransactionMap.get(orderId).getProductCode();
+        if (this.productTypeMap.get(productCode).getLocation()==null)
+            throw new InvalidLocationException();
+
+        //check order status
+        String status =this.orderTransactionMap.get(orderId).getStatus();
+        if (!status.equalsIgnoreCase("completed") && !status.equalsIgnoreCase("payed"))
+            return false;
+        // if already completed do nothing
+        if (status.equalsIgnoreCase("completed"))
+            return true;
+
+        //state changes to completed
+        this.orderTransactionMap.get(orderId).setStatus("completed");
+        //update product Quantity
+        int quantity=this.orderTransactionMap.get(orderId).getQuantity();
+        int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
+        this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
+
+
+        return true;
     }
+
+    /**
+     * This method return the list of all orders ISSUED, ORDERED and COMLPETED.
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @return a list containing all orders
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<Order> getAllOrders() throws UnauthorizedException {
-        return null;
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER"))
+            throw new UnauthorizedException();
+
+        return new ArrayList<>(this.orderTransactionMap.values());
     }
+
+    /**
+     * This method saves a new customer into the system. The customer's name should be unique.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param customerName the name of the customer to be registered
+     *
+     * @return the id (>0) of the new customer if successful, -1 otherwise
+     *
+     * @throws InvalidCustomerNameException if the customer name is empty or null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public Integer defineCustomer(String customerName) throws InvalidCustomerNameException, UnauthorizedException {
-
-
-        return null;
+        if (customerName==null || customerName.trim().equals(""))
+            throw new InvalidCustomerNameException();
+        if ( userSession==null )
+            throw new UnauthorizedException();
+        int newCustomerId = this.idCustomer;
+        customerMap.put(newCustomerId,new EZCustomer(customerName, newCustomerId));
+        //TODO: if ( UPDATE DATABASE) //devo controllare anche altro per verificarne il corretto inserimento?
+        //return -1;
+        this.idCustomer++;
+        return newCustomerId;
     }
+    /**
+     * This method updates the data of a customer with given <id>. This method can be used to assign/delete a card to a
+     * customer. If <newCustomerCard> has a numeric value than this value will be assigned as new card code, if it is an
+     * empty string then any existing card code connected to the customer will be removed and, finally, it assumes the
+     * null value then the card code related to the customer should not be affected from the update. The card code should
+     * be unique and should be a string of 10 digits.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param id the id of the customer to be updated
+     * @param newCustomerName the new name to be assigned
+     * @param newCustomerCard the new card code to be assigned. If it is empty it means that the card must be deleted,
+     *                        if it is null then we don't want to update the cardNumber
+     *
+     * @return true if the update is successful
+     *          false if the update fails ( cardCode assigned to another user, db unreacheable)
+     *
+     * @throws InvalidCustomerNameException if the customer name is empty or null
+     * @throws InvalidCustomerCardException if the customer card is empty, null or if it is not in a valid format (string with 10 digits)
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean modifyCustomer(Integer id, String newCustomerName, String newCustomerCard) throws InvalidCustomerNameException, InvalidCustomerCardException, InvalidCustomerIdException, UnauthorizedException {
-        return false;
+        if (newCustomerName==null || newCustomerName.trim().equals(""))  // Check if the newCustomerName is valid.
+            throw new InvalidCustomerNameException();
+
+        if(!customerMap.containsKey(id))                                 //If the Customer id doesn't exist or the customerMap doesn't contain the id
+            throw new InvalidCustomerIdException();
+
+        if(userSession == null)                                         //if the user is not logged
+            throw new UnauthorizedException();
+
+        if( newCustomerCard==null || !newCustomerCard.matches( "[0-9]{10}" ))             //newCustomerCard is not in a valid format
+            throw new InvalidCustomerCardException();
+
+        for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
+            if (c.getCustomerCard().equals(newCustomerCard))
+            {
+                return false;
+            }
+        }
+
+        if (newCustomerCard.trim().equals("")){                     // if the customerCard is empty, delete the Card
+            EZCustomer s = (EZCustomer) customerMap.get(id);
+            s.removeCustomerCard();
+            //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+            throw new InvalidCustomerCardException();
+        }
+
+        EZCustomer c = (EZCustomer) customerMap.get(id);
+        c.setCustomerName(newCustomerName);
+        //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+
+        if(newCustomerCard.matches( "[0-9]{10}" )){
+            c.setCustomerCard(newCustomerCard);
+            //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+        }
+
+    return true;
     }
+    /**
+     * This method deletes a customer with given id from the system.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param id the id of the customer to be deleted
+     * @return true if the customer was successfully deleted
+     *          false if the user does not exists or if we have problems to reach the db
+     *
+     * @throws InvalidCustomerIdException if the id is null, less than or equal to 0.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean deleteCustomer(Integer id) throws InvalidCustomerIdException, UnauthorizedException {
-        return false;
+        if(id==null || id<=0)
+            throw new InvalidCustomerIdException();
+        if(userSession==null)
+            throw new UnauthorizedException();
+        if(!customerMap.containsKey(id))
+            return false;
+        EZCustomer c = (EZCustomer) customerMap.get(id);
+        customerMap.remove(id);
+        c.removeCustomerCard();
+        c=null;
+        //Todo: aggiorna il DB, return false nel caso in cui ci siano problemi.
+
+        return true;
+
+
     }
+    /**
+     * This method returns a customer with given id.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param id the id of the customer
+     *
+     * @return the customer with given id
+     *          null if that user does not exists
+     *
+     * @throws InvalidCustomerIdException if the id is null, less than or equal to 0.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public Customer getCustomer(Integer id) throws InvalidCustomerIdException, UnauthorizedException {
-        return null;
+        if(id==null || id<=0)
+            throw new InvalidCustomerIdException();
+        if(userSession==null || !customerMap.containsKey(id))
+            throw new UnauthorizedException();
+        return customerMap.get(id);
     }
+
+    /**
+     * This method returns a list containing all registered users.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @return the list of all the customers registered
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public List<Customer> getAllCustomers() throws UnauthorizedException {
-        return null;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        return (new ArrayList<Customer>(customerMap.values()));
     }
+    /**
+     * This method returns a string containing the code of a new assignable card.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @return the code of a new available card. An empty string if the db is unreachable
+     *
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public String createCard() throws UnauthorizedException {
-        return null;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        Integer newCustomerCard = idCustomerCard;
+        String customerCardString = newCustomerCard.toString();
+        if(customerCardString.length()!= 10){                                  //CustomerCardString must be 10 characters long.
+            String tmp = new String("") ;                               // I convert the number to a string and add the amount of zeros needed to get to 10 characters
+            String str1 = "0";                                                 // ex. idCustomerCard = 3 -> String CustomerCardString="0000000003"
+            for(int i=0; i<(10-customerCardString.length()); i++){              // Integer max value is 2ˆ32 -1 . Integer cannot be used for 10-digit numbers. LONG?
+                tmp = tmp + str1;
+            }
+            customerCardString = tmp + customerCardString;
+        }
+        this.idCustomerCard++;
+        return customerCardString;
     }
+
+    /**
+     * This method assigns a card with given card code to a customer with given identifier. A card with given card code
+     * can be assigned to one customer only.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param customerCard the number of the card to be attached to a customer
+     * @param customerId the id of the customer the card should be assigned to
+     *
+     * @return true if the operation was successful
+     *          false if the card is already assigned to another user, if there is no customer with given id, if the db is unreachable
+     *
+     * @throws InvalidCustomerIdException if the id is null, less than or equal to 0.
+     * @throws InvalidCustomerCardException if the card is null, empty or in an invalid format
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean attachCardToCustomer(String customerCard, Integer customerId) throws InvalidCustomerIdException, InvalidCustomerCardException, UnauthorizedException {
-        return false;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        if(customerId==null || customerId<=0)
+            throw new InvalidCustomerIdException();
+        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+            throw new InvalidCustomerCardException();
+
+        for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
+            if (c.getCustomerCard().equals(customerCard))
+            {
+                return false;
+            }
+        }
+        if(!customerMap.containsKey(customerId))
+            return false;
+
+        customerMap.get(customerId).setCustomerCard(customerCard);
+        //todo:update db. if database is unreachable return false
+
+        return true;
     }
+    /**
+     * This method updates the points on a card adding to the number of points available on the card the value assumed by
+     * <pointsToBeAdded>. The points on a card should always be greater than or equal to 0.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param customerCard the card the points should be added to
+     * @param pointsToBeAdded the points to be added or subtracted ( this could assume a negative value)
+     *
+     * @return true if the operation is successful
+     *          false   if there is no card with given code,
+     *                  if pointsToBeAdded is negative and there were not enough points on that card before this operation,
+     *                  if we cannot reach the db.
+     *
+     * @throws InvalidCustomerCardException if the card is null, empty or in an invalid format
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
 
     @Override
     public boolean modifyPointsOnCard(String customerCard, int pointsToBeAdded) throws InvalidCustomerCardException, UnauthorizedException {
-        return false;
+        int counter=0;
+        if(userSession==null)
+            throw new UnauthorizedException();
+        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+            throw new InvalidCustomerCardException();
+        for (Customer c : customerMap.values()){
+            if (c.getCustomerCard().equals(customerCard))
+            {
+                counter++;
+                if(c.getPoints()<Math.abs(pointsToBeAdded) && pointsToBeAdded < 0)   // if pointsToBeAdded is negative and there were not enough points on that card before this operation
+                    return false;
+                c.setPoints(c.getPoints()+pointsToBeAdded);
+                //todo:UPDATE DB
+            }
+        }
+        if (counter==0)
+            return false;   //it means that there is no card with code linked to a Customer
+
+
+        return true;
     }
 
     // --- Manage Sale Transactions --- //
@@ -393,7 +1247,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null || transactionId <= 0  ) {
             throw new InvalidTransactionIdException();
         }
 
@@ -462,7 +1316,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null ||transactionId <= 0  ) {
             throw new InvalidTransactionIdException();
         }
 
@@ -551,7 +1405,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null||transactionId <= 0  ) {
             throw new InvalidTransactionIdException();
         }
 
