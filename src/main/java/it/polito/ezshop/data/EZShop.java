@@ -19,7 +19,6 @@ public class EZShop implements EZShopInterface {
     Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
     Map<Integer, Order> orderTransactionMap = new HashMap<>();
     Map<String, ProductType> productTypeMap = new HashMap<>(); //Key= barcode, value= ProductType
-    double balance=0;
     User userSession=null;
     int idUsers=0;
     int idCustomer=0;
@@ -123,7 +122,6 @@ public class EZShop implements EZShopInterface {
         this.saleTransactionMap= null;
         this.orderTransactionMap = null;
         this.productTypeMap = null;
-        this.balance=0;
         this.userSession= null;
         this.idUsers = 0;
         this.counter_transactionID = 0;
@@ -779,7 +777,8 @@ public class EZShop implements EZShopInterface {
             return -1;
         //check if the balance is enough for the order
         double priceToPay=quantity*pricePerUnit;
-        if (this.balance< priceToPay)
+
+        if (this.computeBalance()< priceToPay)
             return -1;
 
 
@@ -792,7 +791,7 @@ public class EZShop implements EZShopInterface {
         this.orderTransactionMap.get(newID).setStatus("PAYED");
 
         //insert order in the balance operation
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(),  -priceToPay));
 
         return newID;
 
@@ -831,21 +830,18 @@ public class EZShop implements EZShopInterface {
         if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
             return false;
 
-        //Everything good. Create new order
-        int newID = ++this.counter_transactionID;
 
         // set status PAYED
         this.orderTransactionMap.get(orderId).setStatus("PAYED");
 
         // update balance
         double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
-        this.balance=this.balance -toPay;
 
         //insert order in the balance operation
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+        this.transactionMap.put(orderId, new EZBalanceOperation(orderId, LocalDate.now(),  -toPay));
 
         //set balanceId in order
-        this.orderTransactionMap.get(orderId).setBalanceId((newID));
+        this.orderTransactionMap.get(orderId).setBalanceId((orderId));
 
         return true;
 
@@ -1833,17 +1829,10 @@ public class EZShop implements EZShopInterface {
         if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
-        String type;
-        if (toBeAdded >= 0) {
-            type = "CREDIT";
-        }
-        else {
-            type = "DEBIT";
-        }
 
-        BalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), type);
+        BalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), toBeAdded);
 
-        if (this.balance + toBeAdded < 0) {
+        if (this.computeBalance() + toBeAdded < 0) {
             return false;
         }
 
