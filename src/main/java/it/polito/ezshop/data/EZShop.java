@@ -15,13 +15,15 @@ public class EZShop implements EZShopInterface {
     Map<Integer, Customer> customerMap =new HashMap<>();
     Map<Integer, BalanceOperation> transactionMap = new HashMap<>();
     Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
+    Map<Integer, ReturnTransaction> returnTransactionMap = new HashMap<>();
     Map<Integer, Order> orderTransactionMap = new HashMap<>();
     Map<String, ProductType> productTypeMap = new HashMap<>(); //Key= barcode, value= ProductType
     User userSession=null;
     int idUsers=0;
     int idCustomer=0;
     Integer idCustomerCard=0; //
-    int counter_saleTransactionID = 0;
+    //int counter_saleTransactionID = 0;
+    int counter_returnTransactionID = 0;
     int counter_transactionID = 0;
     private int productIds=0;
 
@@ -1207,7 +1209,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        int newID = ++this.counter_saleTransactionID;
+        int newID = ++this.counter_transactionID;
         // aggiungi SaleTransaction alla mappa specifica
         this.saleTransactionMap.put(newID, new EZSaleTransaction(newID));
         // l'oggetto BalanceOperation verrà aggiunto solo quando verrà chiusa la transazione
@@ -1356,7 +1358,7 @@ public class EZShop implements EZShopInterface {
             }
 
             // elimina il prodotto dalla lista
-            s.deleteProductFromEntry(productCode, amount);
+            s.updateProductInEntry(productCode, -amount);
 
             // aggiorna il prezzo della transazione e la mappa
             s.setPrice(this.computeSaleTransactionPrice(s));
@@ -1596,6 +1598,10 @@ public class EZShop implements EZShopInterface {
 
         this.saleTransactionMap.remove(saleNumber);
 
+        if (transactionMap.containsKey(saleNumber)) {
+            this.transactionMap.remove(saleNumber);
+        }
+
         // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONE
 
         return true;
@@ -1638,24 +1644,255 @@ public class EZShop implements EZShopInterface {
 
     // --- Manage Return Transactions --- //
 
+    /**
+     * This method starts a new return transaction for units of products that have already been sold and payed.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param saleNumber the number of the transaction
+     *
+     * @return the id of the return transaction (>= 0), -1 if the transaction is not available.
+     *
+     * @throws InvalidTransactionIdException if the transactionId  is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public Integer startReturnTransaction(Integer saleNumber) throws /*InvalidTicketNumberException,*/InvalidTransactionIdException, UnauthorizedException {
-        return null;
+        if (!this.checkUserRole("MANAGER")
+                && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        if (saleNumber < 0) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!this.saleTransactionMap.containsKey(saleNumber)) {
+            return -1;
+        }
+
+        int newID = ++this.counter_returnTransactionID;
+
+        EZSaleTransaction e = (EZSaleTransaction) this.saleTransactionMap.get(saleNumber);
+
+        e.addReturn(new EZReturnTransaction(saleNumber, newID));
+
+        this.saleTransactionMap.put(saleNumber, e);
+        this.returnTransactionMap.put(newID, new EZReturnTransaction(saleNumber, newID));
+
+        return newID;
     }
 
+    /**
+     * This method adds a product to the return transaction
+     * The amount of units of product to be returned should not exceed the amount originally sold.
+     * This method DOES NOT update the product quantity
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the return transaction
+     * @param productCode the bar code of the product to be returned
+     * @param amount the amount of product to be returned
+     *
+     * @return  true if the operation is successful
+     *          false   if the the product to be returned does not exists,
+     *                  if it was not in the transaction,
+     *                  if the amount is higher than the one in the sale transaction,
+     *                  if the transaction does not exist
+     *
+     * @throws InvalidTransactionIdException if the return id is less ther or equal to 0 or if it is null
+     * @throws InvalidProductCodeException if the product code is empty, null or invalid
+     * @throws InvalidQuantityException if the quantity is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean returnProduct(Integer returnId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        return false;
+        if (returnId <= 0 || returnId == null) {
+            throw new InvalidTransactionIdException();
+        }
+        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
+            throw new InvalidProductCodeException();
+        }
+        if (amount <= 0) {
+            throw new InvalidQuantityException();
+        }
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+         && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        // check if product exists
+        if (!this.productTypeMap.containsKey(productCode)) {
+            return false;
+        }
+        // check if the return transaction exists
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+        // check if sale transaction exists
+        if (!this.saleTransactionMap.containsKey(ret.getSaleTransactionID())) {
+            return false;
+        }
+
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+        // check if the product is in the sale transaction
+        int prodAmt = -1;
+        for (TicketEntry e : sale.getEntries()) {
+            if (e.getBarCode() == productCode) {
+                prodAmt = e.getAmount();
+            }
+        }
+        // this happens if the product is not in the transaction
+        if (prodAmt < 0) {
+            return false;
+        }
+        // otherwise, check if the amount inserted is larger than the amount bought
+        else if (amount > prodAmt) {
+            return false;
+        }
+
+        // ok, everything should be fine at this point
+        HashMap<String, Integer> returnProdMap = (HashMap<String, Integer>) ret.getMapOfProducts();
+
+        returnProdMap.put(productCode, amount);
+
+        ret.setMapOfProducts(returnProdMap);
+
+        // update both the sale transaction's list and the return map
+        sale.updateReturn(ret);
+        this.returnTransactionMap.put(ret.getReturnID(), ret);
+
+        return true;
     }
 
+    /**
+     * This method closes a return transaction. A closed return transaction can be committed (i.e. <commit> = true) thus
+     * it increases the product quantity available on the shelves or not (i.e. <commit> = false) thus the whole trasaction
+     * is undone.
+     * This method updates the transaction status (decreasing the number of units sold by the number of returned one and
+     * decreasing the final price).
+     * If committed, the return transaction must be persisted in the system's memory.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the transaction
+     * @param commit whether we want to commit (True) or rollback(false) the transaction
+     *
+     * @return  true if the operation is successful
+     *          false   if the returnId does not correspond to an active return transaction,
+     *                  if there is some problem with the db
+     *
+     * @throws InvalidTransactionIdException if returnId is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean endReturnTransaction(Integer returnId, boolean commit) throws InvalidTransactionIdException, UnauthorizedException {
-        return false;
+        if (returnId < 0 || returnId == null) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        // check if return exists
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+        if (!commit) {
+            // rollback the transaction
+            // remove the return transaction from the sale and update the map
+            sale.deleteReturn(ret.getReturnID());
+            this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+            // note that, at this point, the return transaction only exists temporarily in
+            // this class' map, thus there's no need to delete it from the DB (because it's not there)
+            this.returnTransactionMap.remove(returnId);
+        }
+        else {
+
+            /*
+                Must update:
+                * the corresponding sale transaction, i.e. entries and price
+                * the quantity for each product type returned
+             */
+            HashMap<String, Integer> rMap = (HashMap<String, Integer>) ret.getMapOfProducts();
+
+            for (String prodCode : ret.getMapOfProducts().keySet()) {
+                // update the quantity for each product in the return list
+                EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
+                int quantity = rMap.get(prodCode);
+                p.setQuantity(p.getQuantity() + quantity);
+                this.productTypeMap.put(prodCode, p);
+
+                // update corresponding sale entry
+                sale.updateProductInEntry(prodCode, -quantity);
+            }
+            // recompute the sale's price
+            sale.setPrice(this.computeSaleTransactionPrice(sale));
+            // update the map
+            this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+
+            //TODO: AGGIORNA DB
+        }
+        return true;
     }
 
+    /**
+     * This method deletes a closed return transaction. It affects the quantity of product sold in the connected sale transaction
+     * (and consequently its price) and the quantity of product available on the shelves.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the identifier of the return transaction to be deleted
+     *
+     * @return  true if the transaction has been successfully deleted,
+     *          false   if it doesn't exist,
+     *                  if it has been payed,
+     *                  if there are some problems with the db
+     *
+     * @throws InvalidTransactionIdException if the transaction id is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean deleteReturnTransaction(Integer returnId) throws InvalidTransactionIdException, UnauthorizedException {
-        return false;
+        if (returnId < 0 || returnId == null) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        // check if return exists
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+        
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+
+        /*
+            Must update:
+            * the corresponding sale transaction, i.e. entries and price
+            * the quantity for each product type returned
+         */
+        HashMap<String, Integer> rMap = (HashMap<String, Integer>) ret.getMapOfProducts();
+
+        for (String prodCode : ret.getMapOfProducts().keySet()) {
+            // update the quantity for each product in the return list
+            EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
+            int quantity = rMap.get(prodCode);
+            p.setQuantity(p.getQuantity() - quantity);
+            this.productTypeMap.put(prodCode, p);
+
+            // update corresponding sale entry
+            sale.updateProductInEntry(prodCode, +quantity);
+        }
+        // recompute the sale's price
+        sale.setPrice(this.computeSaleTransactionPrice(sale));
+        this.returnTransactionMap.remove(returnId);
+
+        //TODO: AGGIORNA DB
+
+        return true;
     }
 
     // --- Manage Payments --- //
