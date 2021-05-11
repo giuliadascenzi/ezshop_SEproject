@@ -831,8 +831,6 @@ public class EZShop implements EZShopInterface {
         if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
             return false;
 
-        //Everything good. Create new order
-        int newID = ++this.counter_transactionID;
 
         // set status PAYED
         this.orderTransactionMap.get(orderId).setStatus("PAYED");
@@ -842,10 +840,10 @@ public class EZShop implements EZShopInterface {
         this.balance=this.balance -toPay;
 
         //insert order in the balance operation
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+        this.transactionMap.put(orderId, new EZBalanceOperation(orderId, LocalDate.now(), "DEBIT"));
 
         //set balanceId in order
-        this.orderTransactionMap.get(orderId).setBalanceId((newID));
+        this.orderTransactionMap.get(orderId).setBalanceId((orderId));
 
         return true;
 
