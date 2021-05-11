@@ -19,8 +19,12 @@
     <remote-repository>
       <option name="id" value="lib" />
       <option name="name" value="lib" />
-      <option name="url" value="file:///D:\Università\Magistrale (Polito)\Software Engineering\Project\Third deliverable\ezshop/lib/" />
       <option name="url" value="file:///C:\Users\Utente\IdeaProjects\git\ezshop/lib/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="lib" />
+      <option name="name" value="lib" />
+      <option name="url" value="file:///D:\Università\Magistrale (Polito)\Software Engineering\Project\Third deliverable\ezshop/lib/" />
     </remote-repository>
   </component>
 </project>
