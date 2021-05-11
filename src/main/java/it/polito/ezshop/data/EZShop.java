@@ -21,15 +21,14 @@ public class EZShop implements EZShopInterface {
     User userSession=null;
     int idUsers=0;
     int idCustomer=0;
-    Integer idCustomerCard=0; //
-    //int counter_saleTransactionID = 0;
+    Integer idCustomerCard=0;
     int counter_returnTransactionID = 0;
     int counter_transactionID = 0;
     private int productIds=0;
 
     /**
         checkUserRole(String expectedRole)
-        @param expectedRole il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
+        @param expectedRole il ruolo da controllare; può avere come valore "ADMINISTRATOR", "SHOPMANAGER" o "CASHIER"
 
         @return
             true,  se l'utente è loggato e ha il permesso che ci si aspetta
@@ -39,7 +38,7 @@ public class EZShop implements EZShopInterface {
         return (this.userSession != null && this.userSession.getRole().equalsIgnoreCase(expectedRole));
     }
 
-    /*
+    /**
         checkBarCodeValidity(String barCode)
         @param barCode: il codice a barre da controllare
 
@@ -79,7 +78,7 @@ public class EZShop implements EZShopInterface {
         return (checkVal == Character.getNumericValue(barCode_arr[12]));
     }
 
-    /*
+    /**
         checkCreditCardValidity(String cardCode)
         Controlla la validità del codice di una carta di credito tramite l'algoritmo di Luhn.
 
@@ -162,7 +161,7 @@ public class EZShop implements EZShopInterface {
         if (password== null||password.trim().equals("")  )
             throw new InvalidPasswordException();
         //Role not valid
-        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("MANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
 
         int newuserId = this.idUsers;
@@ -276,7 +275,7 @@ public class EZShop implements EZShopInterface {
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
         //Check role validity
-        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("MANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
 
 
@@ -579,7 +578,7 @@ public class EZShop implements EZShopInterface {
 
     // -------------------- FR4 ------------------- //
     // ------------------- ADMIN ------------------ //
-    // --------------- SHOP MANAGER --------------- //
+    // --------------- SHOP SHOPMANAGER --------------- //
 
     /**
      * This method updates the quantity of product available in store. <toBeAdded> can be negative but the final updated
@@ -1001,7 +1000,7 @@ public class EZShop implements EZShopInterface {
             //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
         }
 
-    return true;
+        return true;
     }
     /**
      * This method deletes a customer with given id from the system.
@@ -1204,7 +1203,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public Integer startSaleTransaction() throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1237,7 +1236,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean addProductToSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1306,7 +1305,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
          && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1395,7 +1394,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean applyDiscountRateToProduct(Integer transactionId, String productCode, double discountRate) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidDiscountRateException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1466,7 +1465,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean applyDiscountRateToSale(Integer transactionId, double discountRate) throws InvalidTransactionIdException, InvalidDiscountRateException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1509,7 +1508,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public int computePointsForSale(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1545,7 +1544,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean endSaleTransaction(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1583,7 +1582,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteSaleTransaction(Integer saleNumber) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1620,7 +1619,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public SaleTransaction getSaleTransaction(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1657,7 +1656,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public Integer startReturnTransaction(Integer saleNumber) throws /*InvalidTicketNumberException,*/InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER")
+        if (!this.checkUserRole("SHOPMANAGER")
                 && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
@@ -1714,7 +1713,7 @@ public class EZShop implements EZShopInterface {
         if (amount <= 0) {
             throw new InvalidQuantityException();
         }
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
          && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1788,7 +1787,7 @@ public class EZShop implements EZShopInterface {
         if (returnId < 0 || returnId == null) {
             throw new InvalidTransactionIdException();
         }
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1857,7 +1856,7 @@ public class EZShop implements EZShopInterface {
         if (returnId < 0 || returnId == null) {
             throw new InvalidTransactionIdException();
         }
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1920,7 +1919,7 @@ public class EZShop implements EZShopInterface {
             throw new InvalidPaymentException();
         }
 
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1972,7 +1971,7 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -2061,7 +2060,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean recordBalanceUpdate(double toBeAdded) throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
 
@@ -2096,7 +2095,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public List<BalanceOperation> getCreditsAndDebits(LocalDate from, LocalDate to) throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
 
@@ -2121,7 +2120,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public double computeBalance() throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
 
