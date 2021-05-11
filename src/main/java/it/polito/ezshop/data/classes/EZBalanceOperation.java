@@ -12,10 +12,10 @@ public class EZBalanceOperation implements BalanceOperation {
     double money;
     String type;
 
-    public EZBalanceOperation(int balanceId, LocalDate date, String type) {
+    public EZBalanceOperation(int balanceId, LocalDate date, String type, double money) {
         this.balanceId = balanceId;
         this.date = date;
-        this.money = 0;
+        this.money = money;
         this.type = "";
     }
 
