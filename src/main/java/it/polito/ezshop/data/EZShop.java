@@ -1,6 +1,5 @@
 package it.polito.ezshop.data;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import it.polito.ezshop.exceptions.*;
 import it.polito.ezshop.data.classes.*;
 
@@ -9,7 +8,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 
 public class EZShop implements EZShopInterface {
 
