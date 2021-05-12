@@ -51,7 +51,7 @@ public class EZUser implements User{
     @Override
     public String getRole() {
         if(this.role==UserRole.MANAGER){
-            return "MANAGER";
+            return "SHOPMANAGER";
         }
         if(this.role==UserRole.ADMINISTRATOR){
             return "ADMINISTRATOR";
@@ -63,7 +63,7 @@ public class EZUser implements User{
 
     @Override
     public void setRole(String role) {
-        if((role).equalsIgnoreCase("MANAGER"))
+        if((role).equalsIgnoreCase("SHOPMANAGER"))
             this.role=UserRole.MANAGER;
         if((role).equalsIgnoreCase("ADMINISTRATOR"))
             this.role=UserRole.ADMINISTRATOR;
