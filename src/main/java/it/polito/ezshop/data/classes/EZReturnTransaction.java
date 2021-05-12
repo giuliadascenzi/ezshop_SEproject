@@ -16,6 +16,7 @@ public class EZReturnTransaction implements ReturnTransaction{
         * CLOSED
      */
     private String status;
+    private double money;
 
     public EZReturnTransaction(int stID, int retID) {
         this.saleTransactionID = stID;
@@ -61,5 +62,15 @@ public class EZReturnTransaction implements ReturnTransaction{
     @Override
     public void setStatus(String s) {
         this.status = s;
+    }
+
+    @Override
+    public double getMoneyReturned() {
+        return this.money;
+    }
+
+    @Override
+    public void setMoneyReturned(double m) {
+        this.money = m;
     }
 }

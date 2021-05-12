@@ -15,4 +15,7 @@ public interface ReturnTransaction {
     // status
     public String getStatus();
     public void setStatus(String s);
+    // money returned
+    public double getMoneyReturned();
+    public void setMoneyReturned(double m);
 }

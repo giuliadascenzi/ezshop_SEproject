@@ -52,18 +52,20 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        int digits[] = new int[12];
+        int codeLength = barCode.length();
+
+        int digits[] = new int[codeLength - 1];
 
         char barCode_arr[] = barCode.toCharArray();
 
         // converti la stringa in un vettore di interi da 0 a 9
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < codeLength - 1; i++) {
             digits[i] = Character.getNumericValue(barCode_arr[i]);
         }
 
         int sum = 0;
-        for (int i = 0; i < 12; i++) {
-            sum += (digits[i] % 2 == 1)? digits[i] : digits[i] * 3;
+        for (int i = 0; i < codeLength - 1; i++) {
+            sum += ((i % 2 == 0)? digits[i] : (digits[i] * 3));
         }
 
         int i = 0;
@@ -75,7 +77,7 @@ public class EZShop implements EZShopInterface {
         int checkVal = i - sum;
 
         // confronta il risultato con l'ultima cifra del codice a barre
-        return (checkVal == Character.getNumericValue(barCode_arr[12]));
+        return (checkVal == Character.getNumericValue(barCode_arr[codeLength - 1]));
     }
 
     /**
@@ -1826,8 +1828,13 @@ public class EZShop implements EZShopInterface {
                 // update corresponding sale entry
                 sale.updateProductInEntry(prodCode, -quantity);
             }
+            double prevMoney = sale.getPrice();
+            double newMoney = this.computeSaleTransactionPrice(sale);
+            // set the amount of money returned in the return transaction
+            ret.setMoneyReturned(prevMoney - newMoney);
+
             // recompute the sale's price
-            sale.setPrice(this.computeSaleTransactionPrice(sale));
+            sale.setPrice(newMoney);
             // update the map
             this.saleTransactionMap.put(sale.getTicketNumber(), sale);
 
@@ -1979,6 +1986,8 @@ public class EZShop implements EZShopInterface {
         if (ticketNumber <= 0 || ticketNumber == null) {
             throw new InvalidTransactionIdException();
         }
+        //TODO: CONTROLLARE SE LA CARTA E' REGISTRATA (????????????????????????)
+        //TODO: CONTROLLARE SE LA CARTA HA ABBASTANZA SOLDI (??????????????????????????????????????????)
 
         // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
         EZSaleTransaction result = new EZSaleTransaction(99999);
@@ -2008,8 +2017,28 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public double returnCashPayment(Integer returnId) throws InvalidTransactionIdException, UnauthorizedException {
-        // TODO: PAGAMENTI NEL DB
-        return 0;
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (returnId <= 0) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return -1;
+        }
+
+        // TODO: PRENDI TRANSAZIONE DAL DB
+        // placeholder
+        EZReturnTransaction result = new EZReturnTransaction(99999, 99999);
+
+        // registra la modifica del conto, aggiungendo una nuova BalanceOperation
+        // richiamando un metodo dell'API
+        this.recordBalanceUpdate(result.getMoneyReturned());
+
+        return result.getMoneyReturned();
     }
 
     /**
@@ -2038,10 +2067,26 @@ public class EZShop implements EZShopInterface {
         if (!this.checkCreditCardValidity(creditCard)) {
             throw new InvalidCreditCardException();
         }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        //TODO: controlla se la carta è registrata (???)
+        if (returnId <= 0) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return -1;
+        }
 
-        // TODO: METODO
+        // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
+        EZReturnTransaction result = new EZReturnTransaction(99999, 99999);
 
-        return 0;
+        // registra il pagamento aggiungendo una nuova BalanceOperation
+        // tramite metodo dell'API
+        this.recordBalanceUpdate(-result.getMoneyReturned());
+
+        return result.getMoneyReturned();
     }
 
     // --- Manage Accounting --- //
