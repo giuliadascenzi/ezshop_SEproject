@@ -17,28 +17,18 @@ public class BB_UnitTesting {
 
     // --- Test bar code validity --- //
     @Test
-    public void test_InvalidShortBarCode() {
-        assertFalse(ez.checkBarCodeValidity("425003"));
-    }
-
-    @Test
     public void test_InvalidBarCode() {
-        assertFalse(ez.checkBarCodeValidity("6291041500218"));
+        assertFalse(ez.checkBarCodeValidity("42"));
     }
 
     @Test
     public void test_ValidBarCode() {
         assertTrue(ez.checkBarCodeValidity("6291041500213"));
     }
-
-    @Test
-    public void test_InvalidStringCreditCard() {
-        assertFalse(ez.checkCreditCardValidity("banana"));
-    }
-
+    // --- Test credit card validity --- //
     @Test
     public void test_InvalidCreditCard() {
-        assertFalse(ez.checkCreditCardValidity("79927398718"));
+        assertFalse(ez.checkCreditCardValidity("cane"));
     }
 
     @Test

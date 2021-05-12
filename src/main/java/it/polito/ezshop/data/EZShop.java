@@ -11,20 +11,39 @@ import java.util.stream.Collectors;
 
 public class EZShop implements EZShopInterface {
 
-    List<User> userList = new ArrayList<>();
-    Map<Integer, Customer> customerMap =new HashMap<>();
-    Map<Integer, BalanceOperation> transactionMap = new HashMap<>();
-    Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
-    Map<Integer, ReturnTransaction> returnTransactionMap = new HashMap<>();
-    Map<Integer, Order> orderTransactionMap = new HashMap<>();
-    Map<String, ProductType> productTypeMap = new HashMap<>(); //Key= barcode, value= ProductType
-    User userSession=null;
-    int idUsers=0;
-    int idCustomer=0;
-    Integer idCustomerCard=0;
-    int counter_returnTransactionID = 0;
-    int counter_transactionID = 0;
-    private int productIds=0;
+    List<User> userList;
+    Map<Integer, Customer> customerMap;
+    Map<Integer, BalanceOperation> transactionMap;
+    Map<Integer, SaleTransaction> saleTransactionMap;
+    Map<Integer, ReturnTransaction> returnTransactionMap;
+    Map<Integer, Order> orderTransactionMap;
+    Map<String, ProductType> productTypeMap; //Key= barcode, value= ProductType
+    User userSession;
+    int idUsers;
+    int idCustomer;
+    Integer idCustomerCard;
+    int counter_returnTransactionID;
+    int counter_transactionID;
+    private int productIds;
+
+    public EZShop() {
+        // TODO: leggere dati dal DB e riempire le strutture dati
+        this.userList = new ArrayList<>();
+        this.customerMap = new HashMap<>();
+        this.transactionMap = new HashMap<>();
+        this.saleTransactionMap = new HashMap<>();
+        this.returnTransactionMap = new HashMap<>();
+        this.orderTransactionMap = new HashMap<>();
+        this.productTypeMap = new HashMap<>();
+        this.userSession = null;
+        // TODO: rimpiazzare questi valori con quelli ricavati dal DB
+        this.idUsers = 0;
+        this.idCustomer = 0;
+        this.idCustomerCard = 0;
+        this.counter_transactionID = 0;
+        this.counter_returnTransactionID = 0;
+        this.productIds = 0;
+    }
 
     /**
         checkUserRole(String expectedRole)
@@ -47,12 +66,14 @@ public class EZShop implements EZShopInterface {
             false, se il codice non è valido o ci sono problemi
      */
     public boolean checkBarCodeValidity(String barCode) {
-        if (!barCode.matches("[0-9]{13}")) {
-            // se in input non abbiamo un codice con 13 interi, ritorna false
+        if (!barCode.matches("[0-9]{12,14}")) {
+            // se in input non abbiamo un codice con solo interi e con lunghezza compresa
+            // tra 12 e 14 inclusi, ritorna false
             return false;
         }
 
         int codeLength = barCode.length();
+        int parity = codeLength % 2;
 
         int digits[] = new int[codeLength - 1];
 
@@ -65,7 +86,7 @@ public class EZShop implements EZShopInterface {
 
         int sum = 0;
         for (int i = 0; i < codeLength - 1; i++) {
-            sum += ((i % 2 == 0)? digits[i] : (digits[i] * 3));
+            sum += ((i % 2 == parity)? (digits[i] * 3) : digits[i]);
         }
 
         int i = 0;
