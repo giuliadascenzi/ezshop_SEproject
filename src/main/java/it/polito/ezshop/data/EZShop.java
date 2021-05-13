@@ -66,7 +66,7 @@ public class EZShop implements EZShopInterface {
             false, se il codice non è valido o ci sono problemi
      */
     public boolean checkBarCodeValidity(String barCode) {
-        if (!barCode.matches("[0-9]{12,14}")) {
+        if (barCode == null || !barCode.matches("[0-9]{12,14}")) {
             // se in input non abbiamo un codice con solo interi e con lunghezza compresa
             // tra 12 e 14 inclusi, ritorna false
             return false;
@@ -113,7 +113,7 @@ public class EZShop implements EZShopInterface {
      */
     public boolean checkCreditCardValidity(String cardCode) {
         // se la carta non è formata da soli numeri, ritorna false
-        if (!cardCode.matches("[0-9]+")) {
+        if (cardCode == null || !cardCode.matches("[0-9]+")) {
             return false;
         }
 

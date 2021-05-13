@@ -1,16 +1,14 @@
 # Unit Testing Documentation
 
-Authors:
+Authors: Giulia D'Ascenzi, Francesco Di Franco, Antonino Monti
 
 Date:
 
-Version:
+Version: 1.0
 
 # Contents
 
 - [Black Box Unit Tests](#black-box-unit-tests)
-
-
 
 
 - [White Box Unit Tests](#white-box-unit-tests)
@@ -37,20 +35,20 @@ Version:
 | Criteria | Predicate |
 | -------- | --------- |
 | Validity of barCode         | valid           |
-| '' | invalid |
+| '' | invalid/NULL |
 
 **Boundaries**:
 
 | Criteria | Boundary values |
 | -------- | --------------- |
-| Validity of barCode       | valid, invalid                |
+| Validity of barCode       | valid, invalid, NULL |
 
 **Combination of predicates**:
 
 
 | Validity of barCode | Valid / Invalid | Description of the test case | JUnit test case |
 |-------|-------|-------|-------|
-|Invalid|Invalid|checkBarCodeValidity("42")<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
+|Invalid/NULL|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity("6291041500218")<br/> -> false<br/>checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
 |Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
 
  ### **Class *EZShop* - method *checkCreditCardValidity***
@@ -64,20 +62,20 @@ Version:
 | Criteria               | Predicate |
 | ---------------------- | --------- |
 | Validity of creditCard | valid     |
-| ''                     | invalid   |
+| ''                     | invalid/NULL   |
 
 **Boundaries**:
 
 | Criteria               | Boundary values |
 | ---------------------- | --------------- |
-| Validity of creditCard | valid, invalid  |
+| Validity of creditCard | valid, invalid, NULL  |
 
 **Combination of predicates**:
 
 
 | Validity of creditCard | Valid / Invalid | Description of the test case                         | JUnit test case                       |
 | ---------------------- | --------------- | ---------------------------------------------------- | ------------------------------------- |
-| Invalid                | Invalid         | checkCreditCardValidity("79927398718")<br/> -> false | BB_UnitTesting.test_InvalidCreditCard |
+| Invalid/NULL                | Invalid         | checkCreditCardValidity("79927398718")<br/> -> false<br/>checkCreditCardValidity("cane")<br/> -> false<br/>checkCreditCardValidity(null)<br/> -> false | BB_UnitTesting.test_InvalidCreditCard |
 | Valid                  | Valid           | checkBarCodeValidity("79927398713")<br/> -> true     | BB_UnitTesting.test_ValidCreditCard   |
 
 
@@ -91,16 +89,16 @@ Version:
 
 
 | Unit name | JUnit test case |
-|--|--|
-|||
-|||
-||||
+| -- | -- |
+| Method - EZShop.checkBarCodeValidity | WB_UnitTesting.test_barCodeCheck |
+| Method - EZShop.checkCreditCardValidity | WB_UnitTesting.test_creditCardCheck |
 
 ### Code coverage report
 
     <Add here the screenshot report of the statement and branch coverage obtained using
     the Eclemma tool. >
 
+![wb_unit_coverage](TestingPNGs/wb_unit_coverage.png)
 
 ### Loop coverage analysis
 
@@ -109,9 +107,8 @@ Version:
 
 |Unit name | Loop rows | Number of iterations | JUnit test case |
 |---|---|---|---|
-|||||
-|||||
-||||||
-
-
+|Method - EZShop.checkBarCodeValidity|6|0|WB_UnitTesting.test_barCodeCheck|
+|Method - EZShop.checkBarCodeValidity|6|22+|WB_UnitTesting.test_barCodeCheck|
+|Method - EZShop.checkCreditCardValidity|7|0|WB_UnitTesting.test_creditCardCheck|
+|Method - EZShop.checkCreditCardValidity|7|1+|WB_UnitTesting.test_creditCardCheck|
 
