@@ -1,6 +1,5 @@
 package it.polito.ezshop.data;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import it.polito.ezshop.exceptions.*;
 import it.polito.ezshop.data.classes.*;
 
@@ -10,27 +9,45 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
 public class EZShop implements EZShopInterface {
 
-    List<User> userList = new ArrayList<>();
-    Map<Integer, Customer> customerMap =new HashMap<>();
-    Map<Integer, BalanceOperation> transactionMap = new HashMap<>();
-    Map<Integer, SaleTransaction> saleTransactionMap = new HashMap<>();
-    Map<Integer, Order> orderTransactionMap = new HashMap<>();
-    Map<String, ProductType> productTypeMap = new HashMap<>(); //Key= barcode, value= ProductType
-    double balance=0;
-    User userSession=null;
-    int idUsers=0;
-    int idCustomer=0;
-    Integer idCustomerCard=0; //
-    int counter_saleTransactionID = 0;
-    int counter_transactionID = 0;
-    private int productIds=0;
+    List<User> userList;
+    Map<Integer, Customer> customerMap;
+    Map<Integer, BalanceOperation> transactionMap;
+    Map<Integer, SaleTransaction> saleTransactionMap;
+    Map<Integer, ReturnTransaction> returnTransactionMap;
+    Map<Integer, Order> orderTransactionMap;
+    Map<String, ProductType> productTypeMap; //Key= barcode, value= ProductType
+    User userSession;
+    int idUsers;
+    int idCustomer;
+    Integer idCustomerCard;
+    int counter_returnTransactionID;
+    int counter_transactionID;
+    private int productIds;
+
+    public EZShop() {
+        // TODO: leggere dati dal DB e riempire le strutture dati
+        this.userList = new ArrayList<>();
+        this.customerMap = new HashMap<>();
+        this.transactionMap = new HashMap<>();
+        this.saleTransactionMap = new HashMap<>();
+        this.returnTransactionMap = new HashMap<>();
+        this.orderTransactionMap = new HashMap<>();
+        this.productTypeMap = new HashMap<>();
+        this.userSession = null;
+        // TODO: rimpiazzare questi valori con quelli ricavati dal DB
+        this.idUsers = 0;
+        this.idCustomer = 0;
+        this.idCustomerCard = 0;
+        this.counter_transactionID = 0;
+        this.counter_returnTransactionID = 0;
+        this.productIds = 0;
+    }
 
     /**
         checkUserRole(String expectedRole)
-        @param expectedRole il ruolo da controllare; può avere come valore "ADMINISTRATOR", "MANAGER" o "CASHIER"
+        @param expectedRole il ruolo da controllare; può avere come valore "ADMINISTRATOR", "SHOPMANAGER" o "CASHIER"
 
         @return
             true,  se l'utente è loggato e ha il permesso che ci si aspetta
@@ -40,7 +57,7 @@ public class EZShop implements EZShopInterface {
         return (this.userSession != null && this.userSession.getRole().equalsIgnoreCase(expectedRole));
     }
 
-    /*
+    /**
         checkBarCodeValidity(String barCode)
         @param barCode: il codice a barre da controllare
 
@@ -49,23 +66,27 @@ public class EZShop implements EZShopInterface {
             false, se il codice non è valido o ci sono problemi
      */
     public boolean checkBarCodeValidity(String barCode) {
-        if (!barCode.matches("[0-9]{13}")) {
-            // se in input non abbiamo un codice con 13 interi, ritorna false
+        if (!barCode.matches("[0-9]{12,14}")) {
+            // se in input non abbiamo un codice con solo interi e con lunghezza compresa
+            // tra 12 e 14 inclusi, ritorna false
             return false;
         }
 
-        int digits[] = new int[12];
+        int codeLength = barCode.length();
+        int parity = codeLength % 2;
+
+        int digits[] = new int[codeLength - 1];
 
         char barCode_arr[] = barCode.toCharArray();
 
         // converti la stringa in un vettore di interi da 0 a 9
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < codeLength - 1; i++) {
             digits[i] = Character.getNumericValue(barCode_arr[i]);
         }
 
         int sum = 0;
-        for (int i = 0; i < 12; i++) {
-            sum += (digits[i] % 2 == 1)? digits[i] : digits[i] * 3;
+        for (int i = 0; i < codeLength - 1; i++) {
+            sum += ((i % 2 == parity)? (digits[i] * 3) : digits[i]);
         }
 
         int i = 0;
@@ -77,10 +98,10 @@ public class EZShop implements EZShopInterface {
         int checkVal = i - sum;
 
         // confronta il risultato con l'ultima cifra del codice a barre
-        return (checkVal == Character.getNumericValue(barCode_arr[12]));
+        return (checkVal == Character.getNumericValue(barCode_arr[codeLength - 1]));
     }
 
-    /*
+    /**
         checkCreditCardValidity(String cardCode)
         Controlla la validità del codice di una carta di credito tramite l'algoritmo di Luhn.
 
@@ -123,7 +144,6 @@ public class EZShop implements EZShopInterface {
         this.saleTransactionMap= null;
         this.orderTransactionMap = null;
         this.productTypeMap = null;
-        this.balance=0;
         this.userSession= null;
         this.idUsers = 0;
         this.counter_transactionID = 0;
@@ -164,7 +184,7 @@ public class EZShop implements EZShopInterface {
         if (password== null||password.trim().equals("")  )
             throw new InvalidPasswordException();
         //Role not valid
-        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("MANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
 
         int newuserId = this.idUsers;
@@ -278,7 +298,7 @@ public class EZShop implements EZShopInterface {
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
         //Check role validity
-        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("MANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
 
 
@@ -581,7 +601,7 @@ public class EZShop implements EZShopInterface {
 
     // -------------------- FR4 ------------------- //
     // ------------------- ADMIN ------------------ //
-    // --------------- SHOP MANAGER --------------- //
+    // --------------- SHOP SHOPMANAGER --------------- //
 
     /**
      * This method updates the quantity of product available in store. <toBeAdded> can be negative but the final updated
@@ -779,7 +799,8 @@ public class EZShop implements EZShopInterface {
             return -1;
         //check if the balance is enough for the order
         double priceToPay=quantity*pricePerUnit;
-        if (this.balance< priceToPay)
+
+        if (this.computeBalance()< priceToPay)
             return -1;
 
 
@@ -792,7 +813,7 @@ public class EZShop implements EZShopInterface {
         this.orderTransactionMap.get(newID).setStatus("PAYED");
 
         //insert order in the balance operation
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(),  -priceToPay));
 
         return newID;
 
@@ -831,21 +852,18 @@ public class EZShop implements EZShopInterface {
         if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
             return false;
 
-        //Everything good. Create new order
-        int newID = ++this.counter_transactionID;
 
         // set status PAYED
         this.orderTransactionMap.get(orderId).setStatus("PAYED");
 
         // update balance
         double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
-        this.balance=this.balance -toPay;
 
         //insert order in the balance operation
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(), "DEBIT"));
+        this.transactionMap.put(orderId, new EZBalanceOperation(orderId, LocalDate.now(),  -toPay));
 
         //set balanceId in order
-        this.orderTransactionMap.get(orderId).setBalanceId((newID));
+        this.orderTransactionMap.get(orderId).setBalanceId((orderId));
 
         return true;
 
@@ -1005,7 +1023,7 @@ public class EZShop implements EZShopInterface {
             //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
         }
 
-    return true;
+        return true;
     }
     /**
      * This method deletes a customer with given id from the system.
@@ -1208,12 +1226,12 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public Integer startSaleTransaction() throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
 
-        int newID = ++this.counter_saleTransactionID;
+        int newID = ++this.counter_transactionID;
         // aggiungi SaleTransaction alla mappa specifica
         this.saleTransactionMap.put(newID, new EZSaleTransaction(newID));
         // l'oggetto BalanceOperation verrà aggiunto solo quando verrà chiusa la transazione
@@ -1241,7 +1259,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean addProductToSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1310,7 +1328,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
          && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1362,7 +1380,7 @@ public class EZShop implements EZShopInterface {
             }
 
             // elimina il prodotto dalla lista
-            s.deleteProductFromEntry(productCode, amount);
+            s.updateProductInEntry(productCode, -amount);
 
             // aggiorna il prezzo della transazione e la mappa
             s.setPrice(this.computeSaleTransactionPrice(s));
@@ -1399,7 +1417,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean applyDiscountRateToProduct(Integer transactionId, String productCode, double discountRate) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidDiscountRateException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1470,7 +1488,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean applyDiscountRateToSale(Integer transactionId, double discountRate) throws InvalidTransactionIdException, InvalidDiscountRateException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1513,7 +1531,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public int computePointsForSale(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1549,7 +1567,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean endSaleTransaction(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1587,7 +1605,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteSaleTransaction(Integer saleNumber) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1601,6 +1619,10 @@ public class EZShop implements EZShopInterface {
         }
 
         this.saleTransactionMap.remove(saleNumber);
+
+        if (transactionMap.containsKey(saleNumber)) {
+            this.transactionMap.remove(saleNumber);
+        }
 
         // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONE
 
@@ -1620,7 +1642,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public SaleTransaction getSaleTransaction(Integer transactionId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1644,24 +1666,260 @@ public class EZShop implements EZShopInterface {
 
     // --- Manage Return Transactions --- //
 
+    /**
+     * This method starts a new return transaction for units of products that have already been sold and payed.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param saleNumber the number of the transaction
+     *
+     * @return the id of the return transaction (>= 0), -1 if the transaction is not available.
+     *
+     * @throws InvalidTransactionIdException if the transactionId  is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public Integer startReturnTransaction(Integer saleNumber) throws /*InvalidTicketNumberException,*/InvalidTransactionIdException, UnauthorizedException {
-        return null;
+        if (!this.checkUserRole("SHOPMANAGER")
+                && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        if (saleNumber < 0) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!this.saleTransactionMap.containsKey(saleNumber)) {
+            return -1;
+        }
+
+        int newID = ++this.counter_returnTransactionID;
+
+        EZSaleTransaction e = (EZSaleTransaction) this.saleTransactionMap.get(saleNumber);
+
+        e.addReturn(new EZReturnTransaction(saleNumber, newID));
+
+        this.saleTransactionMap.put(saleNumber, e);
+        this.returnTransactionMap.put(newID, new EZReturnTransaction(saleNumber, newID));
+
+        return newID;
     }
 
+    /**
+     * This method adds a product to the return transaction
+     * The amount of units of product to be returned should not exceed the amount originally sold.
+     * This method DOES NOT update the product quantity
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the return transaction
+     * @param productCode the bar code of the product to be returned
+     * @param amount the amount of product to be returned
+     *
+     * @return  true if the operation is successful
+     *          false   if the the product to be returned does not exists,
+     *                  if it was not in the transaction,
+     *                  if the amount is higher than the one in the sale transaction,
+     *                  if the transaction does not exist
+     *
+     * @throws InvalidTransactionIdException if the return id is less ther or equal to 0 or if it is null
+     * @throws InvalidProductCodeException if the product code is empty, null or invalid
+     * @throws InvalidQuantityException if the quantity is less than or equal to 0
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean returnProduct(Integer returnId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        return false;
+        if (returnId <= 0 || returnId == null) {
+            throw new InvalidTransactionIdException();
+        }
+        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
+            throw new InvalidProductCodeException();
+        }
+        if (amount <= 0) {
+            throw new InvalidQuantityException();
+        }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+         && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        // check if product exists
+        if (!this.productTypeMap.containsKey(productCode)) {
+            return false;
+        }
+        // check if the return transaction exists
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+        // check if sale transaction exists
+        if (!this.saleTransactionMap.containsKey(ret.getSaleTransactionID())) {
+            return false;
+        }
+
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+        // check if the product is in the sale transaction
+        int prodAmt = -1;
+        for (TicketEntry e : sale.getEntries()) {
+            if (e.getBarCode() == productCode) {
+                prodAmt = e.getAmount();
+            }
+        }
+        // this happens if the product is not in the transaction
+        if (prodAmt < 0) {
+            return false;
+        }
+        // otherwise, check if the amount inserted is larger than the amount bought
+        else if (amount > prodAmt) {
+            return false;
+        }
+
+        // ok, everything should be fine at this point
+        HashMap<String, Integer> returnProdMap = (HashMap<String, Integer>) ret.getMapOfProducts();
+
+        returnProdMap.put(productCode, amount);
+
+        ret.setMapOfProducts(returnProdMap);
+
+        // update both the sale transaction's list and the return map
+        sale.updateReturn(ret);
+        this.returnTransactionMap.put(ret.getReturnID(), ret);
+
+        return true;
     }
 
+    /**
+     * This method closes a return transaction. A closed return transaction can be committed (i.e. <commit> = true) thus
+     * it increases the product quantity available on the shelves or not (i.e. <commit> = false) thus the whole trasaction
+     * is undone.
+     * This method updates the transaction status (decreasing the number of units sold by the number of returned one and
+     * decreasing the final price).
+     * If committed, the return transaction must be persisted in the system's memory.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the transaction
+     * @param commit whether we want to commit (True) or rollback(false) the transaction
+     *
+     * @return  true if the operation is successful
+     *          false   if the returnId does not correspond to an active return transaction,
+     *                  if there is some problem with the db
+     *
+     * @throws InvalidTransactionIdException if returnId is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean endReturnTransaction(Integer returnId, boolean commit) throws InvalidTransactionIdException, UnauthorizedException {
-        return false;
+        if (returnId < 0 || returnId == null) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        // check if return exists
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+        if (!commit) {
+            // rollback the transaction
+            // remove the return transaction from the sale and update the map
+            sale.deleteReturn(ret.getReturnID());
+            this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+            // note that, at this point, the return transaction only exists temporarily in
+            // this class' map, thus there's no need to delete it from the DB (because it's not there)
+            this.returnTransactionMap.remove(returnId);
+        }
+        else {
+
+            /*
+                Must update:
+                * the corresponding sale transaction, i.e. entries and price
+                * the quantity for each product type returned
+             */
+            HashMap<String, Integer> rMap = (HashMap<String, Integer>) ret.getMapOfProducts();
+
+            for (String prodCode : ret.getMapOfProducts().keySet()) {
+                // update the quantity for each product in the return list
+                EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
+                int quantity = rMap.get(prodCode);
+                p.setQuantity(p.getQuantity() + quantity);
+                this.productTypeMap.put(prodCode, p);
+
+                // update corresponding sale entry
+                sale.updateProductInEntry(prodCode, -quantity);
+            }
+            double prevMoney = sale.getPrice();
+            double newMoney = this.computeSaleTransactionPrice(sale);
+            // set the amount of money returned in the return transaction
+            ret.setMoneyReturned(prevMoney - newMoney);
+
+            // recompute the sale's price
+            sale.setPrice(newMoney);
+            // update the map
+            this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+
+            //TODO: AGGIORNA DB
+        }
+        return true;
     }
 
+    /**
+     * This method deletes a closed return transaction. It affects the quantity of product sold in the connected sale transaction
+     * (and consequently its price) and the quantity of product available on the shelves.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the identifier of the return transaction to be deleted
+     *
+     * @return  true if the transaction has been successfully deleted,
+     *          false   if it doesn't exist,
+     *                  if it has been payed,
+     *                  if there are some problems with the db
+     *
+     * @throws InvalidTransactionIdException if the transaction id is less than or equal to 0 or if it is null
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
     @Override
     public boolean deleteReturnTransaction(Integer returnId) throws InvalidTransactionIdException, UnauthorizedException {
-        return false;
+        if (returnId < 0 || returnId == null) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        // check if return exists
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+
+        /*
+            Must update:
+            * the corresponding sale transaction, i.e. entries and price
+            * the quantity for each product type returned
+         */
+        HashMap<String, Integer> rMap = (HashMap<String, Integer>) ret.getMapOfProducts();
+
+        for (String prodCode : ret.getMapOfProducts().keySet()) {
+            // update the quantity for each product in the return list
+            EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
+            int quantity = rMap.get(prodCode);
+            p.setQuantity(p.getQuantity() - quantity);
+            this.productTypeMap.put(prodCode, p);
+
+            // update corresponding sale entry
+            sale.updateProductInEntry(prodCode, +quantity);
+        }
+        // recompute the sale's price
+        sale.setPrice(this.computeSaleTransactionPrice(sale));
+        this.returnTransactionMap.remove(returnId);
+
+        //TODO: AGGIORNA DB
+
+        return true;
     }
 
     // --- Manage Payments --- //
@@ -1689,7 +1947,7 @@ public class EZShop implements EZShopInterface {
             throw new InvalidPaymentException();
         }
 
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1741,7 +1999,7 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
@@ -1749,6 +2007,8 @@ public class EZShop implements EZShopInterface {
         if (ticketNumber <= 0 || ticketNumber == null) {
             throw new InvalidTransactionIdException();
         }
+        //TODO: CONTROLLARE SE LA CARTA E' REGISTRATA (????????????????????????)
+        //TODO: CONTROLLARE SE LA CARTA HA ABBASTANZA SOLDI (??????????????????????????????????????????)
 
         // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
         EZSaleTransaction result = new EZSaleTransaction(99999);
@@ -1778,8 +2038,28 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public double returnCashPayment(Integer returnId) throws InvalidTransactionIdException, UnauthorizedException {
-        // TODO: PAGAMENTI NEL DB
-        return 0;
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        if (returnId <= 0) {
+            throw new InvalidTransactionIdException();
+        }
+
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return -1;
+        }
+
+        // TODO: PRENDI TRANSAZIONE DAL DB
+        // placeholder
+        EZReturnTransaction result = new EZReturnTransaction(99999, 99999);
+
+        // registra la modifica del conto, aggiungendo una nuova BalanceOperation
+        // richiamando un metodo dell'API
+        this.recordBalanceUpdate(result.getMoneyReturned());
+
+        return result.getMoneyReturned();
     }
 
     /**
@@ -1808,10 +2088,26 @@ public class EZShop implements EZShopInterface {
         if (!this.checkCreditCardValidity(creditCard)) {
             throw new InvalidCreditCardException();
         }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+        //TODO: controlla se la carta è registrata (???)
+        if (returnId <= 0) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.returnTransactionMap.containsKey(returnId)) {
+            return -1;
+        }
 
-        // TODO: METODO
+        // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
+        EZReturnTransaction result = new EZReturnTransaction(99999, 99999);
 
-        return 0;
+        // registra il pagamento aggiungendo una nuova BalanceOperation
+        // tramite metodo dell'API
+        this.recordBalanceUpdate(-result.getMoneyReturned());
+
+        return result.getMoneyReturned();
     }
 
     // --- Manage Accounting --- //
@@ -1830,20 +2126,13 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean recordBalanceUpdate(double toBeAdded) throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
-        String type;
-        if (toBeAdded >= 0) {
-            type = "CREDIT";
-        }
-        else {
-            type = "DEBIT";
-        }
 
-        BalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), type);
+        BalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), toBeAdded);
 
-        if (this.balance + toBeAdded < 0) {
+        if (this.computeBalance() + toBeAdded < 0) {
             return false;
         }
 
@@ -1872,7 +2161,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public List<BalanceOperation> getCreditsAndDebits(LocalDate from, LocalDate to) throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
 
@@ -1897,7 +2186,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public double computeBalance() throws UnauthorizedException {
-        if (!this.checkUserRole("MANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")) {
             throw new UnauthorizedException();
         }
 

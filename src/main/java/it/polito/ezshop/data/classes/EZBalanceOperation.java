@@ -4,7 +4,6 @@ import it.polito.ezshop.data.BalanceOperation;
 
 import java.time.LocalDate;
 
-
 /*ANTONINO*/
 public class EZBalanceOperation implements BalanceOperation {
     int balanceId;
@@ -12,11 +11,16 @@ public class EZBalanceOperation implements BalanceOperation {
     double money;
     String type;
 
-    public EZBalanceOperation(int balanceId, LocalDate date, String type, double money) {
+    public EZBalanceOperation(int balanceId, LocalDate date, double money) {
         this.balanceId = balanceId;
         this.date = date;
         this.money = money;
-        this.type = "";
+        if (money < 0) {
+            this.type = "DEBIT";
+        }
+        else {
+            this.type = "CREDIT";
+        }
     }
 
     @Override
