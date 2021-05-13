@@ -1,4 +1,4 @@
-package it.polito.ezshop.blackboxTest;
+package it.polito.ezshop.unitTest;
 
 import it.polito.ezshop.data.EZShop;
 import org.junit.Test;
