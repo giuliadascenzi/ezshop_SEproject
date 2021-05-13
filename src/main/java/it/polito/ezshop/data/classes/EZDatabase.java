@@ -115,6 +115,75 @@ public class EZDatabase {
     }
 
 /*******************************************************************************************/
+    /********************* METODI PER LA TABELLA CUSTOMER **************************/
+    public boolean insertCustomer(EZCustomer customer) throws SQLException {
+
+        String values = customer.getId()+", '"+customer.getCustomerName()+"', '"+customer.getCustomerCard()+"', '"+customer.getPoints()+"'";
+        String sql ="INSERT INTO CUSTOMERS VALUES ("+ values +")";
+        Statement statement =this.connection.createStatement();
+        if(statement.executeUpdate(sql)!=1) //ritorna il numero di righe cambiate executeUpdate -> in questo caso é una insert, quindi deve essere per forza una.
+            return false;
+        return true;
+    }
+    public boolean updateCustomer (EZCustomer updatedCustomer) throws SQLException {
+        String sql = "UPDATE CUSTOMERS SET CustomerName= ?, CustomerCard = ?, points = ? WHERE id = ?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setString(1, updatedCustomer.getCustomerName());
+        pstm.setString(2, updatedCustomer.getCustomerCard());
+        pstm.setInt(3, updatedCustomer.getPoints());
+        pstm.setInt(4, updatedCustomer.getId());
+
+
+        if(pstm.executeUpdate()!=4)
+            return false;
+
+        return true;
+    }
+    public void deleteCustomer (Integer id) throws SQLException {
+
+
+        String sql ="DELETE FROM CUSTOMERS WHERE id =?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.setInt(1, id);
+        pstm.executeUpdate();
+
+    }
+    public boolean deleteCustomerCard (Integer id) throws SQLException {
+
+
+        String sql ="DELETE CUSTOMERCARD FROM CUSTOMERS WHERE id =?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.setInt(1, id);
+        if(pstm.executeUpdate()!=1)
+            return false;
+        return true;
+    }
+    public boolean updateCustomerCard (Integer id, String newCustomerCard) throws SQLException {
+
+
+        String sql ="UPDATE CUSTOMER SET CustomerCard = ?  WHERE id =?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.setString(1, newCustomerCard);
+        pstm.setInt(2, id);
+        if(pstm.executeUpdate()!=2)
+            return false;
+        return true;
+    }
+    public boolean updatePoints (Integer id, Integer Points) throws SQLException {
+
+
+        String sql ="UPDATE CUSTOMERS SET Points = ? WHERE id =?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.setInt(1, Points);
+        pstm.setInt(2, id);
+        if(pstm.executeUpdate()!=2)
+            return false;
+        return true;
+    }
+
+
+    /*******************************************************************************************/
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();

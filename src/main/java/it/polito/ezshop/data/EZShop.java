@@ -25,6 +25,7 @@ public class EZShop implements EZShopInterface {
     int counter_returnTransactionID;
     int counter_transactionID;
     private int productIds;
+    //EZDatabase dbase;
 
     public EZShop() {
         // TODO: leggere dati dal DB e riempire le strutture dati
@@ -43,6 +44,7 @@ public class EZShop implements EZShopInterface {
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
+        //this.dbase= new EZDatabase();
     }
 
     /**
@@ -959,7 +961,10 @@ public class EZShop implements EZShopInterface {
         if ( userSession==null )
             throw new UnauthorizedException();
         int newCustomerId = this.idCustomer;
-        customerMap.put(newCustomerId,new EZCustomer(customerName, newCustomerId));
+        EZCustomer c = new EZCustomer(customerName, newCustomerId);
+        customerMap.put(newCustomerId,c);
+        //if(!dbase.insertCustomer(c))
+           //   return -1;
         //TODO: if ( UPDATE DATABASE) //devo controllare anche altro per verificarne il corretto inserimento?
         //return -1;
         this.idCustomer++;
@@ -1010,16 +1015,21 @@ public class EZShop implements EZShopInterface {
         if (newCustomerCard.trim().equals("")){                     // if the customerCard is empty, delete the Card
             EZCustomer s = (EZCustomer) customerMap.get(id);
             s.removeCustomerCard();
+            //db.removeCustomerCard(s.getId());
             //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
             throw new InvalidCustomerCardException();
         }
 
         EZCustomer c = (EZCustomer) customerMap.get(id);
         c.setCustomerName(newCustomerName);
+        //if(!db.updateCustomer(c))
+        // return false
         //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
 
         if(newCustomerCard.matches( "[0-9]{10}" )){
             c.setCustomerCard(newCustomerCard);
+            //if(!db.updateCustomerCard(c.getId(), newCustomerCard))
+            // return false
             //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
         }
 
@@ -1048,6 +1058,7 @@ public class EZShop implements EZShopInterface {
         EZCustomer c = (EZCustomer) customerMap.get(id);
         customerMap.remove(id);
         c.removeCustomerCard();
+        //db.removeCustomer(c.getId());
         c=null;
         //Todo: aggiorna il DB, return false nel caso in cui ci siano problemi.
 
@@ -1153,8 +1164,9 @@ public class EZShop implements EZShopInterface {
         if(!customerMap.containsKey(customerId))
             return false;
 
-        customerMap.get(customerId).setCustomerCard(customerCard);
-        //todo:update db. if database is unreachable return false
+        EZCustomer c = (EZCustomer) customerMap.get(customerId);
+        c.setCustomerCard(customerCard);
+        //If(!updateCustomerCard(c.getId(), customerCard)
 
         return true;
     }
@@ -1189,6 +1201,8 @@ public class EZShop implements EZShopInterface {
                 if(c.getPoints()<Math.abs(pointsToBeAdded) && pointsToBeAdded < 0)   // if pointsToBeAdded is negative and there were not enough points on that card before this operation
                     return false;
                 c.setPoints(c.getPoints() + pointsToBeAdded);
+                //if(!db.updatePoints(c.getId(),c.getPoints() + pointsToBeAdded))
+                   // return false;
                 //todo:UPDATE DB
                 break;
             }
