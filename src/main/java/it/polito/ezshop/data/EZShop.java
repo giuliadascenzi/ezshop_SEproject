@@ -1898,7 +1898,7 @@ public class EZShop implements EZShopInterface {
         if (!this.returnTransactionMap.containsKey(returnId)) {
             return false;
         }
-        
+
         EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
         EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
 
