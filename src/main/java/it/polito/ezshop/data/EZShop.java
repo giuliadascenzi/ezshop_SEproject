@@ -138,15 +138,22 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public void reset() {
-        this.userList= null;
-        this.customerMap= null;
-        this.transactionMap =null;
-        this.saleTransactionMap= null;
-        this.orderTransactionMap = null;
-        this.productTypeMap = null;
-        this.userSession= null;
+        // TODO: aggiornare il DB eliminando tutto
+        this.userList = new ArrayList<>();
+        this.customerMap = new HashMap<>();
+        this.transactionMap = new HashMap<>();
+        this.saleTransactionMap = new HashMap<>();
+        this.returnTransactionMap = new HashMap<>();
+        this.orderTransactionMap = new HashMap<>();
+        this.productTypeMap = new HashMap<>();
+        this.userSession = null;
+
         this.idUsers = 0;
+        this.idCustomer = 0;
+        this.idCustomerCard = 0;
         this.counter_transactionID = 0;
+        this.counter_returnTransactionID = 0;
+        this.productIds = 0;
     }
 
 
@@ -190,7 +197,6 @@ public class EZShop implements EZShopInterface {
         int newuserId = this.idUsers;
         userList.add(new EZUser(newuserId, username,password,role)); //TODO Aggiorna DB
         this.idUsers++;
-
 
         return newuserId;
     }
