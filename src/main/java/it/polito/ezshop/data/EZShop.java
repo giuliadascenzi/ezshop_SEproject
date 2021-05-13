@@ -68,7 +68,7 @@ public class EZShop implements EZShopInterface {
             false, se il codice non è valido o ci sono problemi
      */
     public boolean checkBarCodeValidity(String barCode) {
-        if (!barCode.matches("[0-9]{12,14}")) {
+        if (barCode == null || !barCode.matches("[0-9]{12,14}")) {
             // se in input non abbiamo un codice con solo interi e con lunghezza compresa
             // tra 12 e 14 inclusi, ritorna false
             return false;
@@ -115,7 +115,7 @@ public class EZShop implements EZShopInterface {
      */
     public boolean checkCreditCardValidity(String cardCode) {
         // se la carta non è formata da soli numeri, ritorna false
-        if (!cardCode.matches("[0-9]+")) {
+        if (cardCode == null || !cardCode.matches("[0-9]+")) {
             return false;
         }
 
@@ -140,15 +140,22 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public void reset() {
-        this.userList= null;
-        this.customerMap= null;
-        this.transactionMap =null;
-        this.saleTransactionMap= null;
-        this.orderTransactionMap = null;
-        this.productTypeMap = null;
-        this.userSession= null;
+        // TODO: aggiornare il DB eliminando tutto
+        this.userList = new ArrayList<>();
+        this.customerMap = new HashMap<>();
+        this.transactionMap = new HashMap<>();
+        this.saleTransactionMap = new HashMap<>();
+        this.returnTransactionMap = new HashMap<>();
+        this.orderTransactionMap = new HashMap<>();
+        this.productTypeMap = new HashMap<>();
+        this.userSession = null;
+
         this.idUsers = 0;
+        this.idCustomer = 0;
+        this.idCustomerCard = 0;
         this.counter_transactionID = 0;
+        this.counter_returnTransactionID = 0;
+        this.productIds = 0;
     }
 
 
@@ -192,7 +199,6 @@ public class EZShop implements EZShopInterface {
         int newuserId = this.idUsers;
         userList.add(new EZUser(newuserId, username,password,role)); //TODO Aggiorna DB
         this.idUsers++;
-
 
         return newuserId;
     }

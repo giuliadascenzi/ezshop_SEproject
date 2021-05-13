@@ -1,4 +1,4 @@
-package it.polito.ezshop.blackboxTest;
+package it.polito.ezshop.unitTest;
 
 import it.polito.ezshop.data.EZShop;
 import org.junit.Test;
@@ -18,7 +18,10 @@ public class BB_UnitTesting {
     // --- Test bar code validity --- //
     @Test
     public void test_InvalidBarCode() {
+        assertFalse(ez.checkBarCodeValidity("6291041500218"));
+        assertFalse(ez.checkBarCodeValidity(null));
         assertFalse(ez.checkBarCodeValidity("42"));
+        assertFalse(ez.checkBarCodeValidity("62910415002187326548"));
     }
 
     @Test
@@ -28,6 +31,8 @@ public class BB_UnitTesting {
     // --- Test credit card validity --- //
     @Test
     public void test_InvalidCreditCard() {
+        assertFalse(ez.checkCreditCardValidity("79927398718"));
+        assertFalse(ez.checkCreditCardValidity(null));
         assertFalse(ez.checkCreditCardValidity("cane"));
     }
 
