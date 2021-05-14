@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="Customer Database.">
+    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EZshop.db" beforeDir="false" afterPath="$PROJECT_DIR$/EZshop.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +43,9 @@
     </option>
   </component>
   <component name="ProjectId" id="1s4p6LRBMGKyUShtcCmBPQtqEEU" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -76,19 +75,6 @@
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="CLASS" />
-      <properties />
-      <listeners />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -204,5 +190,22 @@
     <MESSAGE value="Customer's methods implementation" />
     <MESSAGE value="Customer Database." />
     <option name="LAST_COMMIT_MESSAGE" value="Customer Database." />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/ezshop$it_polito_ezshop_unitTest_in_ezshop.ic" NAME="it.polito.ezshop.unitTest in ezshop Coverage Results" MODIFIED="1620919488134" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>it.polito.ezshop.unitTest.*</FILTER>
+      <FILTER>it.polito.ezshop.data.EZShop</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/ezshop$WB_UnitTesting.ic" NAME="WB_UnitTesting Coverage Results" MODIFIED="1620904162824" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>it.polito.ezshop.unitTest.*</FILTER>
+      <FILTER>it.polito.ezshop.data.EZShop</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/ezshop$BB_UnitTesting.ic" NAME="BB_UnitTesting Coverage Results" MODIFIED="1620919010787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>it.polito.ezshop.unitTest.*</FILTER>
+      <FILTER>it.polito.ezshop.data.EZShop</FILTER>
+    </SUITE>
+    <SUITE FILE_PATH="coverage/ezshop$BB_UnitTesting_test_ValidBarCode.ic" NAME="BB_UnitTesting.test_ValidBarCode Coverage Results" MODIFIED="1620919162794" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>it.polito.ezshop.unitTest.*</FILTER>
+    </SUITE>
   </component>
 </project>
