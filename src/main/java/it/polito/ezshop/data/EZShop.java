@@ -490,7 +490,7 @@ public class EZShop implements EZShopInterface {
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
         this.productIds++;
         this.productTypeMap.put(productCode, pt);
-
+        //db.insertProductType(pt);
         //
         //TODO update db
 
@@ -555,6 +555,7 @@ public class EZShop implements EZShopInterface {
                 p.setNote(newNote);
                 //update map product type with the item associated with the new barcode
                 this.productTypeMap.put(p.getBarCode(), p);
+                //db.updateProduct(p);
                 return true; //TODO update db
             }
 
@@ -586,7 +587,7 @@ public class EZShop implements EZShopInterface {
             if (p.getId().equals(id))
             { //Found
                 this.productTypeMap.remove(p.getBarCode());
-
+                //db.updateProduct(p);
                 return true; //TODO update db
             }
 
@@ -1130,7 +1131,7 @@ public class EZShop implements EZShopInterface {
         if(userSession == null)                                         //if the user is not logged
             throw new UnauthorizedException();
 
-        if( newCustomerCard==null || !newCustomerCard.matches( "[0-9]{10}" ))             //newCustomerCard is not in a valid format
+        if(!newCustomerCard.matches( "[0-9]{10}" ))             //newCustomerCard is not in a valid format
             throw new InvalidCustomerCardException();
 
         for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
@@ -1145,7 +1146,6 @@ public class EZShop implements EZShopInterface {
             s.removeCustomerCard();
             //db.removeCustomerCard(s.getId());
             //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
-            throw new InvalidCustomerCardException();
         }
 
         EZCustomer c = (EZCustomer) customerMap.get(id);
