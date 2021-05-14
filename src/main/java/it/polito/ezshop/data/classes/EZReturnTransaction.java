@@ -14,6 +14,7 @@ public class EZReturnTransaction implements ReturnTransaction{
         Values:
         * OPEN
         * CLOSED
+        * PAID
      */
     private String status;
     private double money;
@@ -22,6 +23,7 @@ public class EZReturnTransaction implements ReturnTransaction{
         this.saleTransactionID = stID;
         this.returnID = retID;
         this.productMap = new HashMap<>();
+        this.status = "OPEN";
     }
 
     @Override
@@ -61,6 +63,12 @@ public class EZReturnTransaction implements ReturnTransaction{
 
     @Override
     public void setStatus(String s) {
+        if (!s.equalsIgnoreCase("OPEN")
+            && !s.equalsIgnoreCase("CLOSED")
+            && !s.equalsIgnoreCase("PAID")) {
+            return;
+        }
+
         this.status = s;
     }
 

@@ -1586,7 +1586,8 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        SaleTransaction st = this.saleTransactionMap.get(transactionId);
+        EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+        st.setStatus("CLOSED");
 
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
         // TODO: AGGIORNA DB CON NUOVA TRANSAZIONE
@@ -1859,9 +1860,16 @@ public class EZShop implements EZShopInterface {
             double newMoney = this.computeSaleTransactionPrice(sale);
             // set the amount of money returned in the return transaction
             ret.setMoneyReturned(prevMoney - newMoney);
+            // change the return transaction's status
+            ret.setStatus("CLOSED");
 
             // recompute the sale's price
             sale.setPrice(newMoney);
+
+            // update both the ST's list and the return map
+            sale.updateReturn(ret);
+            this.returnTransactionMap.put(ret.getReturnID(), ret);
+
             // update the map
             this.saleTransactionMap.put(sale.getTicketNumber(), sale);
 
@@ -1902,6 +1910,11 @@ public class EZShop implements EZShopInterface {
         EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
         EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
 
+        if (!ret.getStatus().equalsIgnoreCase("CLOSED")
+            && !ret.getStatus().equalsIgnoreCase("PAID")) {
+            return false;
+        }
+
         /*
             Must update:
             * the corresponding sale transaction, i.e. entries and price
@@ -1921,9 +1934,15 @@ public class EZShop implements EZShopInterface {
         }
         // recompute the sale's price
         sale.setPrice(this.computeSaleTransactionPrice(sale));
-        this.returnTransactionMap.remove(returnId);
+        // remove the return transaction from the ST's list
+        sale.deleteReturn(ret.getReturnID());
 
         //TODO: AGGIORNA DB
+
+        // update the ST map
+        this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+        // update the RT map
+        this.returnTransactionMap.remove(returnId);
 
         return true;
     }
@@ -1962,9 +1981,16 @@ public class EZShop implements EZShopInterface {
             throw new InvalidTransactionIdException();
         }
 
-        // TODO: PRENDI TRANSAZIONE DAL DB
-        // placeholder
-        EZSaleTransaction result = new EZSaleTransaction(99999);
+        if (!saleTransactionMap.containsKey(ticketNumber)) {
+            return -1;
+        }
+
+        EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
+
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")
+            && !result.getStatus().equalsIgnoreCase("PAID")) {
+            return -1;
+        }
 
         if (cash < result.getPrice()) {
             return -1;
@@ -1973,6 +1999,12 @@ public class EZShop implements EZShopInterface {
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
         this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+
+        result.setStatus("PAID");
+
+        //TODO: AGGIORNA DB
+
+        this.saleTransactionMap.put(result.getTicketNumber(), result);
 
         return (cash - result.getPrice());
     }
@@ -2013,15 +2045,26 @@ public class EZShop implements EZShopInterface {
         if (ticketNumber <= 0 || ticketNumber == null) {
             throw new InvalidTransactionIdException();
         }
+
         //TODO: CONTROLLARE SE LA CARTA E' REGISTRATA (????????????????????????)
         //TODO: CONTROLLARE SE LA CARTA HA ABBASTANZA SOLDI (??????????????????????????????????????????)
 
-        // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
-        EZSaleTransaction result = new EZSaleTransaction(99999);
+        EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
+
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")
+                && !result.getStatus().equalsIgnoreCase("PAID")) {
+            return false;
+        }
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
         this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+
+        result.setStatus("PAID");
+
+        //TODO: AGGIORNA DB
+
+        this.saleTransactionMap.put(result.getTicketNumber(), result);
 
         return false;
     }
@@ -2057,13 +2100,30 @@ public class EZShop implements EZShopInterface {
             return -1;
         }
 
-        // TODO: PRENDI TRANSAZIONE DAL DB
-        // placeholder
-        EZReturnTransaction result = new EZReturnTransaction(99999, 99999);
+        EZReturnTransaction result = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")
+                && !result.getStatus().equalsIgnoreCase("PAID")) {
+            return -1;
+        }
+
+        if (!this.saleTransactionMap.containsKey(result.getSaleTransactionID())) {
+            return -1;
+        }
+
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(result.getSaleTransactionID());
 
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
         this.recordBalanceUpdate(result.getMoneyReturned());
+
+        result.setStatus("PAID");
+        sale.updateReturn(result);
+
+        // TODO: AGGIORNA DB
+
+        this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+        this.returnTransactionMap.put(result.getReturnID(), result);
 
         return result.getMoneyReturned();
     }
@@ -2102,16 +2162,35 @@ public class EZShop implements EZShopInterface {
         if (returnId <= 0) {
             throw new InvalidTransactionIdException();
         }
+
         if (!this.returnTransactionMap.containsKey(returnId)) {
             return -1;
         }
 
-        // TODO: IMPLEMENTARE OTTENIMENTO DELLA TRANSAZIONE DAL DB
-        EZReturnTransaction result = new EZReturnTransaction(99999, 99999);
+        EZReturnTransaction result = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")
+                && !result.getStatus().equalsIgnoreCase("PAID")) {
+            return -1;
+        }
+
+        if (!this.saleTransactionMap.containsKey(result.getSaleTransactionID())) {
+            return -1;
+        }
+
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(result.getSaleTransactionID());
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
         this.recordBalanceUpdate(-result.getMoneyReturned());
+
+        result.setStatus("PAID");
+        sale.updateReturn(result);
+
+        // TODO: AGGIORNA DB
+
+        this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+        this.returnTransactionMap.put(result.getReturnID(), result);
 
         return result.getMoneyReturned();
     }
