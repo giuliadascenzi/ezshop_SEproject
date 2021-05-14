@@ -28,28 +28,71 @@ public class EZShop implements EZShopInterface {
     EZDatabase dbase;
 
     public EZShop() {
-        // TODO: leggere dati dal DB e riempire le strutture dati
-        this.userList = new ArrayList<>();
-        this.customerMap = new HashMap<>();
-        this.transactionMap = new HashMap<>();
-        this.saleTransactionMap = new HashMap<>();
-        this.returnTransactionMap = new HashMap<>();
-        this.orderTransactionMap = new HashMap<>();
-        this.productTypeMap = new HashMap<>();
-        this.userSession = null;
-        // TODO: rimpiazzare questi valori con quelli ricavati dal DB
-        this.idUsers = 0;
-        this.idCustomer = 0;
-        this.idCustomerCard = 0;
-        this.counter_transactionID = 0;
-        this.counter_returnTransactionID = 0;
-        this.productIds = 0;
         try {
             this.dbase = new EZDatabase();
+
+            // TODO: inizializzare lista di utenti
+            // TODO: funzione per inizializzare idUsers dal DB
+            this.userList = new ArrayList<>();
+            // TODO: inizializzare lista di clienti
+            // TODO: funzione per inizializzare idCustomers dal DB
+            this.customerMap = new HashMap<>();
+            try {
+                this.transactionMap = this.dbase.getBalanceOperations();
+                this.counter_transactionID = this.dbase.getLastTransactionID();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.transactionMap = new HashMap<>();
+                this.counter_transactionID = 0;
+            }
+            try {
+                this.saleTransactionMap = this.dbase.getSaleTransactions();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.saleTransactionMap = new HashMap<>();
+            }
+            try {
+                this.returnTransactionMap = this.dbase.getReturnTransactions();
+                this.counter_returnTransactionID = this.dbase.getLastReturnID();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.returnTransactionMap = new HashMap<>();
+                this.counter_returnTransactionID = 0;
+            }
+            //TODO: inizializzare orderTransactionMap
+            this.orderTransactionMap = new HashMap<>();
+            //TODO: inizializzare productTypeMap
+            // TODO: funzione per inizializzare productIds dal DB
+            this.productTypeMap = new HashMap<>();
         }
         catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database.");
+            // Se la connessione al database fallisce, si inizializza tutto con i valori di default
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+            this.userList = new ArrayList<>();
+            this.customerMap = new HashMap<>();
+            this.transactionMap = new HashMap<>();
+            this.saleTransactionMap = new HashMap<>();
+            this.returnTransactionMap = new HashMap<>();
+            this.orderTransactionMap = new HashMap<>();
+            this.productTypeMap = new HashMap<>();
+
+            this.idUsers = 0;
+            this.idCustomer = 0;
+            this.idCustomerCard = 0;
+            this.counter_transactionID = 0;
+            this.counter_returnTransactionID = 0;
+            this.productIds = 0;
         }
+
+        // Questo rimane inizializzato a null in ogni caso
+        this.userSession = null;
     }
 
     /**
@@ -2098,15 +2141,22 @@ public class EZShop implements EZShopInterface {
             throw new InvalidTransactionIdException();
         }
 
-        //TODO: CONTROLLARE SE LA CARTA E' REGISTRATA (????????????????????????)
-        //TODO: CONTROLLARE SE LA CARTA HA ABBASTANZA SOLDI (??????????????????????????????????????????)
+        // Controllo se la carta esiste tra quelle registrate
+        EZFileReader reader = new EZFileReader();
+        Map<String, Double> ccMap = reader.readCreditCards();
 
-        EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
-
-        if (!result.getStatus().equalsIgnoreCase("CLOSED")
-                && !result.getStatus().equalsIgnoreCase("PAID")) {
+        if (!ccMap.containsKey(creditCard)) {
             return false;
         }
+        // prendo la ST
+        EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
+
+        // Controllo se la carta ha abbastanza soldi
+        double ccAmount = ccMap.get(creditCard);
+
+        if (ccAmount < result.getPrice()) {
+            return false;
+        };
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
@@ -2127,6 +2177,10 @@ public class EZShop implements EZShopInterface {
         }
 
         this.saleTransactionMap.put(result.getTicketNumber(), result);
+
+        // aggiorna la carta di credito
+        ccMap.put(creditCard, ccAmount - result.getPrice());
+        reader.setCreditCards(ccMap);
 
         return true;
     }
@@ -2230,11 +2284,20 @@ public class EZShop implements EZShopInterface {
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
-        //TODO: controlla se la carta è registrata (???)
+
         if (returnId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
+        // Controllo se la carta esiste tra quelle registrate
+        EZFileReader reader = new EZFileReader();
+        Map<String, Double> ccMap = reader.readCreditCards();
+
+        if (!ccMap.containsKey(creditCard)) {
+            return -1;
+        }
+
+        // controllo se la RT esiste
         if (!this.returnTransactionMap.containsKey(returnId)) {
             return -1;
         }
@@ -2273,6 +2336,10 @@ public class EZShop implements EZShopInterface {
 
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
         this.returnTransactionMap.put(result.getReturnID(), result);
+
+        // aggiorna la carta di credito
+        ccMap.put(creditCard, ccMap.get(creditCard) + result.getMoneyReturned());
+        reader.setCreditCards(ccMap);
 
         return result.getMoneyReturned();
     }

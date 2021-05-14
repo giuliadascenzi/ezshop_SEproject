@@ -1,6 +1,7 @@
 package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.BalanceOperation;
+import it.polito.ezshop.data.ReturnTransaction;
 import it.polito.ezshop.data.SaleTransaction;
 import it.polito.ezshop.data.TicketEntry;
 
@@ -156,11 +157,11 @@ public class EZDatabase {
         pstm.executeUpdate();
     }
 
-    public List<EZBalanceOperation> getBalanceOperations() throws SQLException {
+    public Map<Integer, BalanceOperation> getBalanceOperations() throws SQLException {
         String query = "SELECT * FROM BalanceOperations;";
         Statement statement =this.connection.createStatement();
         ResultSet rs = statement.executeQuery(query);
-        List<EZBalanceOperation> boList = new ArrayList<>();
+        Map<Integer, BalanceOperation> boMap = new HashMap<>();
 
         while(rs.next()) {
             EZBalanceOperation bo = new EZBalanceOperation(
@@ -168,10 +169,18 @@ public class EZDatabase {
                     LocalDate.parse(rs.getString("date")),
                     rs.getDouble("money")
             );
-            boList.add(bo);
+            boMap.put(bo.getBalanceId(), bo);
         }
 
-        return boList;
+        return boMap;
+    }
+
+    public int getLastTransactionID() throws SQLException {
+        String sql = "SELECT MAX(id) AS maxTransID FROM BalanceOperations;";
+        Statement stat = this.connection.createStatement();
+        ResultSet rs = stat.executeQuery(sql);
+
+        return rs.getInt("maxTransID");
     }
 
     // ---------------------- METODI PER LA TABELLA SALETRANSACTIONS --------------- //
@@ -263,11 +272,11 @@ public class EZDatabase {
         pstm.executeUpdate();
     }
 
-    public List<EZSaleTransaction> getSaleTransactions() throws SQLException {
+    public Map<Integer, SaleTransaction> getSaleTransactions() throws SQLException {
         String query = "SELECT * FROM SaleTransactions;";
         Statement statement =this.connection.createStatement();
         ResultSet rs = statement.executeQuery(query);
-        List<EZSaleTransaction> stList = new ArrayList<>();
+        Map<Integer, SaleTransaction> stMap = new HashMap<>();
 
         while(rs.next()) {
             // create a new st object
@@ -303,10 +312,10 @@ public class EZDatabase {
             // set the list for the sale transaction
             st.setEntries(entryList);
             // add the st to the st list
-            stList.add(st);
+            stMap.put(st.getTicketNumber(), st);
         }
 
-        return stList;
+        return stMap;
     }
 
     public EZSaleTransaction getSaleTransaction(int id) throws SQLException {
@@ -432,7 +441,51 @@ public class EZDatabase {
         }
     }
 
-/*******************************************************************************************/
+    public Map<Integer, ReturnTransaction> getReturnTransactions() throws SQLException {
+        String query = "SELECT * FROM ReturnTransactions;";
+        Statement statement =this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(query);
+        Map<Integer, ReturnTransaction> rtMap = new HashMap<>();
+
+        while(rs.next()) {
+            // create a new rt object
+            EZReturnTransaction rt = new EZReturnTransaction(
+                    rs.getInt("saleId"),
+                    rs.getInt("returnId"),
+                    rs.getString("status")
+            );
+
+            // get all return product entries associated with the rt
+            String productQuery = "SELECT * FROM ReturnProductEntry WHERE returnId = ?;";
+            PreparedStatement pstat = this.connection.prepareStatement(productQuery);
+
+            pstat.setInt(1, rt.getReturnID());
+
+            ResultSet rs_prod = pstat.executeQuery(productQuery);
+            Map<String, Integer> prodMap = rt.getMapOfProducts();
+
+            // for each product entry...
+            while (rs_prod.next()) {
+                // add an element to the rt's product map
+                prodMap.put(rs_prod.getString("barCode"), rs_prod.getInt("amount"));
+            }
+            // set the list for the sale transaction
+            rt.setMapOfProducts(prodMap);
+            // add the rt to the rt map
+            rtMap.put(rt.getReturnID(), rt);
+        }
+
+        return rtMap;
+    }
+
+    public int getLastReturnID() throws SQLException {
+        String sql = "SELECT MAX(returnId) AS maxRetID FROM ReturnTransactions;";
+        Statement stat = this.connection.createStatement();
+        ResultSet rs = stat.executeQuery(sql);
+
+        return rs.getInt("maxRetID");
+    }
+    /*******************************************************************************************/
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();
