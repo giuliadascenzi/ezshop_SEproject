@@ -117,7 +117,7 @@ public class EZDatabase {
     /*******************************************************************************************/
     /********************* METODI PER LA TABELLA CUSTOMER **************************/
     public boolean insertCustomer(EZCustomer customer) throws SQLException {
-
+ 
         String values = customer.getId()+", '"+customer.getCustomerName()+"', '"+customer.getCustomerCard()+"', '"+customer.getPoints()+"'";
         String sql ="INSERT INTO CUSTOMERS VALUES ("+ values +")";
         Statement statement =this.connection.createStatement();
@@ -223,7 +223,7 @@ public class EZDatabase {
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();
-        //db.createTableCustomer();
+
 
         //EZUser user =new EZUser(2, "antonino", "ciao2", "Manager");
         //db.insertUser(user);

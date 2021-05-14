@@ -4,11 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="Customer Database.">
+    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="ProductType Database.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EZshop.db" beforeDir="false" afterPath="$PROJECT_DIR$/EZshop.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/BB_UnitTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/BB_UnitTesting.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +114,7 @@
       <workItem from="1620285944895" duration="22158000" />
       <workItem from="1620746583542" duration="2528000" />
       <workItem from="1620749342119" duration="2053000" />
-      <workItem from="1620984082615" duration="6285000" />
+      <workItem from="1620984082615" duration="16857000" />
     </task>
     <task id="LOCAL-00001" summary="EzProductT and User classes implemented.">
       <created>1620235521148</created>
@@ -165,7 +165,14 @@
       <option name="project" value="LOCAL" />
       <updated>1620903509806</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="ProductType Database.">
+      <created>1620997650351</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1620997650351</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -203,6 +210,7 @@
     <MESSAGE value="pt1." />
     <MESSAGE value="Customer's methods implementation" />
     <MESSAGE value="Customer Database." />
-    <option name="LAST_COMMIT_MESSAGE" value="Customer Database." />
+    <MESSAGE value="ProductType Database." />
+    <option name="LAST_COMMIT_MESSAGE" value="ProductType Database." />
   </component>
 </project>
