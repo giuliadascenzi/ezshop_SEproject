@@ -3,6 +3,7 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.BalanceOperation;
 import it.polito.ezshop.data.SaleTransaction;
+import it.polito.ezshop.data.TicketEntry;
 
 import java.sql.*;
 import java.sql.Date;
@@ -218,14 +219,41 @@ public class EZDatabase {
         List<EZSaleTransaction> stList = new ArrayList<>();
 
         while(rs.next()) {
+            // create a new st object
             EZSaleTransaction st = new EZSaleTransaction(
                     rs.getInt("id"),
                     rs.getDouble("discountRate"),
                     rs.getDouble("price"),
                     rs.getString("status")
             );
+
+            // get all product entries associated with the st
+            String productQuery = "SELECT * FROM productEntry WHERE saleId = ?;";
+            PreparedStatement pstat = this.connection.prepareStatement(productQuery);
+
+            pstat.setInt(1, st.getTicketNumber());
+
+            ResultSet rs_prod = pstat.executeQuery(productQuery);
+            List<TicketEntry> entryList = new ArrayList<>();
+
+            // for each product entry...
+            while (rs_prod.next()) {
+                // create a new object
+                EZTicketEntry e = new EZTicketEntry(
+                        rs_prod.getString("barCode"),
+                        rs_prod.getString("prodDesc"),
+                        rs_prod.getInt("amount"),
+                        rs_prod.getDouble("pricePerUnit"),
+                        rs_prod.getDouble("discountRate")
+                );
+                // add it to the temporary list
+                entryList.add(e);
+            }
+            // set the list for the sale transaction
+            st.setEntries(entryList);
+            // add the st to the st list
             stList.add(st);
-            //TODO: PRENDERE LE PRODUCT ENTRY RELATIVE ALLA ST E AGGIUNGERLE ALL'OGGETTO
+            //TODO: AGGIUNGERE TABELLA PRODUCTENTRY NEL DB
         }
 
         return stList;
@@ -240,15 +268,43 @@ public class EZDatabase {
         ResultSet rs = statement.executeQuery(query);
         List<EZSaleTransaction> stList = new ArrayList<>();
 
+        // for each sale transaction returned...
         while(rs.next()) {
+            // create a new st object
             EZSaleTransaction st = new EZSaleTransaction(
                     rs.getInt("id"),
                     rs.getDouble("discountRate"),
                     rs.getDouble("price"),
                     rs.getString("status")
             );
+
+            // get all product entries associated with the st
+            String productQuery = "SELECT * FROM productEntry WHERE saleId = ?;";
+            PreparedStatement pstat = this.connection.prepareStatement(productQuery);
+
+            pstat.setInt(1, st.getTicketNumber());
+
+            ResultSet rs_prod = pstat.executeQuery(productQuery);
+            List<TicketEntry> entryList = new ArrayList<>();
+
+            // for each product entry...
+            while (rs_prod.next()) {
+                // create a new object
+                EZTicketEntry e = new EZTicketEntry(
+                        rs_prod.getString("barCode"),
+                        rs_prod.getString("prodDesc"),
+                        rs_prod.getInt("amount"),
+                        rs_prod.getDouble("pricePerUnit"),
+                        rs_prod.getDouble("discountRate")
+                );
+                // add it to the temporary list
+                entryList.add(e);
+            }
+            // set the list for the sale transaction
+            st.setEntries(entryList);
+            // add the st to the st list
             stList.add(st);
-            //TODO: PRENDERE LE PRODUCT ENTRY RELATIVE ALLA ST E AGGIUNGERLE ALL'OGGETTO
+            //TODO: AGGIUNGERE TABELLA PRODUCTENTRY NEL DB
         }
 
         return stList.get(0);
@@ -258,6 +314,18 @@ public class EZDatabase {
 
     //TODO: DB - METODO PER AGGIORNARE LA QUANTITA' IN MAGAZZINO DEI PRODOTTI
 
+    // ---------------------- METODI PER LA TABELLA RETURNTRANSACTION ------------------ //
+    public void addReturnTransaction(EZReturnTransaction rt) throws SQLException {
+        /*String sql = "INSERT INTO SaleTransactions(id, discountRate, price, status) VALUES (?, ?, ?, ?);";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setInt(1, st.getTicketNumber());
+        pstm.setDouble(2, st.getDiscountRate());
+        pstm.setDouble(3, st.getPrice());
+        pstm.setString(4, st.getStatus());
+
+        pstm.executeUpdate();*/
+    }
     //TODO: METODI DB PER LE RETURN TRANSACTION
 
 /*******************************************************************************************/
