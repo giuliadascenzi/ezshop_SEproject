@@ -1,8 +1,6 @@
 package it.polito.ezshop.data.classes;
 
-import it.polito.ezshop.data.BalanceOperation;
-import it.polito.ezshop.data.SaleTransaction;
-import it.polito.ezshop.data.TicketEntry;
+import it.polito.ezshop.data.*;
 
 import java.sql.*;
 import java.sql.Date;
@@ -21,18 +19,24 @@ public class EZDatabase {
 
     /********************* METODI PER LA TABELLA USER **************************/
 
-    public void insertUser(EZUser user) throws SQLException {
+    public int getNextUserId () throws SQLException {
+        String query = "SELECT MAX(id) as maxid FROM USERS";
+        Statement statement =this.connection.createStatement();
+        ResultSet rs= statement.executeQuery(query);
+        return (rs.getInt("maxid")+1);
+    }
+    public void insertUser(User user) throws SQLException {
         String values = user.getId()+", '"+user.getUsername()+"', '"+user.getPassword()+"', '"+user.getRole()+"'";
         String sql ="INSERT INTO USERS VALUES ("+ values +")";
         Statement statement =this.connection.createStatement();
         statement.executeUpdate(sql);
     }
 
-    public List<EZUser> getUsers() throws SQLException {
+    public List<User> getUsers() throws SQLException {
         String query = "SELECT * FROM USERS";
         Statement statement =this.connection.createStatement();
         ResultSet rs= statement.executeQuery(query);
-        List<EZUser> users = new ArrayList<>();
+        List<User> users = new ArrayList<>();
 
         while (rs.next())
         {
@@ -54,7 +58,7 @@ public class EZDatabase {
 
     }
 
-    public void updateUser (EZUser updatedUser) throws SQLException {
+    public void updateUser (User updatedUser) throws SQLException {
         String sql = "UPDATE USERS SET username = ?, password = ?, role = ? WHERE id = ?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
@@ -66,9 +70,18 @@ public class EZDatabase {
         pstm.executeUpdate();
 
     }
+    public void updateUserRole(Integer id, String role) throws SQLException {
+        String sql = "UPDATE USERS SET  role = ? WHERE id = ?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setString(1, role);
+        pstm.setInt(2, id);
+
+        pstm.executeUpdate();
+    }
 
     /********************* METODI PER LA TABELLA ORDER **************************/
-    public void insertOrder(EZOrder order) throws SQLException {
+    public void insertOrder(Order order) throws SQLException {
 
         String values = order.getOrderId()+", '"+order.getBalanceId()+"', '"+order.getProductCode()+"', '"+order.getPricePerUnit()+"', '"+order.getQuantity()+"', '"+order.getStatus()+"'";
         String sql ="INSERT INTO ORDERS VALUES ("+ values +")";
@@ -76,18 +89,18 @@ public class EZDatabase {
         statement.executeUpdate(sql);
     }
 
-    public List<EZOrder> getOrders() throws SQLException {
+    public Map<Integer, Order> getOrders() throws SQLException {
         String query = "SELECT * FROM ORDERS";
         Statement statement =this.connection.createStatement();
         ResultSet rs= statement.executeQuery(query);
-        List<EZOrder> orders = new ArrayList<>();
+        Map<Integer, Order> orders = new HashMap<>();
 
         while (rs.next())
         {
             EZOrder ordr = new EZOrder(rs.getInt("id"), rs.getString("productCode"), rs.getInt("quantity"), rs.getDouble("pricePerUnit"));
             ordr.setStatus(rs.getString("status"));
             ordr.setBalanceId(rs.getInt("balanceId"));
-            orders.add(ordr);
+            orders.put(rs.getInt("id"), ordr);
         }
 
         return orders;
@@ -104,7 +117,7 @@ public class EZDatabase {
 
     }
 
-    public void updateOrder (EZOrder updatedOrder) throws SQLException {
+    public void updateOrder (Order updatedOrder) throws SQLException {
         String sql = "UPDATE ORDERS SET balanceId = ?, productCode = ?, pricePerUnit = ?, quantity=?, status=? WHERE id = ?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
@@ -118,6 +131,28 @@ public class EZDatabase {
         pstm.executeUpdate();
 
     }
+
+    public void updateOrderStatus(Integer orderId, String stat) throws SQLException {
+        String sql = "UPDATE ORDERS SET  status=? WHERE id = ?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setInt(2, orderId);
+        pstm.setString(1, stat);
+        pstm.executeUpdate();
+
+    }
+    public void updateOrderBalanceId(Integer orderId, Integer balanceId) throws SQLException {
+        String sql = "UPDATE ORDERS SET  balanceId=? WHERE id = ?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setInt(1, orderId);
+        pstm.setInt(2, balanceId);
+        pstm.executeUpdate();
+
+    }
+
+
+
 
     // ---------------- METODI PER LA TABELLA BALANCEOPERATIONS ------------------- //
     public void addBalanceOperation(EZBalanceOperation bo) throws SQLException {
@@ -437,22 +472,13 @@ public class EZDatabase {
     {
         EZDatabase db = new EZDatabase();
 
-        //EZUser user =new EZUser(2, "antonino", "ciao2", "Manager");
-        //db.insertUser(user);
-        //db.updateUser(user);
-        //db.deleteUser(2);
+        System.out.println(db.getNextUserId());
 
-        //EZOrder order =new EZOrder(1, "12345", 5, 3.40);
-        //order.setBalanceId(1);
-        //order.setStatus("PAYED");
 
-        //db.insertOrder(order2);
 
-        //List<EZOrder> ordini= db.getOrders();
-
-        //System.out.println(ordini.stream().map(o -> o.getOrderId()).count());
-        //db.deleteOrder(3);
-        //db.updateOrder(order);
 
     }
+
+
+
 }

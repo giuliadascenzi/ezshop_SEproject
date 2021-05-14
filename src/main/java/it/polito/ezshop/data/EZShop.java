@@ -29,27 +29,39 @@ public class EZShop implements EZShopInterface {
 
     public EZShop() {
         // TODO: leggere dati dal DB e riempire le strutture dati
-        this.userList = new ArrayList<>();
-        this.customerMap = new HashMap<>();
-        this.transactionMap = new HashMap<>();
-        this.saleTransactionMap = new HashMap<>();
-        this.returnTransactionMap = new HashMap<>();
-        this.orderTransactionMap = new HashMap<>();
-        this.productTypeMap = new HashMap<>();
-        this.userSession = null;
-        // TODO: rimpiazzare questi valori con quelli ricavati dal DB
-        this.idUsers = 0;
-        this.idCustomer = 0;
-        this.idCustomerCard = 0;
-        this.counter_transactionID = 0;
-        this.counter_returnTransactionID = 0;
-        this.productIds = 0;
+        /* APERTURA DATABASE*/
         try {
             this.dbase = new EZDatabase();
         }
         catch (SQLException e) {
             System.out.println("There was a problem in connecting with the SQLite database.");
         }
+
+        /* CARICAMENTO DATI*/
+        try {
+            this.userList = this.dbase.getUsers();
+            this.orderTransactionMap = this.dbase.getOrders();
+            // TODO: FARE QUI DENTRO L'UPLOAD DEI DATI!!
+
+            this.customerMap = new HashMap<>();
+            this.transactionMap = new HashMap<>();
+            this.saleTransactionMap = new HashMap<>();
+            this.returnTransactionMap = new HashMap<>();
+
+            this.productTypeMap = new HashMap<>();
+            this.userSession = null;
+            // TODO: rimpiazzare questi valori con quelli ricavati dal DB
+            this.idUsers = dbase.getNextUserId();
+            this.idCustomer = 0;
+            this.idCustomerCard = 0;
+            this.counter_transactionID = 0;
+            this.counter_returnTransactionID = 0;
+            this.productIds = 0;
+
+        } catch (SQLException e) {
+            System.out.println("Problem uploading the data from the database");
+        }
+
     }
 
     /**
@@ -146,12 +158,33 @@ public class EZShop implements EZShopInterface {
     @Override
     public void reset() {
         // TODO: aggiornare il DB eliminando tutto
-        this.userList = new ArrayList<>();
+
+
+        try {
+
+            /*Delete all users from the database and from the local structure*/
+                for (User u : this.userList) {
+                    dbase.deleteUser(u.getId());
+                }
+                this.userList.clear();
+
+            /*Delete all the orders from the database*/
+                for (Order o : this.orderTransactionMap.values()) {
+                    dbase.deleteOrder(o.getOrderId());
+                }
+                this.orderTransactionMap.clear();
+
+
+
+        } catch (SQLException e) {
+            System.out.println("Error deleting data from database");
+        }
+
+
         this.customerMap = new HashMap<>();
         this.transactionMap = new HashMap<>();
         this.saleTransactionMap = new HashMap<>();
         this.returnTransactionMap = new HashMap<>();
-        this.orderTransactionMap = new HashMap<>();
         this.productTypeMap = new HashMap<>();
         this.userSession = null;
 
@@ -202,7 +235,17 @@ public class EZShop implements EZShopInterface {
             throw new InvalidRoleException();
 
         int newuserId = this.idUsers;
-        userList.add(new EZUser(newuserId, username,password,role)); //TODO Aggiorna DB
+        User newUsr =new EZUser(newuserId, username,password,role);
+
+        /*Try to add the user to the database*/
+        try {
+            this.dbase.insertUser(newUsr);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return -1;  /*Error while saving*/
+        }
+        userList.add(newUsr);
+
         this.idUsers++;
 
         return newuserId;
@@ -216,7 +259,7 @@ public class EZShop implements EZShopInterface {
      * @param id the user id, this value should not be less than or equal to 0 or null.
      *
      * @return  true if the user was deleted
-     *          false if the user cannot be deleted  (**PERCHE'??**)
+     *          false if the user cannot be deleted
      *
      * @throws InvalidUserIdException if id is less than or equal to 0 or if it is
      *
@@ -234,7 +277,14 @@ public class EZShop implements EZShopInterface {
         for (User u : this.userList)
             if (u.getId().equals(id))
             {
-                this.userList.remove(u); //TODO Aggiorna DB
+                try {
+                    this.dbase.deleteUser(u.getId()); // Updated database
+
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage()); //error deleting the user
+                    return false;
+                }
+                this.userList.remove(u);
                 return true;
             }
         // if no user has been found return false
@@ -318,7 +368,15 @@ public class EZShop implements EZShopInterface {
         /*Look for the user with the same id*/
         for (User u : this.userList)
             if (u.getId().equals(id))
-            {   u.setRole(role); //TODO Update DB
+            {
+                try {
+                    this.dbase.updateUserRole(u.getId(), role);
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                    return false;
+                }
+
+                u.setRole(role);
                 if (u.getId().equals(this.userSession.getId())) //I'm asking to modify the role of the user logged in in this moment
                     this.userSession.setRole(role);
 
@@ -763,10 +821,21 @@ public class EZShop implements EZShopInterface {
         //Everything good. Create new order
         int newID = ++this.counter_transactionID;
 
-        // insert order in the map (not also in the balance operation map because this order has still to be paid)
-        this.orderTransactionMap.put(newID, new EZOrder(newID, productCode, quantity, pricePerUnit));
+        Order newOrder =new EZOrder(newID, productCode, quantity, pricePerUnit);
         // set status ISSUED
-        this.orderTransactionMap.get(newID).setStatus("ISSUED");
+        newOrder.setStatus("ISSUED");
+
+        //Try insert it in the db
+        try {
+            this.dbase.insertOrder(newOrder);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+
+        // insert order in the map (not also in the balance operation map because this order has still to be paid)
+        this.orderTransactionMap.put(newID, newOrder);
+
 
         return newID;
 
@@ -824,13 +893,29 @@ public class EZShop implements EZShopInterface {
         //Everything good. Create new order
         int newID = ++this.counter_transactionID;
 
-        // insert order in the map (not also in the balance operation map because this order has still to be paid)
-        this.orderTransactionMap.put(newID, new EZOrder(newID, productCode, quantity, pricePerUnit));
+        Order newOrder =new EZOrder(newID, productCode, quantity, pricePerUnit);
         // set status PAYED
-        this.orderTransactionMap.get(newID).setStatus("PAYED");
+        newOrder.setStatus("PAYED");
+
+        EZBalanceOperation blOp= new EZBalanceOperation(newID, LocalDate.now(),  -priceToPay);
+
+        //Try insert it in the db
+        try {  //TODO non stai gestendo la situa in cui uno e basta fallisce!! devi fare il rollback dell'altra operazione
+            this.dbase.insertOrder(newOrder);
+
+            this.dbase.addBalanceOperation(blOp);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+
+        //insert it in the map of orders
+        this.orderTransactionMap.put(newID, newOrder);
+        // TODO: update db per balance operation
 
         //insert order in the balance operation
-        this.transactionMap.put(newID, new EZBalanceOperation(newID, LocalDate.now(),  -priceToPay));
+        this.transactionMap.put(newID, blOp);
 
         return newID;
 
@@ -869,15 +954,33 @@ public class EZShop implements EZShopInterface {
         if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
             return false;
 
+        // update balance
+        double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
+        //new balance operation
+        EZBalanceOperation balOp =new EZBalanceOperation(orderId, LocalDate.now(),  -toPay);
 
+
+        //Update the db
+
+        try {
+            // set status PAYED
+            this.dbase.updateOrderStatus(orderId, "PAYED");
+
+            //insert order in the balance operation
+            this.dbase.addBalanceOperation(balOp);
+            //set balanceId in order
+            this.dbase.updateOrderBalanceId(orderId, orderId);
+
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
         // set status PAYED
         this.orderTransactionMap.get(orderId).setStatus("PAYED");
 
-        // update balance
-        double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
-
         //insert order in the balance operation
-        this.transactionMap.put(orderId, new EZBalanceOperation(orderId, LocalDate.now(),  -toPay));
+        this.transactionMap.put(orderId, balOp);
 
         //set balanceId in order
         this.orderTransactionMap.get(orderId).setBalanceId((orderId));
@@ -927,12 +1030,22 @@ public class EZShop implements EZShopInterface {
         if (status.equalsIgnoreCase("completed"))
             return true;
 
+        try {
+            // set status PAYED
+            this.dbase.updateOrderStatus(orderId, "COMPLETED");
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
         //state changes to completed
         this.orderTransactionMap.get(orderId).setStatus("completed");
         //update product Quantity
         int quantity=this.orderTransactionMap.get(orderId).getQuantity();
         int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
         this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
+
+        //TODO: update quantity product
 
 
         return true;
@@ -1804,7 +1917,7 @@ public class EZShop implements EZShopInterface {
         // check if the product is in the sale transaction
         int prodAmt = -1;
         for (TicketEntry e : sale.getEntries()) {
-            if (e.getBarCode() == productCode) {
+            if (e.getBarCode().equals(productCode)) {
                 prodAmt = e.getAmount();
             }
         }
@@ -2374,4 +2487,25 @@ public class EZShop implements EZShopInterface {
 
         return total;
     }
+
+
+
+    public static void main (String[] args) throws SQLException
+    {
+        EZShop shop =new EZShop();
+        //System.out.println(shop.orderTransactionMap.values().stream().map(o -> o.getOrderId()).collect(Collectors.toList()));
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
 }
