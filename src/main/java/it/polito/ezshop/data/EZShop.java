@@ -39,7 +39,7 @@ public class EZShop implements EZShopInterface {
             this.customerMap = new HashMap<>();
             try {
                 this.transactionMap = this.dbase.getBalanceOperations();
-                this.counter_transactionID = this.dbase.getLastTransactionID();
+                this.counter_transactionID= this.dbase.getLastTransactionID();
             }
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
