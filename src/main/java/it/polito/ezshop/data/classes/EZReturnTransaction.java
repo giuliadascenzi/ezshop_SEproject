@@ -26,6 +26,13 @@ public class EZReturnTransaction implements ReturnTransaction{
         this.status = "OPEN";
     }
 
+    public EZReturnTransaction(int stID, int retID, String status) {
+        this.saleTransactionID = stID;
+        this.returnID = retID;
+        this.productMap = new HashMap<>();
+        this.status = "OPEN";
+    }
+
     @Override
     public int getSaleTransactionID() {
         return this.saleTransactionID;

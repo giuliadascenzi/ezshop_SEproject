@@ -28,41 +28,72 @@ public class EZShop implements EZShopInterface {
     EZDatabase dbase;
 
     public EZShop() {
-        // TODO: leggere dati dal DB e riempire le strutture dati
-        /* APERTURA DATABASE*/
         try {
             this.dbase = new EZDatabase();
+
+            this.userList = this.dbase.getUsers();
+            this.idUsers = dbase.getNextUserId();
+
+            // TODO: inizializzare lista di clienti
+            // TODO: funzione per inizializzare idCustomers dal DB
+            this.customerMap = new HashMap<>();
+            try {
+                this.transactionMap = this.dbase.getBalanceOperations();
+                this.counter_transactionID = this.dbase.getLastTransactionID();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.transactionMap = new HashMap<>();
+                this.counter_transactionID = 0;
+            }
+            try {
+                this.saleTransactionMap = this.dbase.getSaleTransactions();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.saleTransactionMap = new HashMap<>();
+            }
+            try {
+                this.returnTransactionMap = this.dbase.getReturnTransactions();
+                this.counter_returnTransactionID = this.dbase.getLastReturnID();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.returnTransactionMap = new HashMap<>();
+                this.counter_returnTransactionID = 0;
+            }
+            this.orderTransactionMap = this.dbase.getOrders();
+            //TODO: inizializzare productTypeMap
+            // TODO: funzione per inizializzare productIds dal DB
+            this.productTypeMap = new HashMap<>();
         }
         catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database.");
-        }
-
-        /* CARICAMENTO DATI*/
-        try {
-            this.userList = this.dbase.getUsers();
-            this.orderTransactionMap = this.dbase.getOrders();
-            // TODO: FARE QUI DENTRO L'UPLOAD DEI DATI!!
-
+            // Se la connessione al database fallisce, si inizializza tutto con i valori di default
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+            this.userList = new ArrayList<>();
             this.customerMap = new HashMap<>();
             this.transactionMap = new HashMap<>();
             this.saleTransactionMap = new HashMap<>();
             this.returnTransactionMap = new HashMap<>();
-
+            this.orderTransactionMap = new HashMap<>();
             this.productTypeMap = new HashMap<>();
-            this.userSession = null;
-            // TODO: rimpiazzare questi valori con quelli ricavati dal DB
-            this.idUsers = dbase.getNextUserId();
+
+            this.idUsers = 0;
             this.idCustomer = 0;
             this.idCustomerCard = 0;
             this.counter_transactionID = 0;
             this.counter_returnTransactionID = 0;
             this.productIds = 0;
-
-        } catch (SQLException e) {
-            System.out.println("Problem uploading the data from the database");
         }
 
+        // Questo rimane inizializzato a null in ogni caso
+        this.userSession = null;
     }
+
 
     /**
         checkUserRole(String expectedRole)
