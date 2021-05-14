@@ -41,6 +41,14 @@ public class EZSaleTransaction implements SaleTransaction {
         this.status = "OPEN";
     }
 
+    public EZSaleTransaction(Integer transactionID, double discountRate, double price, String status) {
+        this.transactionID = transactionID;
+        this.discountRate = discountRate;
+        this.price = price;
+        this.entryList = new ArrayList<>();
+        this.status = status;
+    }
+
     @Override
     public Integer getTicketNumber() {
         return this.transactionID;

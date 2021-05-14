@@ -1590,8 +1590,8 @@ public class EZShop implements EZShopInterface {
         st.setStatus("CLOSED");
 
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
-        // TODO: AGGIORNA DB CON NUOVA TRANSAZIONE
-        // TODO: AGGIORNA DB AGGIORNANDO LE QUANTITA' DEI PRODOTTI ACQUISTATI
+        // TODO: AGGIORNA DB CON NUOVA TRANSAZIONE (SALE TRANSACTION)
+        // TODO: AGGIORNA DB AGGIORNANDO LE QUANTITA' DEI PRODOTTI ACQUISTATI (SALE TRANSACTION)
 
         return true;
     }
@@ -1631,7 +1631,7 @@ public class EZShop implements EZShopInterface {
             this.transactionMap.remove(saleNumber);
         }
 
-        // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONE
+        // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONE (SALE TRANSACTION)
 
         return true;
     }
@@ -1663,7 +1663,7 @@ public class EZShop implements EZShopInterface {
         }
 
         // Get transaction from the data base
-        // TODO: PRENDI TRANSAZIONE DAL DB
+        // TODO: PRENDI TRANSAZIONE DAL DB (SALE TRANSACTION)
 
         // Placeholder value until DB is implemented
         EZSaleTransaction e = new EZSaleTransaction(99999);
@@ -1699,9 +1699,13 @@ public class EZShop implements EZShopInterface {
             return -1;
         }
 
-        int newID = ++this.counter_returnTransactionID;
-
         EZSaleTransaction e = (EZSaleTransaction) this.saleTransactionMap.get(saleNumber);
+
+        if (!e.getStatus().equalsIgnoreCase("PAID")) {
+            return -1;
+        }
+
+        int newID = ++this.counter_returnTransactionID;
 
         e.addReturn(new EZReturnTransaction(saleNumber, newID));
 
@@ -1873,7 +1877,9 @@ public class EZShop implements EZShopInterface {
             // update the map
             this.saleTransactionMap.put(sale.getTicketNumber(), sale);
 
-            //TODO: AGGIORNA DB
+            //TODO: AGGIORNA DB, AGGIUNGENDO I RIMBORSI PER LA TRANSAZIONE DI VENDITA (RET. TRANSACTION)
+            //TODO: AGGIORNA DB, MODIFICANDO LA TRANSAZIONE DI VENDITA (RET. TRANSACTION)
+            //TODO: AGGIORNA DB, MODIFICANDO LE QUANTITA' DI PRODOTTI DELLA ST (RET. TRANSACTION)
         }
         return true;
     }
@@ -1937,7 +1943,9 @@ public class EZShop implements EZShopInterface {
         // remove the return transaction from the ST's list
         sale.deleteReturn(ret.getReturnID());
 
-        //TODO: AGGIORNA DB
+        //TODO: AGGIORNA DB, ELIMINANDO LA RT (RETURN TRANSACTION)
+        //TODO: AGGIORNA DB, MODIFICANDO LA ST (RETURN TRANSACTION)
+        //TODO: AGGIORNA DB, MODIFICANDO LE QUANTITA' DEI PRODOTTI NELLA ST (RETURN TRANSACTION)
 
         // update the ST map
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
@@ -2002,7 +2010,7 @@ public class EZShop implements EZShopInterface {
 
         result.setStatus("PAID");
 
-        //TODO: AGGIORNA DB
+        //TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA ST (PAYMENT - SALE TRANSACTION)
 
         this.saleTransactionMap.put(result.getTicketNumber(), result);
 
@@ -2062,7 +2070,7 @@ public class EZShop implements EZShopInterface {
 
         result.setStatus("PAID");
 
-        //TODO: AGGIORNA DB
+        //TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA ST (PAYMENT - SALE TRANSACTION)
 
         this.saleTransactionMap.put(result.getTicketNumber(), result);
 
@@ -2120,7 +2128,7 @@ public class EZShop implements EZShopInterface {
         result.setStatus("PAID");
         sale.updateReturn(result);
 
-        // TODO: AGGIORNA DB
+        // TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA RT (PAYMENT - RETURN TRANSACTION)
 
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
         this.returnTransactionMap.put(result.getReturnID(), result);
@@ -2187,7 +2195,7 @@ public class EZShop implements EZShopInterface {
         result.setStatus("PAID");
         sale.updateReturn(result);
 
-        // TODO: AGGIORNA DB
+        // TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA RT (PAYMENT - RETURN TRANSACTION)
 
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
         this.returnTransactionMap.put(result.getReturnID(), result);
@@ -2221,7 +2229,7 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        // TODO: AGGIUNGI OPERAZIONE AL DB
+        // TODO: AGGIUNGI OPERAZIONE AL DB (BALANCE OPERATION)
 
         this.transactionMap.put(bo.getBalanceId(), bo);
 
