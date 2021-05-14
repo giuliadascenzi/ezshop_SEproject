@@ -426,7 +426,10 @@ public class EZShop implements EZShopInterface {
         int newProductId=this.productIds;
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
         this.productIds++;
-        this.productTypeMap.put(productCode, pt); //TODO update db
+        this.productTypeMap.put(productCode, pt);
+
+        //
+        //TODO update db
 
         return newProductId;
     }
@@ -520,6 +523,7 @@ public class EZShop implements EZShopInterface {
             if (p.getId().equals(id))
             { //Found
                 this.productTypeMap.remove(p.getBarCode());
+
                 return true; //TODO update db
             }
 

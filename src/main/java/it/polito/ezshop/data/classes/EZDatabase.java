@@ -114,7 +114,7 @@ public class EZDatabase {
 
     }
 
-/*******************************************************************************************/
+    /*******************************************************************************************/
     /********************* METODI PER LA TABELLA CUSTOMER **************************/
     public boolean insertCustomer(EZCustomer customer) throws SQLException {
 
@@ -152,7 +152,7 @@ public class EZDatabase {
     public boolean deleteCustomerCard (Integer id) throws SQLException {
 
 
-        String sql ="DELETE CUSTOMERCARD FROM CUSTOMERS WHERE id =?";
+        String sql ="DELETE CustomerCard FROM CUSTOMERS WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, id);
         if(pstm.executeUpdate()!=1)
@@ -162,7 +162,7 @@ public class EZDatabase {
     public boolean updateCustomerCard (Integer id, String newCustomerCard) throws SQLException {
 
 
-        String sql ="UPDATE CUSTOMER SET CustomerCard = ?  WHERE id =?";
+        String sql ="UPDATE CUSTOMERS SET CustomerCard = ?  WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setString(1, newCustomerCard);
         pstm.setInt(2, id);
@@ -181,12 +181,49 @@ public class EZDatabase {
             return false;
         return true;
     }
+    /*******************************************************************************************/
+    /********************* METODI PER LA TABELLA PRODUCT TYPE **************************/
+    public boolean insertProductType(EZProductType product) throws SQLException {
+        String values = product.getBarCode()+", '"+product.getId()+"', '"+product.getPricePerUnit()+"', '"+product.getLocation()+"', '"+product.getNote()+"', '"+product.getQuantity()+"', '"+product.getProductDescription()+"'";
+        String sql ="INSERT INTO PRODUCTS VALUES ("+ values +")";
+        Statement statement =this.connection.createStatement();
+        if(statement.executeUpdate(sql)!=1) //ritorna il numero di righe cambiate executeUpdate -> in questo caso é una insert, quindi deve essere per forza una.
+            return false;
+        return true;
+    }
+    public void updateProduct (EZProductType product) throws SQLException {
+        String sql = "UPDATE PRODUCTS SET productId= ?, PricePerUnit = ?, Location = ?, Note = ?, Quantity = ?,Description = ?, WHERE Barcode = ?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setInt(1, product.getId());
+        pstm.setDouble(2, product.getPricePerUnit());
+        pstm.setString(3, product.getLocation());
+        pstm.setString(4, product.getNote());
+        pstm.setInt(5, product.getQuantity());
+        pstm.setString(6, product.getProductDescription());
+        pstm.setString(7, product.getBarCode());
+
+
+    }
+    public void deleteProduct (EZProductType product) throws SQLException {
+
+
+        String sql ="DELETE FROM CUSTOMERS WHERE Barcode =?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.setString(1, product.getBarCode());
+        pstm.executeUpdate();
+
+    }
+
+
 
 
     /*******************************************************************************************/
+
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();
+        //db.createTableCustomer();
 
         //EZUser user =new EZUser(2, "antonino", "ciao2", "Manager");
         //db.insertUser(user);
