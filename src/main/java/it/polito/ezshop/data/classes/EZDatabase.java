@@ -1,12 +1,7 @@
 package it.polito.ezshop.data.classes;
 
 
-import it.polito.ezshop.data.BalanceOperation;
-import it.polito.ezshop.data.SaleTransaction;
-
 import java.sql.*;
-import java.sql.Date;
-import java.time.LocalDate;
 import java.util.*;
 
 public class EZDatabase {
@@ -119,148 +114,7 @@ public class EZDatabase {
 
     }
 
-    // ---------------- METODI PER LA TABELLA BALANCEOPERATIONS ------------------- //
-    public void addBalanceOperation(EZBalanceOperation bo) throws SQLException {
-        String sql = "INSERT INTO BalanceOperations(id, money, date, type) VALUES (?, ?, ?, ?);";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
-
-        pstm.setInt(1, bo.getBalanceId());
-        pstm.setDouble(2, bo.getMoney());
-        pstm.setString(3, bo.getDate().toString());
-        pstm.setString(4, bo.getType());
-
-        pstm.executeUpdate();
-    }
-
-    public void updateBalanceOperation(EZBalanceOperation bo) throws SQLException {
-        String sql = "UPDATE BalanceOperations" +
-                "SET money = ?, date = ?, type = ?" +
-                "WHERE id = ?;";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
-
-        pstm.setDouble(1, bo.getMoney());
-        pstm.setString(2, bo.getDate().toString());
-        pstm.setString(3, bo.getType());
-        pstm.setInt(4, bo.getBalanceId());
-
-        pstm.executeUpdate();
-    }
-
-    public void deleteBalanceOperation(int balanceId) throws SQLException {
-        String sql = "DELETE FROM BalanceOperations" +
-                "WHERE id = ?;";
-        PreparedStatement pstm = this.connection.prepareStatement(sql);
-
-        pstm.setInt(1, balanceId);
-
-        pstm.executeUpdate();
-    }
-
-    public List<EZBalanceOperation> getBalanceOperations() throws SQLException {
-        String query = "SELECT * FROM BalanceOperations;";
-        Statement statement =this.connection.createStatement();
-        ResultSet rs = statement.executeQuery(query);
-        List<EZBalanceOperation> boList = new ArrayList<>();
-
-        while(rs.next()) {
-            EZBalanceOperation bo = new EZBalanceOperation(
-                    rs.getInt("id"),
-                    LocalDate.parse(rs.getString("date")),
-                    rs.getDouble("money")
-            );
-            boList.add(bo);
-        }
-
-        return boList;
-    }
-
-    // ---------------------- METODI PER LA TABELLA SALETRANSACTIONS --------------- //
-    public void addSaleTransaction(EZSaleTransaction st) throws SQLException {
-        String sql = "INSERT INTO SaleTransactions(id, discountRate, price, status) VALUES (?, ?, ?, ?);";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
-
-        pstm.setInt(1, st.getTicketNumber());
-        pstm.setDouble(2, st.getDiscountRate());
-        pstm.setDouble(3, st.getPrice());
-        pstm.setString(4, st.getStatus());
-
-        pstm.executeUpdate();
-    }
-
-    public void updateSaleTransaction(EZSaleTransaction st) throws SQLException {
-        String sql = "UPDATE SaleTransactions" +
-                "SET discountRate = ?, price = ?, status = ?" +
-                "WHERE id = ?;";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
-
-        pstm.setDouble(1, st.getDiscountRate());
-        pstm.setDouble(2, st.getPrice());
-        pstm.setString(3, st.getStatus());
-        pstm.setInt(4, st.getTicketNumber());
-
-        pstm.executeUpdate();
-    }
-
-    public void deleteSaleTransaction(int id) throws SQLException {
-        String sql = "DELETE FROM SaleTransactions" +
-                "WHERE id = ?;";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
-
-        pstm.setInt(1, id);
-
-        pstm.executeUpdate();
-    }
-
-    public List<EZSaleTransaction> getSaleTransactions() throws SQLException {
-        String query = "SELECT * FROM SaleTransactions;";
-        Statement statement =this.connection.createStatement();
-        ResultSet rs = statement.executeQuery(query);
-        List<EZSaleTransaction> stList = new ArrayList<>();
-
-        while(rs.next()) {
-            EZSaleTransaction st = new EZSaleTransaction(
-                    rs.getInt("id"),
-                    rs.getDouble("discountRate"),
-                    rs.getDouble("price"),
-                    rs.getString("status")
-            );
-            stList.add(st);
-            //TODO: PRENDERE LE PRODUCT ENTRY RELATIVE ALLA ST E AGGIUNGERLE ALL'OGGETTO
-        }
-
-        return stList;
-    }
-
-    public EZSaleTransaction getSaleTransaction(int id) throws SQLException {
-        String query = "SELECT * FROM SaleTransactions WHERE id = ?;";
-        PreparedStatement statement = this.connection.prepareStatement(query);
-
-        statement.setInt(1, id);
-
-        ResultSet rs = statement.executeQuery(query);
-        List<EZSaleTransaction> stList = new ArrayList<>();
-
-        while(rs.next()) {
-            EZSaleTransaction st = new EZSaleTransaction(
-                    rs.getInt("id"),
-                    rs.getDouble("discountRate"),
-                    rs.getDouble("price"),
-                    rs.getString("status")
-            );
-            stList.add(st);
-            //TODO: PRENDERE LE PRODUCT ENTRY RELATIVE ALLA ST E AGGIUNGERLE ALL'OGGETTO
-        }
-
-        return stList.get(0);
-    }
-
-    //TODO: DB - METODO PER AGGIORNARE I PRODOTTI DI UNA TRANSAZIONE DI VENDITA
-
-    //TODO: DB - METODO PER AGGIORNARE LA QUANTITA' IN MAGAZZINO DEI PRODOTTI
-
-    //TODO: METODI DB PER LE RETURN TRANSACTION
-
-/*******************************************************************************************/
+    /*******************************************************************************************/
     /********************* METODI PER LA TABELLA CUSTOMER **************************/
     public boolean insertCustomer(EZCustomer customer) throws SQLException {
 
@@ -298,7 +152,7 @@ public class EZDatabase {
     public boolean deleteCustomerCard (Integer id) throws SQLException {
 
 
-        String sql ="DELETE CUSTOMERCARD FROM CUSTOMERS WHERE id =?";
+        String sql ="DELETE CustomerCard FROM CUSTOMERS WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, id);
         if(pstm.executeUpdate()!=1)
@@ -308,7 +162,7 @@ public class EZDatabase {
     public boolean updateCustomerCard (Integer id, String newCustomerCard) throws SQLException {
 
 
-        String sql ="UPDATE CUSTOMER SET CustomerCard = ?  WHERE id =?";
+        String sql ="UPDATE CUSTOMERS SET CustomerCard = ?  WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setString(1, newCustomerCard);
         pstm.setInt(2, id);
@@ -327,12 +181,49 @@ public class EZDatabase {
             return false;
         return true;
     }
+    /*******************************************************************************************/
+    /********************* METODI PER LA TABELLA PRODUCT TYPE **************************/
+    public boolean insertProductType(EZProductType product) throws SQLException {
+        String values = product.getBarCode()+", '"+product.getId()+"', '"+product.getPricePerUnit()+"', '"+product.getLocation()+"', '"+product.getNote()+"', '"+product.getQuantity()+"', '"+product.getProductDescription()+"'";
+        String sql ="INSERT INTO PRODUCTS VALUES ("+ values +")";
+        Statement statement =this.connection.createStatement();
+        if(statement.executeUpdate(sql)!=1) //ritorna il numero di righe cambiate executeUpdate -> in questo caso é una insert, quindi deve essere per forza una.
+            return false;
+        return true;
+    }
+    public void updateProduct (EZProductType product) throws SQLException {
+        String sql = "UPDATE PRODUCTS SET productId= ?, PricePerUnit = ?, Location = ?, Note = ?, Quantity = ?,Description = ?, WHERE Barcode = ?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setInt(1, product.getId());
+        pstm.setDouble(2, product.getPricePerUnit());
+        pstm.setString(3, product.getLocation());
+        pstm.setString(4, product.getNote());
+        pstm.setInt(5, product.getQuantity());
+        pstm.setString(6, product.getProductDescription());
+        pstm.setString(7, product.getBarCode());
+
+
+    }
+    public void deleteProduct (EZProductType product) throws SQLException {
+
+
+        String sql ="DELETE FROM CUSTOMERS WHERE Barcode =?";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.setString(1, product.getBarCode());
+        pstm.executeUpdate();
+
+    }
+
+
 
 
     /*******************************************************************************************/
+
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();
+        //db.createTableCustomer();
 
         //EZUser user =new EZUser(2, "antonino", "ciao2", "Manager");
         //db.insertUser(user);
