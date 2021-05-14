@@ -1284,7 +1284,7 @@ public class EZShop implements EZShopInterface {
         double total = 0;
 
         for (TicketEntry e : list) {
-            total += e.getPricePerUnit() * e.getAmount() * e.getDiscountRate();
+            total += e.getPricePerUnit() * e.getAmount() * (1 - e.getDiscountRate());
         }
 
         return total;
@@ -2083,7 +2083,7 @@ public class EZShop implements EZShopInterface {
 
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
-        boolean success = this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+        boolean success = this.recordBalanceUpdate(result.getPrice() * (1 - result.getDiscountRate()));
         if (!success) {
             return -1;
         }
@@ -2160,7 +2160,7 @@ public class EZShop implements EZShopInterface {
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
-        boolean success = this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+        boolean success = this.recordBalanceUpdate(result.getPrice() * (1 - result.getDiscountRate()));
         if (!success) {
             return false;
         }
