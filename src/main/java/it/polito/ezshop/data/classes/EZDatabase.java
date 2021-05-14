@@ -1,6 +1,5 @@
 package it.polito.ezshop.data.classes;
 
-
 import it.polito.ezshop.data.BalanceOperation;
 import it.polito.ezshop.data.SaleTransaction;
 import it.polito.ezshop.data.TicketEntry;
@@ -177,6 +176,7 @@ public class EZDatabase {
 
     // ---------------------- METODI PER LA TABELLA SALETRANSACTIONS --------------- //
     public void addSaleTransaction(EZSaleTransaction st) throws SQLException {
+        // NOTA: in questo metodo viene aggiunta anche la lista di ProductEntry
         String sql = "INSERT INTO SaleTransactions(id, discountRate, price, status) VALUES (?, ?, ?, ?);";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
@@ -186,6 +186,24 @@ public class EZDatabase {
         pstm.setString(4, st.getStatus());
 
         pstm.executeUpdate();
+
+        // add all entries
+        List<TicketEntry> entryList = st.getEntries();
+
+        for (TicketEntry e : entryList) {
+            String query_e = "INSERT INTO ProductEntry(barCode, saleId, prodDesc, amount, discountRate, pricePerUnit) " +
+                    "VALUES (?, ?, ?, ?, ?, ?);";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setString(1, e.getBarCode());
+            stat_e.setInt(2, st.getTicketNumber());
+            stat_e.setString(3, e.getProductDescription());
+            stat_e.setInt(4, e.getAmount());
+            stat_e.setDouble(5, e.getDiscountRate());
+            stat_e.setDouble(6, e.getPricePerUnit());
+
+            stat_e.executeUpdate();
+        }
     }
 
     public void updateSaleTransaction(EZSaleTransaction st) throws SQLException {
@@ -199,16 +217,49 @@ public class EZDatabase {
         pstm.setString(3, st.getStatus());
         pstm.setInt(4, st.getTicketNumber());
 
+        // update every entry
+        List<TicketEntry> entryList = st.getEntries();
+
+        for (TicketEntry e : entryList) {
+            String query_e = "UPDATE ProductEntry" +
+                    "SET prodDesc = ?, amount = ?,  discountRate = ?, pricePerUnit = ?" +
+                    "WHERE barCode = ?, saleId = ?;";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setString(1, e.getProductDescription());
+            stat_e.setInt(2, e.getAmount());
+            stat_e.setDouble(3, e.getDiscountRate());
+            stat_e.setDouble(4, e.getPricePerUnit());
+
+            stat_e.setString(5, e.getBarCode());
+            stat_e.setInt(6, st.getTicketNumber());
+
+            stat_e.executeUpdate();
+        }
+
         pstm.executeUpdate();
     }
 
-    public void deleteSaleTransaction(int id) throws SQLException {
+    public void deleteSaleTransaction(EZSaleTransaction st) throws SQLException {
         String sql = "DELETE FROM SaleTransactions" +
                 "WHERE id = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
-        pstm.setInt(1, id);
+        pstm.setInt(1, st.getTicketNumber());
 
+        // delete every entry associated with the st
+        List<TicketEntry> entryList = st.getEntries();
+
+        for (TicketEntry e : entryList) {
+            String query_e = "DELETE FROM ProductEntry WHERE barCode = ?, saleId = ?;";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setString(1, e.getBarCode());
+            stat_e.setInt(2, st.getTicketNumber());
+
+            stat_e.executeUpdate();
+        }
+        // delete the st
         pstm.executeUpdate();
     }
 
@@ -253,7 +304,6 @@ public class EZDatabase {
             st.setEntries(entryList);
             // add the st to the st list
             stList.add(st);
-            //TODO: AGGIUNGERE TABELLA PRODUCTENTRY NEL DB
         }
 
         return stList;
@@ -304,29 +354,83 @@ public class EZDatabase {
             st.setEntries(entryList);
             // add the st to the st list
             stList.add(st);
-            //TODO: AGGIUNGERE TABELLA PRODUCTENTRY NEL DB
         }
 
         return stList.get(0);
     }
 
-    //TODO: DB - METODO PER AGGIORNARE I PRODOTTI DI UNA TRANSAZIONE DI VENDITA
+    public void updateSaleInventoryQuantity(EZSaleTransaction st) throws SQLException {
+        // get list of entries
+        List<TicketEntry> entryList = st.getEntries();
 
-    //TODO: DB - METODO PER AGGIORNARE LA QUANTITA' IN MAGAZZINO DEI PRODOTTI
+        // update all of the product quantities in the DB
+        for (TicketEntry e : entryList) {
+            String query_e = "UPDATE Products" +
+                    "SET Quantity = Quantity - ?" +
+                    "WHERE barcode = ?;";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setInt(1, e.getAmount());
+            stat_e.setString(2, e.getBarCode());
+
+            stat_e.executeUpdate();
+        }
+    }
 
     // ---------------------- METODI PER LA TABELLA RETURNTRANSACTION ------------------ //
     public void addReturnTransaction(EZReturnTransaction rt) throws SQLException {
-        /*String sql = "INSERT INTO SaleTransactions(id, discountRate, price, status) VALUES (?, ?, ?, ?);";
+        String sql = "INSERT INTO ReturnTransactions(returnId, saleId, status, money) VALUES (?, ?, ?, ?);";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
-        pstm.setInt(1, st.getTicketNumber());
-        pstm.setDouble(2, st.getDiscountRate());
-        pstm.setDouble(3, st.getPrice());
-        pstm.setString(4, st.getStatus());
+        pstm.setInt(1, rt.getReturnID());
+        pstm.setDouble(2, rt.getSaleTransactionID());
+        pstm.setString(3, rt.getStatus());
+        pstm.setDouble(4, rt.getMoneyReturned());
 
-        pstm.executeUpdate();*/
+        pstm.executeUpdate();
+
+        Map<String, Integer> prodMap = rt.getMapOfProducts();
+
+        for(Map.Entry<String, Integer> e : prodMap.entrySet()) {
+            String query_e = "INSERT INTO ReturnProductEntry(returnId, barCode, amount)" +
+                    "VALUES(?, ?, ?);";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setInt(1, rt.getReturnID());
+            stat_e.setString(2, e.getKey());
+            stat_e.setInt(3, e.getValue());
+
+            stat_e.executeUpdate();
+        }
     }
-    //TODO: METODI DB PER LE RETURN TRANSACTION
+
+    public void updateReturnTransaction(EZReturnTransaction rt) throws SQLException {
+        String sql = "UPDATE ReturnTransactions " +
+                "SET status = ?, money = ?" +
+                "WHERE returnId = ?;";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setString(1, rt.getStatus());
+        pstm.setDouble(2, rt.getMoneyReturned());
+        pstm.setInt(3, rt.getReturnID());
+
+        pstm.executeUpdate();
+
+        Map<String, Integer> prodMap = rt.getMapOfProducts();
+
+        for(Map.Entry<String, Integer> e : prodMap.entrySet()) {
+            String query_e = "UPDATE ReturnProductEntry" +
+                    "SET amount = ?" +
+                    "WHERE returnId = ? AND barCode = ?;";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setInt(1, e.getValue());
+            stat_e.setInt(2, rt.getReturnID());
+            stat_e.setString(3, e.getKey());
+
+            stat_e.executeUpdate();
+        }
+    }
 
 /*******************************************************************************************/
     public static void main (String[] args) throws SQLException

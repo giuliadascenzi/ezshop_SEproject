@@ -3,6 +3,7 @@ package it.polito.ezshop.data;
 import it.polito.ezshop.exceptions.*;
 import it.polito.ezshop.data.classes.*;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 import java.util.*;
@@ -10,7 +11,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class EZShop implements EZShopInterface {
-
     List<User> userList;
     Map<Integer, Customer> customerMap;
     Map<Integer, BalanceOperation> transactionMap;
@@ -25,7 +25,7 @@ public class EZShop implements EZShopInterface {
     int counter_returnTransactionID;
     int counter_transactionID;
     private int productIds;
-    //EZDatabase dbase;
+    EZDatabase dbase;
 
     public EZShop() {
         // TODO: leggere dati dal DB e riempire le strutture dati
@@ -44,7 +44,12 @@ public class EZShop implements EZShopInterface {
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
-        //this.dbase= new EZDatabase();
+        try {
+            this.dbase = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database.");
+        }
     }
 
     /**
@@ -1323,10 +1328,6 @@ public class EZShop implements EZShopInterface {
             // aggiorna la mappa
             saleTransactionMap.put(transactionId, s);
 
-            // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
-            p.setQuantity(p.getQuantity() - amount);
-            productTypeMap.put(productCode, p);
-
             return true;
         }
     }
@@ -1410,11 +1411,13 @@ public class EZShop implements EZShopInterface {
             s.setPrice(this.computeSaleTransactionPrice(s));
             saleTransactionMap.put(transactionId, s);
 
+            /*
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
 
             // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
+            */
 
             return true;
         }
@@ -1608,8 +1611,27 @@ public class EZShop implements EZShopInterface {
         st.setStatus("CLOSED");
 
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
-        // TODO: AGGIORNA DB CON NUOVA TRANSAZIONE (SALE TRANSACTION)
-        // TODO: AGGIORNA DB AGGIORNANDO LE QUANTITA' DEI PRODOTTI ACQUISTATI (SALE TRANSACTION)
+        try {
+            this.dbase.addSaleTransaction(st);
+            this.dbase.updateSaleInventoryQuantity(st);
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+        }
+
+        // aggiorna dati in locale
+        List<TicketEntry> entryList = st.getEntries();
+
+        for (TicketEntry e : entryList) {
+            ProductType p = this.productTypeMap.get(e.getBarCode());
+
+            // aggiorna la quantità del prodotto
+            p.setQuantity(p.getQuantity() - e.getAmount());
+            productTypeMap.put(p.getBarCode(), p);
+        }
+
+        this.saleTransactionMap.put(transactionId, st);
 
         return true;
     }
@@ -1643,13 +1665,13 @@ public class EZShop implements EZShopInterface {
             return false;
         }
 
-        this.saleTransactionMap.remove(saleNumber);
-
-        if (transactionMap.containsKey(saleNumber)) {
-            this.transactionMap.remove(saleNumber);
+        EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(saleNumber);
+        if (st.getStatus().equalsIgnoreCase("CLOSED")
+            || st.getStatus().equalsIgnoreCase("PAID")) {
+            return false;
         }
 
-        // TODO: AGGIORNA DB RIMUOVENDO TRANSAZIONE (SALE TRANSACTION)
+        this.saleTransactionMap.remove(saleNumber);
 
         return true;
     }
@@ -1680,13 +1702,7 @@ public class EZShop implements EZShopInterface {
             return null;
         }
 
-        // Get transaction from the data base
-        // TODO: PRENDI TRANSAZIONE DAL DB (SALE TRANSACTION)
-
-        // Placeholder value until DB is implemented
-        EZSaleTransaction e = new EZSaleTransaction(99999);
-
-        return e;
+        return this.saleTransactionMap.get(transactionId);
     }
 
     // --- Manage Return Transactions --- //
@@ -1888,17 +1904,24 @@ public class EZShop implements EZShopInterface {
             // recompute the sale's price
             sale.setPrice(newMoney);
 
+            try {
+                this.dbase.addReturnTransaction(ret);
+                this.dbase.updateSaleTransaction(sale);
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem with the database:");
+                System.out.println(e.getSQLState());
+                return false;
+            }
+
             // update both the ST's list and the return map
             sale.updateReturn(ret);
             this.returnTransactionMap.put(ret.getReturnID(), ret);
 
             // update the map
             this.saleTransactionMap.put(sale.getTicketNumber(), sale);
-
-            //TODO: AGGIORNA DB, AGGIUNGENDO I RIMBORSI PER LA TRANSAZIONE DI VENDITA (RET. TRANSACTION)
-            //TODO: AGGIORNA DB, MODIFICANDO LA TRANSAZIONE DI VENDITA (RET. TRANSACTION)
-            //TODO: AGGIORNA DB, MODIFICANDO LE QUANTITA' DI PRODOTTI DELLA ST (RET. TRANSACTION)
         }
+
         return true;
     }
 
@@ -1948,10 +1971,7 @@ public class EZShop implements EZShopInterface {
 
         for (String prodCode : ret.getMapOfProducts().keySet()) {
             // update the quantity for each product in the return list
-            EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
             int quantity = rMap.get(prodCode);
-            p.setQuantity(p.getQuantity() - quantity);
-            this.productTypeMap.put(prodCode, p);
 
             // update corresponding sale entry
             sale.updateProductInEntry(prodCode, +quantity);
@@ -1960,10 +1980,6 @@ public class EZShop implements EZShopInterface {
         sale.setPrice(this.computeSaleTransactionPrice(sale));
         // remove the return transaction from the ST's list
         sale.deleteReturn(ret.getReturnID());
-
-        //TODO: AGGIORNA DB, ELIMINANDO LA RT (RETURN TRANSACTION)
-        //TODO: AGGIORNA DB, MODIFICANDO LA ST (RETURN TRANSACTION)
-        //TODO: AGGIORNA DB, MODIFICANDO LE QUANTITA' DEI PRODOTTI NELLA ST (RETURN TRANSACTION)
 
         // update the ST map
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
@@ -2024,11 +2040,21 @@ public class EZShop implements EZShopInterface {
 
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
-        this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+        boolean success = this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+        if (!success) {
+            return -1;
+        }
 
         result.setStatus("PAID");
 
-        //TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA ST (PAYMENT - SALE TRANSACTION)
+        try {
+            this.dbase.updateSaleTransaction(result);
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return -1;
+        }
 
         this.saleTransactionMap.put(result.getTicketNumber(), result);
 
@@ -2084,15 +2110,25 @@ public class EZShop implements EZShopInterface {
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
-        this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+        boolean success = this.recordBalanceUpdate(result.getPrice() * result.getDiscountRate());
+        if (!success) {
+            return false;
+        }
 
         result.setStatus("PAID");
 
-        //TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA ST (PAYMENT - SALE TRANSACTION)
+        try {
+            this.dbase.updateSaleTransaction(result);
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return false;
+        }
 
         this.saleTransactionMap.put(result.getTicketNumber(), result);
 
-        return false;
+        return true;
     }
 
     /**
@@ -2141,12 +2177,22 @@ public class EZShop implements EZShopInterface {
 
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
-        this.recordBalanceUpdate(result.getMoneyReturned());
+        boolean success = this.recordBalanceUpdate(result.getMoneyReturned());
+        if (!success) {
+            return -1;
+        }
 
         result.setStatus("PAID");
         sale.updateReturn(result);
 
-        // TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA RT (PAYMENT - RETURN TRANSACTION)
+        try {
+            this.dbase.updateReturnTransaction(result);
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return -1;
+        }
 
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
         this.returnTransactionMap.put(result.getReturnID(), result);
@@ -2208,12 +2254,22 @@ public class EZShop implements EZShopInterface {
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
-        this.recordBalanceUpdate(-result.getMoneyReturned());
+        boolean success = this.recordBalanceUpdate(-result.getMoneyReturned());
+        if (!success) {
+            return -1;
+        }
 
         result.setStatus("PAID");
         sale.updateReturn(result);
 
-        // TODO: AGGIORNA DB, AGGIORNANDO LO STATUS DELLA RT (PAYMENT - RETURN TRANSACTION)
+        try {
+            this.dbase.updateReturnTransaction(result);
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return -1;
+        }
 
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
         this.returnTransactionMap.put(result.getReturnID(), result);
@@ -2241,13 +2297,20 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        BalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), toBeAdded);
+        EZBalanceOperation bo = new EZBalanceOperation(++this.counter_transactionID, LocalDate.now(), toBeAdded);
 
         if (this.computeBalance() + toBeAdded < 0) {
             return false;
         }
 
-        // TODO: AGGIUNGI OPERAZIONE AL DB (BALANCE OPERATION)
+        try {
+            this.dbase.addBalanceOperation(bo);
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return false;
+        }
 
         this.transactionMap.put(bo.getBalanceId(), bo);
 
