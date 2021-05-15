@@ -37,6 +37,7 @@ public class EZShop implements EZShopInterface {
             // TODO: inizializzare lista di clienti
             // TODO: funzione per inizializzare idCustomers dal DB
             this.customerMap = new HashMap<>();
+
             try {
                 this.transactionMap = this.dbase.getBalanceOperations();
                 this.counter_transactionID= this.dbase.getLastTransactionID();
@@ -109,6 +110,8 @@ public class EZShop implements EZShopInterface {
 
     /**
         checkBarCodeValidity(String barCode)
+        Controlla che il barcode sia valido. Per essere valido il codice deve essere composto da soli interi e deve essere lungo 12/13/14 numeri
+
         @param barCode: il codice a barre da controllare
 
         @return:
@@ -188,11 +191,8 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public void reset() {
-        // TODO: aggiornare il DB eliminando tutto
-
 
         try {
-
             /*Delete all users from the database and from the local structure*/
                 for (User u : this.userList) {
                     dbase.deleteUser(u.getId());
@@ -205,6 +205,16 @@ public class EZShop implements EZShopInterface {
                 }
                 this.orderTransactionMap.clear();
 
+            // TODO: aggiornare il DB eliminando custmerMap
+            this.customerMap = new HashMap<>();
+            // TODO: aggiornare il DB eliminando transactionMap
+            this.transactionMap = new HashMap<>();
+            // TODO: aggiornare il DB eliminando saleTransactionMap
+            this.saleTransactionMap = new HashMap<>();
+            // TODO: aggiornare il DB eliminando returnTransactionMap
+            this.returnTransactionMap = new HashMap<>();
+            // TODO: aggiornare il DB eliminando ProductTypeMap
+            this.productTypeMap = new HashMap<>();
 
 
         } catch (SQLException e) {
@@ -212,13 +222,7 @@ public class EZShop implements EZShopInterface {
         }
 
 
-        this.customerMap = new HashMap<>();
-        this.transactionMap = new HashMap<>();
-        this.saleTransactionMap = new HashMap<>();
-        this.returnTransactionMap = new HashMap<>();
-        this.productTypeMap = new HashMap<>();
         this.userSession = null;
-
         this.idUsers = 0;
         this.idCustomer = 0;
         this.idCustomerCard = 0;
@@ -944,7 +948,6 @@ public class EZShop implements EZShopInterface {
 
         //insert it in the map of orders
         this.orderTransactionMap.put(newID, newOrder);
-        // TODO: update db per balance operation
 
         //insert order in the balance operation
         this.transactionMap.put(newID, blOp);
@@ -1077,7 +1080,11 @@ public class EZShop implements EZShopInterface {
         int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
         this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
 
-        //TODO: update quantity product
+        try {
+            this.dbase.updateProduct((EZProductType) this.productTypeMap.get(productCode));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
 
 
         return true;

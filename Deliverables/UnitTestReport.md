@@ -28,34 +28,51 @@ Version: 1.0
 
 **Criteria for method *checkBarCodeValidity*:**
 
- - Validity of barCode
+ - Length of barCode
+ - Sign of barcode
+ - Data type of barCode digits
+ - Validity of barCode following a validation protocol
 
 **Predicates for method *checkBarCodeValidity*:**
 
 | Criteria | Predicate |
 | -------- | --------- |
-| Validity of barCode         | valid           |
-| '' | invalid/NULL |
+| Length of barCode | <13 |
+|  | >15 |
+| Data type of barCode digits | All digits are numeric |
+|  | Not all digits are numeric |
+| Sign of barcode | <0 |
+|  | >0 |
+| Validity of barCode following a validation protocol | Valid |
+|  | Invalid |
 
 **Boundaries**:
 
 | Criteria | Boundary values |
 | -------- | --------------- |
-| Validity of barCode       | valid, invalid, NULL |
+| Length of barCode | 13,14,15 |
+| Data type of barCode digits | - |
+| Sign of barcode | 0 |
+| Validity of barCode following a validation protocol | - |
 
 **Combination of predicates**:
 
 
-| Validity of barCode | Valid / Invalid | Description of the test case | JUnit test case |
-|-------|-------|-------|-------|
-|Invalid/NULL|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity("6291041500218")<br/> -> false<br/>checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
-|Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
+| Length of barCode | Data type of barCode digits | Sign of barcode | Validity of barCode | Valid / Invalid | Description of the test case | JUnit test case |
+|-------|-------|-------|-------|-------|-------|-------|
+|[0, 13)|*|*|*|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
+|(15, maxint)| *                           |*|*|Invalid|checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|*| Not all numeric             |*|*|Invalid|checkBarCodeValidity("1234a234b")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|*| *                           |<=0|*|Invalid|checkBarCodeValidity("-6291041500213")<br/> -> false<br/> checkBarCodeValidity("0") -> false|BB_UnitTesting.test_InvalidBarCode|
+|*| *                           |*|Invalid|Invalid|checkBarCodeValidity("6291041500218")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|(13,14,15)|All numeric|>0|Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
 
  ### **Class *EZShop* - method *checkCreditCardValidity***
 
 **Criteria for method *checkCreditCardValidity*:**
 
- - Validity of barCode
+ - Validity of creditCard following Luhn Algorithm
+ - Data type of the digits
 
 **Predicates for method *checkCreditCardValidity*:**
 
@@ -63,20 +80,24 @@ Version: 1.0
 | ---------------------- | --------- |
 | Validity of creditCard | valid     |
 | ''                     | invalid/NULL   |
+| Data type of the digits | All numeric |
+|  | Not all numeric |
 
 **Boundaries**:
 
 | Criteria               | Boundary values |
 | ---------------------- | --------------- |
-| Validity of creditCard | valid, invalid, NULL  |
+| Validity of creditCard | -  |
+| Data type of the digits | - |
 
 **Combination of predicates**:
 
 
-| Validity of creditCard | Valid / Invalid | Description of the test case                         | JUnit test case                       |
-| ---------------------- | --------------- | ---------------------------------------------------- | ------------------------------------- |
-| Invalid/NULL                | Invalid         | checkCreditCardValidity("79927398718")<br/> -> false<br/>checkCreditCardValidity("cane")<br/> -> false<br/>checkCreditCardValidity(null)<br/> -> false | BB_UnitTesting.test_InvalidCreditCard |
-| Valid                  | Valid           | checkBarCodeValidity("79927398713")<br/> -> true     | BB_UnitTesting.test_ValidCreditCard   |
+| Data type of the digits | Validity of creditCard | Valid / Invalid | Description of the test case                         | JUnit test case                       |
+| ---------------------- | --------------- | ---------------------------------------------------- | ------------------------------------- | ---------------------- |
+| Not all numeric | *                | Invalid         | checkCreditCardValidity("cane")<br/> -> false<br/>checkCreditCardValidity(null)<br/> -> false | BB_UnitTesting.test_InvalidCreditCard |
+| * | Invalid/NULL | Invalid | checkCreditCardValidity("79927398718")<br/> -> false<br/> | BB_UnitTesting.test_InvalidCreditCard |
+| All numeric       | Valid                  | Valid           | checkBarCodeValidity("79927398713")<br/> -> true     | BB_UnitTesting.test_ValidCreditCard   |
 
 
 # White Box Unit Tests
