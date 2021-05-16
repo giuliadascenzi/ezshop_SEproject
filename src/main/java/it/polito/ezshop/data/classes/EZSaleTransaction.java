@@ -8,6 +8,7 @@ import it.polito.ezshop.data.TicketEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /*ANTONINO*/
 
@@ -103,7 +104,7 @@ public class EZSaleTransaction implements SaleTransaction {
             return;
         }
 
-        this.status = s;
+        this.status = s.toUpperCase();
     }
 
     /*

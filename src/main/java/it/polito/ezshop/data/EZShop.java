@@ -1653,8 +1653,12 @@ public class EZShop implements EZShopInterface {
         EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
         st.setStatus("CLOSED");
 
+        // Aggiungo una BalanceOperation corrispondente alla SaleTransaction
+        EZBalanceOperation bo = new EZBalanceOperation(transactionId, LocalDate.now(), st.getPrice());
+
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
         try {
+            this.dbase.addBalanceOperation(bo);
             this.dbase.addSaleTransaction(st);
             this.dbase.updateSaleInventoryQuantity(st);
         }
@@ -1674,6 +1678,7 @@ public class EZShop implements EZShopInterface {
             productTypeMap.put(p.getBarCode(), p);
         }
 
+        this.transactionMap.put(transactionId, bo);
         this.saleTransactionMap.put(transactionId, st);
 
         return true;
@@ -1908,7 +1913,15 @@ public class EZShop implements EZShopInterface {
         }
 
         EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+
+        if (!this.transactionMap.containsKey(ret.getSaleTransactionID())
+            || !this.saleTransactionMap.containsKey(ret.getSaleTransactionID())) {
+            return false;
+        }
+
+        EZBalanceOperation bo = (EZBalanceOperation) this.transactionMap.get(ret.getSaleTransactionID());
         EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+
         if (!commit) {
             // rollback the transaction
             // remove the return transaction from the sale and update the map
@@ -1919,7 +1932,6 @@ public class EZShop implements EZShopInterface {
             this.returnTransactionMap.remove(returnId);
         }
         else {
-
             /*
                 Must update:
                 * the corresponding sale transaction, i.e. entries and price
@@ -1946,9 +1958,11 @@ public class EZShop implements EZShopInterface {
 
             // recompute the sale's price
             sale.setPrice(newMoney);
+            bo.setMoney(newMoney);
 
             try {
                 this.dbase.addReturnTransaction(ret);
+                this.dbase.updateBalanceOperation(bo);
                 this.dbase.updateSaleTransaction(sale);
             }
             catch (SQLException e) {
@@ -1956,6 +1970,9 @@ public class EZShop implements EZShopInterface {
                 System.out.println(e.getSQLState());
                 return false;
             }
+
+            // update the corresponding BO
+            this.transactionMap.put(bo.getBalanceId(), bo);
 
             // update both the ST's list and the return map
             sale.updateReturn(ret);
@@ -2083,10 +2100,10 @@ public class EZShop implements EZShopInterface {
 
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
-        boolean success = this.recordBalanceUpdate(result.getPrice() * (1 - result.getDiscountRate()));
+        /*boolean success = this.recordBalanceUpdate(result.getPrice() * (1 - result.getDiscountRate()));
         if (!success) {
             return -1;
-        }
+        }*/
 
         result.setStatus("PAID");
 
@@ -2160,10 +2177,10 @@ public class EZShop implements EZShopInterface {
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
-        boolean success = this.recordBalanceUpdate(result.getPrice() * (1 - result.getDiscountRate()));
+        /*boolean success = this.recordBalanceUpdate(result.getPrice() * (1 - result.getDiscountRate()));
         if (!success) {
             return false;
-        }
+        }*/
 
         result.setStatus("PAID");
 
@@ -2231,10 +2248,10 @@ public class EZShop implements EZShopInterface {
 
         // registra la modifica del conto, aggiungendo una nuova BalanceOperation
         // richiamando un metodo dell'API
-        boolean success = this.recordBalanceUpdate(result.getMoneyReturned());
+        /*boolean success = this.recordBalanceUpdate(result.getMoneyReturned());
         if (!success) {
             return -1;
-        }
+        }*/
 
         result.setStatus("PAID");
         sale.updateReturn(result);
@@ -2317,10 +2334,10 @@ public class EZShop implements EZShopInterface {
 
         // registra il pagamento aggiungendo una nuova BalanceOperation
         // tramite metodo dell'API
-        boolean success = this.recordBalanceUpdate(-result.getMoneyReturned());
+        /*boolean success = this.recordBalanceUpdate(-result.getMoneyReturned());
         if (!success) {
             return -1;
-        }
+        }*/
 
         result.setStatus("PAID");
         sale.updateReturn(result);

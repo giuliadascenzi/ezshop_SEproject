@@ -30,7 +30,7 @@ public class EZReturnTransaction implements ReturnTransaction{
         this.saleTransactionID = stID;
         this.returnID = retID;
         this.productMap = new HashMap<>();
-        this.status = "OPEN";
+        this.status = status;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class EZReturnTransaction implements ReturnTransaction{
             return;
         }
 
-        this.status = s;
+        this.status = s.toUpperCase();
     }
 
     @Override
