@@ -8,6 +8,7 @@ import it.polito.ezshop.data.TicketEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 /*ANTONINO*/
 
@@ -17,12 +18,20 @@ public class EZSaleTransaction implements SaleTransaction {
     double discountRate;
     double price;
     List<ReturnTransaction> returnList;
+    /*
+        Values for "status":
+        - OPEN
+        - CLOSED
+        - PAID
+     */
+    String status;
 
     public EZSaleTransaction(Integer transactionID) {
         this.transactionID = transactionID;
         this.discountRate = 1;
         this.price = 0;
         this.entryList = new ArrayList<>();
+        this.status = "OPEN";
     }
 
     public EZSaleTransaction(Integer transactionID, double discountRate, double price) {
@@ -30,6 +39,15 @@ public class EZSaleTransaction implements SaleTransaction {
         this.discountRate = discountRate;
         this.price = price;
         this.entryList = new ArrayList<>();
+        this.status = "OPEN";
+    }
+
+    public EZSaleTransaction(Integer transactionID, double discountRate, double price, String status) {
+        this.transactionID = transactionID;
+        this.discountRate = discountRate;
+        this.price = price;
+        this.entryList = new ArrayList<>();
+        this.status = status;
     }
 
     @Override
@@ -74,6 +92,21 @@ public class EZSaleTransaction implements SaleTransaction {
 
     // --- //
     // Added methods:
+    // Get/Set methods for the transaction's status:
+    public String getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(String s) {
+        if (!s.equalsIgnoreCase("OPEN")
+                && !s.equalsIgnoreCase("CLOSED")
+                && !s.equalsIgnoreCase("PAID")) {
+            return;
+        }
+
+        this.status = s.toUpperCase();
+    }
+
     /*
         addEntry(ProductType product, int amount, double discountRate)
         * Adds an entry to the transaction

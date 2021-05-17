@@ -51,6 +51,12 @@ public class EZBalanceOperation implements BalanceOperation {
     @Override
     public void setMoney(double money) {
         this.money = money;
+        if (money < 0) {
+            this.type = "DEBIT";
+        }
+        else {
+            this.type = "CREDIT";
+        }
     }
 
     @Override
