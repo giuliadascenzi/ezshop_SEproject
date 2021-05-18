@@ -76,6 +76,15 @@ public class EZShop implements EZShopInterface {
                 System.out.println(e.getSQLState());
                 this.customerMap = new HashMap<>();
             }
+            //CustomerID
+            try {
+                this.idCustomer = this.dbase.getLastCustomer();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.idCustomer=0;
+            }
             //CustomerId Card
             try {
                 this.idCustomerCard = this.dbase.getCustomerCard();
@@ -1071,13 +1080,13 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public Integer defineCustomer(String customerName) throws InvalidCustomerNameException, UnauthorizedException {
-        if (customerName==null || customerName.trim().equals(""))
+        if (customerName==null || customerName.trim().equals("")) //nome null or empty string
             throw new InvalidCustomerNameException();
-        if ( userSession==null )
+        if ( userSession==null ) // if the user is not logged
             throw new UnauthorizedException();
-        int newCustomerId = this.idCustomer;
+        Integer newCustomerId = this.idCustomer;
         EZCustomer c = new EZCustomer(customerName, newCustomerId);
-        customerMap.put(newCustomerId,c);
+        customerMap.put(newCustomerId,c); // the new customer is inserted on the customer map and in the db
         try {
             if(!this.dbase.insertCustomer(c))
                 return -1;
@@ -1085,7 +1094,7 @@ public class EZShop implements EZShopInterface {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
         }
-        this.idCustomer++;
+        this.idCustomer++; //idcustomer is a counter that is used to define the id customer
         return newCustomerId;
     }
     /**

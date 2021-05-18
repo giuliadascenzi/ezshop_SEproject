@@ -5,6 +5,10 @@ import it.polito.ezshop.data.EZShop;
 import it.polito.ezshop.data.SaleTransaction;
 import it.polito.ezshop.data.TicketEntry;
 import it.polito.ezshop.data.classes.*;
+import it.polito.ezshop.exceptions.InvalidPasswordException;
+import it.polito.ezshop.exceptions.InvalidRoleException;
+import it.polito.ezshop.exceptions.InvalidUsernameException;
+import it.polito.ezshop.exceptions.UnauthorizedException;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -168,4 +172,32 @@ public class BB_UnitTesting {
         assertEquals(2, rt2.getSaleTransactionID());
         assertEquals("PAID", rt2.getStatus());
     }
+
+    @Test
+    public void test_CreateCard()  {
+        try {
+            ez.createUser("fridanco","pass", "ADMINISTRATOR");
+        } catch (InvalidUsernameException e) {
+            e.printStackTrace();
+        } catch (InvalidPasswordException e) {
+            e.printStackTrace();
+        } catch (InvalidRoleException e) {
+            e.printStackTrace();
+        }
+        try {
+            ez.login("fridanco","pass");
+        } catch (InvalidUsernameException e) {
+            e.printStackTrace();
+        } catch (InvalidPasswordException e) {
+            e.printStackTrace();
+        }
+        try {
+            String CustomerCard = ez.createCard();
+            assertTrue(CustomerCard.matches("[0-9]{10}"));
+        } catch (UnauthorizedException e) {
+            e.printStackTrace();
+        }
+    }
 }
+
+

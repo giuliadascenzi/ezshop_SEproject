@@ -160,6 +160,15 @@ public class EZDatabase {
         }
         return cuMap;
     }
+    public int getLastCustomer () throws SQLException {
+        String sql = "SELECT MAX(CustomerId) FROM CUSTOMERS;";
+        Statement statement = this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+        int cid = rs.getInt(1);
+        if( cid<=0 )
+            return 0;
+        return cid;
+    }
     public Integer getCustomerCard () throws SQLException{
         String sql = "SELECT CustomerCard FROM CUSTOMERS;";
         Statement statement = this.connection.createStatement();
@@ -172,6 +181,8 @@ public class EZDatabase {
                 cucard = rs.getString(1);
             }
         }
+        if (cucard==null || cucard.trim().equals(""))
+            return 0;
         cucard = cucard.substring(1);
         while(cucard.charAt(0)==0){
             cucard = cucard.substring(1);
