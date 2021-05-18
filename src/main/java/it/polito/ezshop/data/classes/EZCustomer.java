@@ -19,6 +19,13 @@ public class EZCustomer implements Customer {
         this.customerCard.setPoints(0);
 
     }
+    public EZCustomer (String customerName, Integer id, EZCustomerCard cc)
+    {
+        this.customerName=customerName;
+        this.customerCard =cc;
+        this.id=id;
+
+    }
     public void removeCustomerCard(){
         this.customerCard.setCardId("");
         this.customerCard.setPoints(0);

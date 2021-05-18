@@ -9,6 +9,10 @@ public class EZCustomerCard {
         this.cardId = cardId;
         this.points=0;
     }
+    public EZCustomerCard(String cardId,Integer points) {
+        this.cardId = cardId;
+        this.points=points;
+    }
 
     public EZCustomerCard() {
         this.points=0;
