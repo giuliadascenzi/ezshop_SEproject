@@ -158,7 +158,8 @@ public class EZShop implements EZShopInterface {
 
     /**
         checkBarCodeValidity(String barCode)
-        Controlla che il barcode sia valido. Per essere valido il codice deve essere composto da soli interi e deve essere lungo 12/13/14 numeri
+        Controlla che il barcode sia valido. Per essere valido il codice deve essere composto da soli interi,
+        deve essere lungo 12/13/14 numeri ed avere il check digit (calcolato tramite algoritmo) corretto
 
         @param barCode: il codice a barre da controllare
 
@@ -1047,7 +1048,6 @@ public class EZShop implements EZShopInterface {
         this.transactionMap.put(newID, blOp);
 
         return newID;
-
     }
 
     /**
