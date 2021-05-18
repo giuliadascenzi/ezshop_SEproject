@@ -31,6 +31,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.discountRate = 1;
         this.price = 0;
         this.entryList = new ArrayList<>();
+        this.returnList = new ArrayList<>();
         this.status = "OPEN";
     }
 
@@ -39,6 +40,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.discountRate = discountRate;
         this.price = price;
         this.entryList = new ArrayList<>();
+        this.returnList = new ArrayList<>();
         this.status = "OPEN";
     }
 
@@ -47,6 +49,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.discountRate = discountRate;
         this.price = price;
         this.entryList = new ArrayList<>();
+        this.returnList = new ArrayList<>();
         this.status = status;
     }
 
@@ -132,7 +135,7 @@ public class EZSaleTransaction implements SaleTransaction {
     public boolean updateProductInEntry(String barCode, int amount) {
         for (TicketEntry t : this.entryList) {
             if (t.getBarCode().equals(barCode)) {
-                if (amount < 0 && t.getAmount() <= amount) {
+                if (amount < 0 && t.getAmount() <= Math.abs(amount)) {
                     // If the amount to remove is larger or equal to the current amount,
                     // delete the entry altogether
                     this.entryList.remove(t);
@@ -171,7 +174,6 @@ public class EZSaleTransaction implements SaleTransaction {
      */
     public void addReturn(ReturnTransaction r) {
         this.returnList.add(r);
-        return;
     }
 
     /*

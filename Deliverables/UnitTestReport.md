@@ -24,6 +24,10 @@ Version: 1.0
     to start tests
     >
 
+
+
+
+
  ### **Class *EZShop* - method *checkBarCodeValidity***
 
 **Criteria for method *checkBarCodeValidity*:**

@@ -2160,7 +2160,7 @@ public class EZShop implements EZShopInterface {
 
         // Controllo se la carta esiste tra quelle registrate
         EZFileReader reader = new EZFileReader();
-        Map<String, Double> ccMap = reader.readCreditCards();
+        Map<String, Double> ccMap = reader.readCreditCards("testFiles/creditCardFile_test.csv");
 
         if (!ccMap.containsKey(creditCard)) {
             return false;
@@ -2197,7 +2197,7 @@ public class EZShop implements EZShopInterface {
 
         // aggiorna la carta di credito
         ccMap.put(creditCard, ccAmount - result.getPrice());
-        reader.setCreditCards(ccMap);
+        reader.setCreditCards(ccMap, "testFiles/creditCardFile_test.csv");
 
         return true;
     }
@@ -2308,7 +2308,7 @@ public class EZShop implements EZShopInterface {
 
         // Controllo se la carta esiste tra quelle registrate
         EZFileReader reader = new EZFileReader();
-        Map<String, Double> ccMap = reader.readCreditCards();
+        Map<String, Double> ccMap = reader.readCreditCards("testFiles/creditCardFile_test.csv");
 
         if (!ccMap.containsKey(creditCard)) {
             return -1;
@@ -2356,7 +2356,7 @@ public class EZShop implements EZShopInterface {
 
         // aggiorna la carta di credito
         ccMap.put(creditCard, ccMap.get(creditCard) + result.getMoneyReturned());
-        reader.setCreditCards(ccMap);
+        reader.setCreditCards(ccMap, "testFiles/creditCardFile_test.csv");
 
         return result.getMoneyReturned();
     }

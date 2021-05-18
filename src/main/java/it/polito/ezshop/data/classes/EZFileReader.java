@@ -7,7 +7,7 @@ import java.util.Map;
 import com.opencsv.*;
 
 public class EZFileReader {
-    public Map<String, Double> readCreditCards() {
+    public Map<String, Double> readCreditCards(String filename) {
         Map<String, Double> ccMap = new HashMap<>();
 
         try {
@@ -15,7 +15,7 @@ public class EZFileReader {
             CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
 
             CSVReader reader =
-                    new CSVReaderBuilder(new FileReader("testFiles/creditCardFile_test.csv"))
+                    new CSVReaderBuilder(new FileReader(filename))
                             .withCSVParser(parser)
                             .build();
             //Reading the contents of the csv file
@@ -46,10 +46,10 @@ public class EZFileReader {
         return ccMap;
     }
 
-    public void setCreditCards(Map<String, Double> ccMap) {
+    public void setCreditCards(Map<String, Double> ccMap, String filename) {
         try {
             // create FileWriter object with file as parameter
-            FileWriter outputfile = new FileWriter(new File("testFiles/creditCardFile_test.csv"));
+            FileWriter outputfile = new FileWriter(new File(filename));
 
             CSVWriter writer = new CSVWriter(outputfile, ';',
                     ICSVWriter.NO_QUOTE_CHARACTER,
