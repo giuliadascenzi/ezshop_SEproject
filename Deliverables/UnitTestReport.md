@@ -29,7 +29,6 @@ Version: 1.0
 **Criteria for method *checkBarCodeValidity*:**
 
  - Length of barCode
- - Sign of barcode
  - Data type of barCode digits
  - Validity of barCode following a validation protocol
 
@@ -41,8 +40,6 @@ Version: 1.0
 |  | >15 |
 | Data type of barCode digits | All digits are numeric |
 |  | Not all digits are numeric |
-| Sign of barcode | <0 |
-|  | >0 |
 | Validity of barCode following a validation protocol | Valid |
 |  | Invalid |
 
@@ -52,20 +49,18 @@ Version: 1.0
 | -------- | --------------- |
 | Length of barCode | 13,14,15 |
 | Data type of barCode digits | - |
-| Sign of barcode | 0 |
 | Validity of barCode following a validation protocol | - |
 
 **Combination of predicates**:
 
 
-| Length of barCode | Data type of barCode digits | Sign of barcode | Validity of barCode | Valid / Invalid | Description of the test case | JUnit test case |
-|-------|-------|-------|-------|-------|-------|-------|
-|[0, 13)|*|*|*|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
-|(15, maxint)| *                           |*|*|Invalid|checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
-|*| Not all numeric             |*|*|Invalid|checkBarCodeValidity("1234a234b")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
-|*| *                           |<=0|*|Invalid|checkBarCodeValidity("-6291041500213")<br/> -> false<br/> checkBarCodeValidity("0") -> false|BB_UnitTesting.test_InvalidBarCode|
-|*| *                           |*|Invalid|Invalid|checkBarCodeValidity("6291041500218")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
-|(13,14,15)|All numeric|>0|Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
+| Length of barCode | Data type of barCode digits | Validity of barCode | Valid / Invalid | Description of the test case | JUnit test case |
+|-------|-------|-------|-------|-------|-------|
+|[0, 13)|*|*|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
+|(15, maxint)| *                           |*|Invalid|checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|*| Not all numeric             |*|Invalid|checkBarCodeValidity("1234a234b")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|*| *                           |Invalid|Invalid|checkBarCodeValidity("6291041500218")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|[13,14,15]|All numeric|Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
 
  ### **Class *EZShop* - method *checkCreditCardValidity***
 
