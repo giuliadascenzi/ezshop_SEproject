@@ -4,6 +4,7 @@ import it.polito.ezshop.data.Customer;
 import it.polito.ezshop.data.EZShop;
 import it.polito.ezshop.data.classes.EZCustomer;
 import it.polito.ezshop.data.classes.EZCustomerCard;
+import it.polito.ezshop.data.classes.EZProductType;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -67,6 +68,53 @@ public class WB_UnitTesting {
         c.removeCustomerCard();
         assertEquals("",c.getCustomerCard());
         assertEquals(po,c.getPoints());
+
+
+    }
+    @Test
+    public void test_ProductTypeMethod(){
+        EZProductType pt = new EZProductType("Granarolo","6291041500213",1.5,"milk",3, "storage room");
+        String desc = pt.getProductDescription();
+        assertEquals("Granarolo",desc);
+
+        String barcode = pt.getBarCode();
+        assertEquals("6291041500213",barcode);
+
+        Double pr = pt.getPricePerUnit();
+        assertEquals(1.5, pr, 0.01);
+
+        String note = pt.getNote();
+        assertEquals("milk",note);
+
+        int id = pt.getId();
+        assertEquals(3,id);
+
+        String loc =pt.getLocation();
+        assertEquals("storage room",loc);
+
+        desc = "Parmalat";
+        pt.setProductDescription(desc);
+        assertEquals(desc,pt.getProductDescription());
+
+        barcode = "6291041500214";
+        pt.setBarCode(barcode);
+        assertEquals(barcode,pt.getBarCode());
+
+        pr = 1.30;
+        pt.setPricePerUnit(pr);
+        assertEquals(pr,pt.getPricePerUnit(),0.01);
+
+        note = "cheese";
+        pt.setNote(note);
+        assertEquals(note,pt.getNote());
+
+        id = 2;
+        pt.setId(id);
+        assertEquals(id, (int) pt.getId());
+
+        loc  = "warehouse";
+        pt.setLocation(loc);
+        assertEquals(loc,pt.getLocation());
 
 
     }
