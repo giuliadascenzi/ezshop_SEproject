@@ -249,7 +249,6 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public void reset() {
-
         /*Delete all users from the database and from the local structure*/
         for (User u : this.userList) {
             try {
