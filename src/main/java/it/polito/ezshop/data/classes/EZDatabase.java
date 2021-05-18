@@ -23,7 +23,7 @@ public class EZDatabase {
     /********************* METODI PER LA TABELLA USER **************************/
 
     public int getNextUserId () throws SQLException {
-        String query = "SELECT MAX(id) as maxid FROM USERS";
+        String query = "SELECT COALESCE(MAX(id), 0) as maxid FROM USERS";
         Statement statement =this.connection.createStatement();
         ResultSet rs= statement.executeQuery(query);
         return (rs.getInt("maxid")+1);
@@ -132,7 +132,6 @@ public class EZDatabase {
         pstm.setInt(6, updatedOrder.getOrderId());
 
         pstm.executeUpdate();
-
     }
 
     public void updateOrderStatus(Integer orderId, String stat) throws SQLException {
@@ -158,7 +157,6 @@ public class EZDatabase {
     /*******************************************************************************************/
     /********************* METODI PER LA TABELLA CUSTOMER **************************/
     public boolean insertCustomer(EZCustomer customer) throws SQLException {
-
         String values = customer.getId()+", '"+customer.getCustomerName()+"', '"+customer.getCustomerCard()+"', '"+customer.getPoints()+"'";
         String sql ="INSERT INTO CUSTOMERS VALUES ("+ values +")";
         Statement statement =this.connection.createStatement();
@@ -174,7 +172,6 @@ public class EZDatabase {
         pstm.setString(2, updatedCustomer.getCustomerCard());
         pstm.setInt(3, updatedCustomer.getPoints());
         pstm.setInt(4, updatedCustomer.getId());
-
 
         if(pstm.executeUpdate()!=4)
             return false;
@@ -197,46 +194,55 @@ public class EZDatabase {
         }
         return cuMap;
     }
+    public int getLastCustomer () throws SQLException {
+        String sql = "SELECT COALESCE(MAX(CustomerId), 0) AS maxcid FROM CUSTOMERS;";
+        Statement statement = this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+        int cid = rs.getInt("maxcid");
+        if( cid<=0 )
+            return 0;
+        return cid;
+    }
     public Integer getCustomerCard () throws SQLException{
-        String sql = "SELECT CustomerCard FROM CUSTOMERS;";
+        String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS;";
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(sql);
         String cucard = new String("");
         Integer max = new Integer(0);
         while(rs.next()){
-            if(max < Integer.parseInt(rs.getString(1))){
-                max = Integer.parseInt(rs.getString(1));
-                cucard = rs.getString(1);
+            if(max < Integer.parseInt(rs.getString("cucard"))){
+                max = Integer.parseInt(rs.getString("cucard"));
+                cucard = rs.getString("cucard");
             }
         }
+        if (cucard==null || cucard.trim().equals(""))
+            return 0;
         cucard = cucard.substring(1);
         while(cucard.charAt(0)==0){
             cucard = cucard.substring(1);
         }
         return Integer.parseInt(cucard);
-        }
+    }
     public void deleteCustomer (Integer id) throws SQLException {
-
-
         String sql ="DELETE FROM CUSTOMERS WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, id);
         pstm.executeUpdate();
-
+    }
+    public void deleteCustomerTable () throws SQLException {
+        String sql ="DELETE FROM CUSTOMERS";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.executeUpdate();
     }
     public boolean deleteCustomerCard (Integer id) throws SQLException {
-
-
-        String sql ="DELETE CustomerCard FROM CUSTOMERS WHERE id =?";
+        String sql ="UPDATE CUSTOMERS SET CustomerCard = NULL WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, id);
-        if(pstm.executeUpdate()!=1)
+        if(pstm.executeUpdate() != 1)
             return false;
         return true;
     }
     public boolean updateCustomerCard (Integer id, String newCustomerCard) throws SQLException {
-
-
         String sql ="UPDATE CUSTOMERS SET CustomerCard = ?  WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setString(1, newCustomerCard);
@@ -246,8 +252,6 @@ public class EZDatabase {
         return true;
     }
     public boolean updatePoints (Integer id, Integer Points) throws SQLException {
-
-
         String sql ="UPDATE CUSTOMERS SET Points = ? WHERE id =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, Points);
@@ -277,23 +281,28 @@ public class EZDatabase {
         pstm.setInt(5, product.getQuantity());
         pstm.setString(6, product.getProductDescription());
         pstm.setString(7, product.getBarCode());
-
-
     }
     public void deleteProduct (EZProductType product) throws SQLException {
-
-
         String sql ="DELETE FROM CUSTOMERS WHERE Barcode =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setString(1, product.getBarCode());
         pstm.executeUpdate();
 
     }
+    public void deleteProductTable () throws SQLException {
+        String sql ="DELETE FROM PRODUCTS";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.executeUpdate();
+
+    }
     public int getLastProductId() throws SQLException{
-        String sql = "SELECT MAX(ProductId) FROM PRODUCTS ;";
+        String sql = "SELECT COALESCE(MAX(ProductId), 0) AS maxpid FROM PRODUCTS ;";
         Statement stmt  = this.connection.createStatement();
         ResultSet rs   = stmt.executeQuery(sql);
-        return rs.getInt(1);
+        int pid = rs.getInt("maxpid");
+        if(pid <=0)
+            return 0;
+        return pid;
     }
     public Map<String, ProductType> getProductTypeMap() throws SQLException {
         String query = "SELECT * FROM PRODUCTS;";
@@ -371,7 +380,7 @@ public class EZDatabase {
     }
 
     public int getLastTransactionID() throws SQLException {
-        String sql = "SELECT MAX(id) AS maxTransID FROM BalanceOperations;";
+        String sql = "SELECT COALESCE(MAX(id), 0) AS maxTransID FROM BalanceOperations;";
         Statement stat = this.connection.createStatement();
         ResultSet rs = stat.executeQuery(sql);
 
@@ -686,7 +695,7 @@ public class EZDatabase {
     }
 
     public int getLastReturnID() throws SQLException {
-        String sql = "SELECT MAX(returnId) AS maxRetID FROM ReturnTransactions;";
+        String sql = "SELECT COALESCE(MAX(returnId), 0) AS maxRetID FROM ReturnTransactions;";
         Statement stat = this.connection.createStatement();
         ResultSet rs = stat.executeQuery(sql);
 

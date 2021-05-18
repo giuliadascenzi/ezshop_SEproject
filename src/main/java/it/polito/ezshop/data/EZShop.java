@@ -274,7 +274,12 @@ public class EZShop implements EZShopInterface {
         }
         this.orderTransactionMap.clear();
 
-        // TODO: aggiornare il DB eliminando custmerMap
+        try {
+            this.dbase.deleteCustomerTable();
+        } catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
         this.customerMap = new HashMap<>();
 
         // --- Clear Balance Operations
@@ -305,7 +310,12 @@ public class EZShop implements EZShopInterface {
         }
         this.returnTransactionMap = new HashMap<>();
 
-        // TODO: aggiornare il DB eliminando ProductTypeMap
+        try {
+            this.dbase.deleteProductTable();
+        } catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
         this.productTypeMap = new HashMap<>();
 
         this.userSession = null;
@@ -315,21 +325,7 @@ public class EZShop implements EZShopInterface {
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
-
-        try {
-            this.dbase.deleteCustomerTable();
-        } catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
-            System.out.println(e.getSQLState());
-        }
-        try {
-            this.dbase.deleteProductTable();
-        } catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
-            System.out.println(e.getSQLState());
-        }
     }
-
 
     /**
      * This method creates a new user with given username, password and role. The returned value is a unique identifier

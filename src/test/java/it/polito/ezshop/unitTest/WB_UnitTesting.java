@@ -235,8 +235,6 @@ public class WB_UnitTesting {
         c.removeCustomerCard();
         assertEquals("",c.getCustomerCard());
         assertEquals(po,c.getPoints());
-
-
     }
     @Test
     public void test_ProductTypeMethod(){
@@ -282,6 +280,5 @@ public class WB_UnitTesting {
         loc  = "warehouse";
         pt.setLocation(loc);
         assertEquals(loc,pt.getLocation());
-
     }
 }
