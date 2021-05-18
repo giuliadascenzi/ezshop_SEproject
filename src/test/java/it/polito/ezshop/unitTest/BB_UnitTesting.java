@@ -30,6 +30,10 @@ public class BB_UnitTesting {
         assertFalse(ez.checkBarCodeValidity(null));
         assertFalse(ez.checkBarCodeValidity("42"));
         assertFalse(ez.checkBarCodeValidity("62910415002187326548"));
+        assertFalse(ez.checkBarCodeValidity("1234a234b"));
+
+
+
     }
 
     @Test

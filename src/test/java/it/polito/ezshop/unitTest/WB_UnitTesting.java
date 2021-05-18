@@ -3,6 +3,8 @@ package it.polito.ezshop.unitTest;
 import it.polito.ezshop.data.EZShop;
 import it.polito.ezshop.data.TicketEntry;
 import it.polito.ezshop.data.classes.*;
+import it.polito.ezshop.data.*;
+
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -144,4 +146,60 @@ public class WB_UnitTesting {
         assertEquals(2, rt2.getSaleTransactionID());
         assertEquals("PAID", rt2.getStatus());
     }
+
+    @Test
+    public void test_OrderClassMethods() {
+        Order o = new EZOrder(2, "6291041500213", 3, 1.50);
+        int orderId = o.getOrderId();
+        assertEquals (2 , orderId);
+
+        String productCode = o.getProductCode();
+        assertEquals("6291041500213",productCode );
+
+        int quantity = o.getQuantity();
+        assertEquals(3,quantity );
+
+        double pricePerUnit = o.getPricePerUnit();
+        assertEquals (1.50, pricePerUnit, 0.00001);
+
+        String status = "PAYED";
+        o.setStatus(status);
+        assertEquals(status, o.getStatus());
+
+        status = "COMPLETED";
+        o.setStatus(status);
+        assertEquals(status, o.getStatus());
+
+        status = "ISSUED";
+        o.setStatus(status);
+        assertEquals(status, o.getStatus());
+
+        int balanceId = 5;
+        o.setBalanceId(balanceId);
+        assertSame(balanceId, o.getBalanceId());
+
+    }
+
+    @Test
+    public void test_UserClassMethods() {
+        User u = new EZUser(4, "giulia", "ciaociao", "SHOPMANAGER");
+
+        assert(4== u.getId());
+        assertEquals("giulia", u.getUsername());
+        assertEquals("ciaociao", u.getPassword());
+        assertEquals("SHOPMANAGER", u.getRole());
+
+        String role = "ADMINISTRATOR";
+        u.setRole(role);
+        assertEquals(role, u.getRole());
+
+        role = "CASHIER";
+        u.setRole(role);
+        assertEquals(role, u.getRole());
+
+
+    }
+
+
+
 }
