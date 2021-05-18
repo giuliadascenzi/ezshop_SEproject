@@ -1031,11 +1031,10 @@ public class EZShop implements EZShopInterface {
         EZBalanceOperation blOp= new EZBalanceOperation(newID, LocalDate.now(),  -priceToPay);
 
         //Try insert it in the db
-        try {  //TODO non stai gestendo la situa in cui uno e basta fallisce!! devi fare il rollback dell'altra operazione
+        try {
             this.dbase.insertOrder(newOrder);
 
             this.dbase.addBalanceOperation(blOp);
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return -1;
