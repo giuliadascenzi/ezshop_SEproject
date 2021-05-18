@@ -248,6 +248,19 @@ public class EZShop implements EZShopInterface {
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
+
+        try {
+            this.dbase.deleteCustomerTable();
+        } catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
+        try {
+            this.dbase.deleteProductTable();
+        } catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
     }
 
 

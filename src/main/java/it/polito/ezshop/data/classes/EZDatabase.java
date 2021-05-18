@@ -161,24 +161,24 @@ public class EZDatabase {
         return cuMap;
     }
     public int getLastCustomer () throws SQLException {
-        String sql = "SELECT MAX(CustomerId) FROM CUSTOMERS;";
+        String sql = "SELECT MAX(CustomerId) AS maxcid FROM CUSTOMERS;";
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(sql);
-        int cid = rs.getInt(1);
+        int cid = rs.getInt("maxcid");
         if( cid<=0 )
             return 0;
         return cid;
     }
     public Integer getCustomerCard () throws SQLException{
-        String sql = "SELECT CustomerCard FROM CUSTOMERS;";
+        String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS;";
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(sql);
         String cucard = new String("");
         Integer max = new Integer(0);
         while(rs.next()){
-            if(max < Integer.parseInt(rs.getString(1))){
-                max = Integer.parseInt(rs.getString(1));
-                cucard = rs.getString(1);
+            if(max < Integer.parseInt(rs.getString("cucard"))){
+                max = Integer.parseInt(rs.getString("cucard"));
+                cucard = rs.getString("cucard");
             }
         }
         if (cucard==null || cucard.trim().equals(""))
@@ -197,6 +197,11 @@ public class EZDatabase {
         pstm.setInt(1, id);
         pstm.executeUpdate();
 
+    }
+    public void deleteCustomerTable () throws SQLException {
+        String sql ="DELETE * FROM CUSTOMERS";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.executeUpdate();
     }
     public boolean deleteCustomerCard (Integer id) throws SQLException {
 
@@ -263,11 +268,20 @@ public class EZDatabase {
         pstm.executeUpdate();
 
     }
+    public void deleteProductTable () throws SQLException {
+        String sql ="DELETE * FROM PRODUCTS";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        pstm.executeUpdate();
+
+    }
     public int getLastProductId() throws SQLException{
-        String sql = "SELECT MAX(ProductId) FROM PRODUCTS ;";
+        String sql = "SELECT MAX(ProductId) AS maxpid FROM PRODUCTS ;";
         Statement stmt  = this.connection.createStatement();
         ResultSet rs   = stmt.executeQuery(sql);
-        return rs.getInt(1);
+        int pid = rs.getInt("maxpid");
+        if(pid <=0)
+            return 0;
+        return pid;
     }
     public Map<String, ProductType> getProductTypeMap() throws SQLException {
         String query = "SELECT * FROM PRODUCTS;";

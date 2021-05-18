@@ -4,13 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="Customer and productype db methods implemented">
+    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="UnitTest Customer class method">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ezshop.iml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/BB_UnitTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/BB_UnitTesting.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/WB_UnitTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/WB_UnitTesting.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -144,7 +141,7 @@
       <workItem from="1620746583542" duration="2528000" />
       <workItem from="1620749342119" duration="2053000" />
       <workItem from="1620984082615" duration="16857000" />
-      <workItem from="1621324926685" duration="7756000" />
+      <workItem from="1621324926685" duration="9785000" />
     </task>
     <task id="LOCAL-00001" summary="EzProductT and User classes implemented.">
       <created>1620235521148</created>
@@ -209,7 +206,14 @@
       <option name="project" value="LOCAL" />
       <updated>1621325312084</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="UnitTest Customer class method">
+      <created>1621344738778</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1621344738778</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -249,7 +253,8 @@
     <MESSAGE value="Customer Database." />
     <MESSAGE value="ProductType Database." />
     <MESSAGE value="Customer and productype db methods implemented" />
-    <option name="LAST_COMMIT_MESSAGE" value="Customer and productype db methods implemented" />
+    <MESSAGE value="UnitTest Customer class method" />
+    <option name="LAST_COMMIT_MESSAGE" value="UnitTest Customer class method" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ezshop$WB_UnitTesting.ic" NAME="WB_UnitTesting Coverage Results" MODIFIED="1620904162824" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
