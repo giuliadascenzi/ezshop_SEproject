@@ -2,7 +2,7 @@
 
 Authors: Giulia D'Ascenzi, Francesco Di Franco, Antonino Monti
 
-Date:
+Date: 19/05/2021
 
 Version: 1.0
 
@@ -24,10 +24,6 @@ Version: 1.0
     to start tests
     >
 
-
-
-
-
  ### **Class *EZShop* - method *checkBarCodeValidity***
 
 **Criteria for method *checkBarCodeValidity*:**
@@ -40,10 +36,11 @@ Version: 1.0
 
 | Criteria | Predicate |
 | -------- | --------- |
-| Length of barCode | <13 |
-|  | >15 |
-| Data type of barCode digits | All digits are numeric |
-|  | Not all digits are numeric |
+| Length of barCode | >= 0 && < 12 |
+|  | >= 12 && <= 14 |
+| | > 14 |
+| Data type of barCode digits | All characters are numeric |
+|  | Not all characters are numeric |
 | Validity of barCode following a validation protocol | Valid |
 |  | Invalid |
 
@@ -51,20 +48,20 @@ Version: 1.0
 
 | Criteria | Boundary values |
 | -------- | --------------- |
-| Length of barCode | 13,14,15 |
-| Data type of barCode digits | - |
-| Validity of barCode following a validation protocol | - |
+| Length of barCode | 0, 12, 14, +maxint |
+| Data type of barCode digits | All numeric, not all numeric |
+| Validity of barCode following a validation protocol | Valid, Invalid |
 
 **Combination of predicates**:
 
 
 | Length of barCode | Data type of barCode digits | Validity of barCode | Valid / Invalid | Description of the test case | JUnit test case |
 |-------|-------|-------|-------|-------|-------|
-|[0, 13)|*|*|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
-|(15, maxint)| *                           |*|Invalid|checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
+|[0, 12)|*|*|Invalid|checkBarCodeValidity("42")<br/> -> false<br/>checkBarCodeValidity(null)<br/> -> false|BB_UnitTesting.test_InvalidBarCode|
+|(14, maxint)| *                           |*|Invalid|checkBarCodeValidity("62910415002187326548")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
 |*| Not all numeric             |*|Invalid|checkBarCodeValidity("1234a234b")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
 |*| *                           |Invalid|Invalid|checkBarCodeValidity("6291041500218")<br/> -> false<br/>|BB_UnitTesting.test_InvalidBarCode|
-|[13,14,15]|All numeric|Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
+|[12,14]|All numeric|Valid|Valid|checkBarCodeValidity("6291041500213")<br/> -> true|BB_UnitTesting.test_ValidBarCode|
 
  ### **Class *EZShop* - method *checkCreditCardValidity***
 
@@ -86,8 +83,8 @@ Version: 1.0
 
 | Criteria               | Boundary values |
 | ---------------------- | --------------- |
-| Validity of creditCard | -  |
-| Data type of the digits | - |
+| Validity of creditCard | Valid, Invalid, NULL |
+| Data type of the digits | All numeric, Not all numeric |
 
 **Combination of predicates**:
 
@@ -110,15 +107,21 @@ Version: 1.0
 
 | Unit name | JUnit test case |
 | -- | -- |
-| Method - EZShop.checkBarCodeValidity | WB_UnitTesting.test_barCodeCheck |
-| Method - EZShop.checkCreditCardValidity | WB_UnitTesting.test_creditCardCheck |
+| Class - EZSaleTransaction | WB_UnitTesting.test_SaleTransaction |
+| Class - EZBalanceOperation | WB_UnitTesting.test_BalanceOperation |
+| Class - EZReturnTransaction | WB_UnitTesting.test_ReturnTransaction |
+| Class - EZTicketEntry | WB_UnitTesting.test_TicketEntry |
+| Class - EZOrder | WB_UnitTesting.test_OrderClassMethods |
+| Class - EZUser | WB_UnitTesting.test_UserClassMethods |
+| Class - EZCustomer | WB_UnitTesting.test_CustomerClassMethods |
+| Class - EZProductType | WB_UnitTesting.test_ProductTypeMethods |
 
 ### Code coverage report
 
     <Add here the screenshot report of the statement and branch coverage obtained using
     the Eclemma tool. >
 
-![wb_unit_coverage](TestingPNGs/wb_unit_coverage.png)
+![unit test coverage report](TestingPNGs/wb_unit_coverage.png)
 
 ### Loop coverage analysis
 
@@ -127,8 +130,5 @@ Version: 1.0
 
 |Unit name | Loop rows | Number of iterations | JUnit test case |
 |---|---|---|---|
-|Method - EZShop.checkBarCodeValidity|6|0|WB_UnitTesting.test_barCodeCheck|
-|Method - EZShop.checkBarCodeValidity|6|22+|WB_UnitTesting.test_barCodeCheck|
-|Method - EZShop.checkCreditCardValidity|7|0|WB_UnitTesting.test_creditCardCheck|
-|Method - EZShop.checkCreditCardValidity|7|1+|WB_UnitTesting.test_creditCardCheck|
+| EZSaleTransaction | 136-149, 160-164, 185-190, 201-206 | Multiple iterations (depends on the class' internal list length) | WB_UnitTesting.test_SaleTransaction |
 

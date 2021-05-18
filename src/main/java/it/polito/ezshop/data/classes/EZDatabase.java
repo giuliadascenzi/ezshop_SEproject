@@ -3,7 +3,6 @@ package it.polito.ezshop.data.classes;
 import it.polito.ezshop.data.*;
 
 import it.polito.ezshop.data.*;
-import sun.util.resources.LocaleData;
 
 import java.sql.*;
 import java.sql.Date;

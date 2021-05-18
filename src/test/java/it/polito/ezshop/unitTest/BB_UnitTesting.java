@@ -20,13 +20,6 @@ import static org.junit.Assert.*;
 public class BB_UnitTesting {
     EZShop ez = new EZShop();
 
-    /*
-        Methods to test for unit testing:
-        - EZShop:
-            * checkBarCodeValidity
-            * checkCreditCardValidity
-     */
-
     // --- Test bar code validity --- //
     @Test
     public void test_InvalidBarCode() {
@@ -36,7 +29,6 @@ public class BB_UnitTesting {
         assertFalse(ez.checkBarCodeValidity("62910415002187326548"));
         assertFalse(ez.checkBarCodeValidity("1234a234b"));
     }
-
     @Test
     public void test_ValidBarCode() {
         assertTrue(ez.checkBarCodeValidity("6291041500213"));
@@ -48,12 +40,10 @@ public class BB_UnitTesting {
         assertFalse(ez.checkCreditCardValidity(null));
         assertFalse(ez.checkCreditCardValidity("cane"));
     }
-
     @Test
     public void test_ValidCreditCard() {
         assertTrue(ez.checkCreditCardValidity("79927398713"));
     }
-
     // --- Test file reader --- //
     @Test
     public void test_readFromFile() {
@@ -63,7 +53,6 @@ public class BB_UnitTesting {
 
         assertTrue(map.containsKey("273564276542"));
     }
-
     @Test
     public void test_writeToFile() {
         EZFileReader ez = new EZFileReader();
@@ -81,5 +70,3 @@ public class BB_UnitTesting {
         assertTrue(map_res.containsKey("273564276542"));
     }
 }
-
-

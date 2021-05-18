@@ -69,6 +69,5 @@ public class EZUser implements User{
             this.role=UserRole.ADMINISTRATOR;
         if((role).equalsIgnoreCase("CASHIER"))
             this.role=UserRole.CASHIER;
-
     }
 }

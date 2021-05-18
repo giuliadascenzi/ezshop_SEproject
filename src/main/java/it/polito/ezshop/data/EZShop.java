@@ -555,7 +555,6 @@ public class EZShop implements EZShopInterface {
             }
         // if no user has been found return null
         return null;
-
     }
 
     /**

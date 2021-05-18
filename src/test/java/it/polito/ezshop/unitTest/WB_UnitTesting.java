@@ -9,6 +9,10 @@ import it.polito.ezshop.data.TicketEntry;
 import it.polito.ezshop.data.classes.*;
 import it.polito.ezshop.data.*;
 
+import it.polito.ezshop.exceptions.InvalidPasswordException;
+import it.polito.ezshop.exceptions.InvalidRoleException;
+import it.polito.ezshop.exceptions.InvalidUsernameException;
+import it.polito.ezshop.exceptions.UnauthorizedException;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -19,6 +23,8 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class WB_UnitTesting {
+    EZShop ez = new EZShop();
+
     // --- Class tests --- //
     @Test
     public void test_BalanceOperation() {
@@ -40,7 +46,6 @@ public class WB_UnitTesting {
         assertEquals(4, bo2.getBalanceId());
         assertEquals(0, bo2.getDate().compareTo(LocalDate.of(2021, 6, 13)));
     }
-
     @Test
     public void test_SaleTransaction() {
         EZSaleTransaction st1 = new EZSaleTransaction(1);
@@ -101,7 +106,6 @@ public class WB_UnitTesting {
         assertFalse(st1.deleteReturn(r2.getReturnID()));
         assertTrue(st1.deleteReturn(r1.getReturnID()));
     }
-
     @Test
     public void test_TicketEntry() {
         EZTicketEntry te1 = new EZTicketEntry("2837468", "potato", 876, 0.5, 0.1);
@@ -124,7 +128,6 @@ public class WB_UnitTesting {
         assertEquals(80.00, te1.getPricePerUnit(), 0.0);
         assertEquals(0.0, te1.getDiscountRate(), 0.0);
     }
-
     @Test
     public void test_ReturnTransaction() {
         EZReturnTransaction rt1 = new EZReturnTransaction(1, 1);
@@ -150,7 +153,6 @@ public class WB_UnitTesting {
         assertEquals(2, rt2.getSaleTransactionID());
         assertEquals("PAID", rt2.getStatus());
     }
-
     @Test
     public void test_OrderClassMethods() {
         Order o = new EZOrder(2, "6291041500213", 3, 1.50);
@@ -181,8 +183,19 @@ public class WB_UnitTesting {
         int balanceId = 5;
         o.setBalanceId(balanceId);
         assertSame(balanceId, o.getBalanceId());
-    }
 
+        o.setQuantity(17);
+        assertEquals(17, o.getQuantity());
+
+        o.setPricePerUnit(0.5);
+        assertEquals(0.5, o.getPricePerUnit(), 0.0);
+
+        o.setProductCode("42");
+        assertEquals("42", o.getProductCode());
+
+        o.setOrderId(42);
+        assertEquals(42, (int) o.getOrderId());
+    }
     @Test
     public void test_UserClassMethods() {
         User u = new EZUser(4, "giulia", "ciaociao", "SHOPMANAGER");
@@ -199,10 +212,24 @@ public class WB_UnitTesting {
         role = "CASHIER";
         u.setRole(role);
         assertEquals(role, u.getRole());
+
+        u.setId(42);
+        assertEquals(42, (int) u.getId());
+
+        u.setUsername("cane");
+        assertEquals("cane", u.getUsername());
+
+        u.setPassword("aaaa");
+        assertEquals("aaaa", u.getPassword());
+
+        EZUser e = new EZUser(1, "a", "a", "AO");
+
+        assertEquals("", e.getRole());
     }
     @Test
     public void test_CustomerClassMethod(){
         EZCustomerCard cc = new EZCustomerCard("0000000011", 100);
+        EZCustomer c1 = new EZCustomer("aaaa", 17);
         EZCustomer c = new EZCustomer("Federico", 19, cc);
 
         String name = c.getCustomerName();
@@ -280,5 +307,8 @@ public class WB_UnitTesting {
         loc  = "warehouse";
         pt.setLocation(loc);
         assertEquals(loc,pt.getLocation());
+
+        pt.setQuantity(42);
+        assertEquals(42, (int) pt.getQuantity());
     }
 }
