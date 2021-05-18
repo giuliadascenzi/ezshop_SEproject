@@ -10,6 +10,13 @@ public class EZUser implements User{
     private String password;
     private UserRole role;
 
+    public EZUser(Integer userId,String username, String password,String role){
+        this.userId=userId;
+        this.username=username;
+        this.password=password;
+        this.setRole(role);
+    }
+
     @Override
     public Integer getId() {
         return userId;
@@ -44,7 +51,7 @@ public class EZUser implements User{
     @Override
     public String getRole() {
         if(this.role==UserRole.MANAGER){
-            return "MANAGER";
+            return "SHOPMANAGER";
         }
         if(this.role==UserRole.ADMINISTRATOR){
             return "ADMINISTRATOR";
@@ -56,12 +63,11 @@ public class EZUser implements User{
 
     @Override
     public void setRole(String role) {
-        if((role).equalsIgnoreCase("MANAGER"))
+        if((role).equalsIgnoreCase("SHOPMANAGER"))
             this.role=UserRole.MANAGER;
         if((role).equalsIgnoreCase("ADMINISTRATOR"))
             this.role=UserRole.ADMINISTRATOR;
         if((role).equalsIgnoreCase("CASHIER"))
             this.role=UserRole.CASHIER;
-
     }
 }

@@ -1,7 +1,9 @@
 package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Order;
+
 /*Giulia*/
+
 public class EZOrder  implements Order  {
 
     private String productCode;
@@ -10,9 +12,17 @@ public class EZOrder  implements Order  {
     private int quantity;
     private Integer id;
     private String status;
+    //Possible status:
+    //issued is sent to the supplier (and not paid),
+    // completed  is when the physical product is received (and recorded in inventory) (Same as arrived)
+    // paid when the supplier is paid
 
-
-
+    public EZOrder(int newID, String productCode, int quantity, double pricePerUnit) {
+        this.productCode=productCode;
+        this.quantity=quantity;
+        this.pricePerUnit=pricePerUnit;
+        this.id=newID;
+    }
 
     public Integer getBalanceId() {
         return this.balanceId;
