@@ -31,13 +31,18 @@ public class EZShop implements EZShopInterface {
         try {
             this.dbase = new EZDatabase();
 
-            this.userList = this.dbase.getUsers();
-            this.idUsers = dbase.getNextUserId();
-
-            // TODO: inizializzare lista di clienti
-            // TODO: funzione per inizializzare idCustomers dal DB
-            this.customerMap = new HashMap<>();
-
+            // --- Users
+            try {
+                this.userList = this.dbase.getUsers();
+                this.idUsers = dbase.getNextUserId();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.userList = new ArrayList<>();
+                this.idUsers = 0;
+            }
+            // --- Balance Operations and respective ID counter
             try {
                 this.transactionMap = this.dbase.getBalanceOperations();
                 this.counter_transactionID = this.dbase.getLastTransactionID();
@@ -48,6 +53,7 @@ public class EZShop implements EZShopInterface {
                 this.transactionMap = new HashMap<>();
                 this.counter_transactionID = 0;
             }
+            // --- Sale Transactions
             try {
                 this.saleTransactionMap = this.dbase.getSaleTransactions();
             }
@@ -56,6 +62,7 @@ public class EZShop implements EZShopInterface {
                 System.out.println(e.getSQLState());
                 this.saleTransactionMap = new HashMap<>();
             }
+            // --- Return Transactions and respective ID counter
             try {
                 this.returnTransactionMap = this.dbase.getReturnTransactions();
                 this.counter_returnTransactionID = this.dbase.getLastReturnID();
@@ -66,7 +73,15 @@ public class EZShop implements EZShopInterface {
                 this.returnTransactionMap = new HashMap<>();
                 this.counter_returnTransactionID = 0;
             }
-            this.orderTransactionMap = this.dbase.getOrders();
+            // --- Orders
+            try {
+                this.orderTransactionMap = this.dbase.getOrders();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.orderTransactionMap = new HashMap<>();
+            }
             //Customers
             try {
                 this.customerMap = this.dbase.getCustomerMap();
