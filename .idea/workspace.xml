@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="UnitTest Customer class method">
+    <list default="true" id="d60c586f-4642-462f-8299-8d3001b52057" name="Default Changelist" comment="delete Customer and Product table methods added">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/EZShop.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/it/polito/ezshop/data/classes/EZDatabase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/WB_UnitTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/it/polito/ezshop/unitTest/WB_UnitTesting.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +59,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.WB_UnitTesting.test_CustomerClassMethod">
+  <component name="RunManager" selected="JUnit.WB_UnitTesting.test_ProductTypeMethod">
     <configuration name="EZDatabase" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="it.polito.ezshop.data.classes.EZDatabase" />
       <module name="ezshop" />
@@ -117,8 +116,25 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="WB_UnitTesting.test_ProductTypeMethod" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="ezshop" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="it.polito.ezshop.unitTest.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="it.polito.ezshop.unitTest" />
+      <option name="MAIN_CLASS_NAME" value="it.polito.ezshop.unitTest.WB_UnitTesting" />
+      <option name="METHOD_NAME" value="test_ProductTypeMethod" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.WB_UnitTesting.test_ProductTypeMethod" />
         <item itemvalue="JUnit.WB_UnitTesting.test_CustomerClassMethod" />
         <item itemvalue="JUnit.BB_UnitTesting.test_CreateCard" />
         <item itemvalue="Application.EZDatabase" />
@@ -141,7 +157,7 @@
       <workItem from="1620746583542" duration="2528000" />
       <workItem from="1620749342119" duration="2053000" />
       <workItem from="1620984082615" duration="16857000" />
-      <workItem from="1621324926685" duration="9785000" />
+      <workItem from="1621324926685" duration="11949000" />
     </task>
     <task id="LOCAL-00001" summary="EzProductT and User classes implemented.">
       <created>1620235521148</created>
@@ -213,7 +229,14 @@
       <option name="project" value="LOCAL" />
       <updated>1621344738778</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="delete Customer and Product table methods added">
+      <created>1621347225615</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1621347225615</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -254,7 +277,8 @@
     <MESSAGE value="ProductType Database." />
     <MESSAGE value="Customer and productype db methods implemented" />
     <MESSAGE value="UnitTest Customer class method" />
-    <option name="LAST_COMMIT_MESSAGE" value="UnitTest Customer class method" />
+    <MESSAGE value="delete Customer and Product table methods added" />
+    <option name="LAST_COMMIT_MESSAGE" value="delete Customer and Product table methods added" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ezshop$WB_UnitTesting.ic" NAME="WB_UnitTesting Coverage Results" MODIFIED="1620904162824" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
