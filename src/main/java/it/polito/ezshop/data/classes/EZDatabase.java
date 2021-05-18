@@ -378,6 +378,12 @@ public class EZDatabase {
         return rs.getInt("maxTransID");
     }
 
+    public void clearBalanceOperations() throws SQLException {
+        String sql = "DELETE FROM BalanceOperations;";
+        Statement stat = this.connection.createStatement();
+        ResultSet rs = stat.executeQuery(sql);
+    }
+
     // ---------------------- METODI PER LA TABELLA SALETRANSACTIONS --------------- //
     public void addSaleTransaction(EZSaleTransaction st) throws SQLException {
         // NOTA: in questo metodo viene aggiunta anche la lista di ProductEntry
@@ -581,6 +587,12 @@ public class EZDatabase {
         }
     }
 
+    public void clearSaleTransactions() throws SQLException {
+        String sql = "DELETE FROM SaleTransactions;";
+        Statement stat = this.connection.createStatement();
+        ResultSet rs = stat.executeQuery(sql);
+    }
+
     // ---------------------- METODI PER LA TABELLA RETURNTRANSACTION ------------------ //
     public void addReturnTransaction(EZReturnTransaction rt) throws SQLException {
         String sql = "INSERT INTO ReturnTransactions(returnId, saleId, status, money) VALUES (?, ?, ?, ?);";
@@ -681,7 +693,11 @@ public class EZDatabase {
         return rs.getInt("maxRetID");
     }
 
-
+    public void clearReturnTransactions() throws SQLException {
+        String sql = "DELETE FROM ReturnTransactions;";
+        Statement stat = this.connection.createStatement();
+        ResultSet rs = stat.executeQuery(sql);
+    }
 
     /*******************************************************************************************/
 

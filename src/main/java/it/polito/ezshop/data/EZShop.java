@@ -240,35 +240,63 @@ public class EZShop implements EZShopInterface {
     @Override
     public void reset() {
 
-        try {
-            /*Delete all users from the database and from the local structure*/
-                for (User u : this.userList) {
-                    dbase.deleteUser(u.getId());
-                }
-                this.userList.clear();
-
-            /*Delete all the orders from the database*/
-                for (Order o : this.orderTransactionMap.values()) {
-                    dbase.deleteOrder(o.getOrderId());
-                }
-                this.orderTransactionMap.clear();
-
-            // TODO: aggiornare il DB eliminando custmerMap
-            this.customerMap = new HashMap<>();
-            // TODO: aggiornare il DB eliminando transactionMap
-            this.transactionMap = new HashMap<>();
-            // TODO: aggiornare il DB eliminando saleTransactionMap
-            this.saleTransactionMap = new HashMap<>();
-            // TODO: aggiornare il DB eliminando returnTransactionMap
-            this.returnTransactionMap = new HashMap<>();
-            // TODO: aggiornare il DB eliminando ProductTypeMap
-            this.productTypeMap = new HashMap<>();
-
-
-        } catch (SQLException e) {
-            System.out.println("Error deleting data from database");
+        /*Delete all users from the database and from the local structure*/
+        for (User u : this.userList) {
+            try {
+                dbase.deleteUser(u.getId());
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+            }
         }
+        this.userList.clear();
 
+        /*Delete all the orders from the database*/
+        for (Order o : this.orderTransactionMap.values()) {
+            try {
+                dbase.deleteOrder(o.getOrderId());
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+            }
+        }
+        this.orderTransactionMap.clear();
+
+        // TODO: aggiornare il DB eliminando custmerMap
+        this.customerMap = new HashMap<>();
+
+        // --- Clear Balance Operations
+        try {
+            this.dbase.clearBalanceOperations();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
+        this.transactionMap = new HashMap<>();
+        // --- Clear Sale Transactions
+        try {
+            this.dbase.clearSaleTransactions();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
+        this.saleTransactionMap = new HashMap<>();
+        // --- Clear Return Transactions
+        try {
+            this.dbase.clearReturnTransactions();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+        }
+        this.returnTransactionMap = new HashMap<>();
+
+        // TODO: aggiornare il DB eliminando ProductTypeMap
+        this.productTypeMap = new HashMap<>();
 
         this.userSession = null;
         this.idUsers = 0;
@@ -579,8 +607,6 @@ public class EZShop implements EZShopInterface {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
         }
-        //
-        //TODO update db
 
         return newProductId;
     }
@@ -679,14 +705,14 @@ public class EZShop implements EZShopInterface {
         for (ProductType p: this.productTypeMap.values())
             if (p.getId().equals(id))
             { //Found
-                this.productTypeMap.remove(p.getBarCode());
                 try {
                     this.dbase.deleteProduct((EZProductType) p);
                 } catch (SQLException e) {
                     System.out.println("There was a problem with the database:");
                     System.out.println(e.getSQLState());
                 }
-                return true; //TODO update db
+                this.productTypeMap.remove(p.getBarCode());
+                return true;
             }
 
         return false; //No product with that id found
@@ -1261,7 +1287,6 @@ public class EZShop implements EZShopInterface {
                 System.out.println(e.getSQLState());
                 return false;
             }
-            //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
         }
 
         EZCustomer c = (EZCustomer) customerMap.get(id);
@@ -1273,7 +1298,6 @@ public class EZShop implements EZShopInterface {
             System.out.println(e.getSQLState());
             return false;
         }
-        //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
 
         if(newCustomerCard.matches( "[0-9]{10}" )){
             c.setCustomerCard(newCustomerCard);
@@ -1878,6 +1902,7 @@ public class EZShop implements EZShopInterface {
         catch (SQLException e) {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
+            return false;
         }
 
         // aggiorna dati in locale
@@ -1931,6 +1956,15 @@ public class EZShop implements EZShopInterface {
             || st.getStatus().equalsIgnoreCase("PAID")) {
             return false;
         }
+
+        /*
+            NOTE: since a sale transaction is permanently recorded only when it's closed
+            and a closed sale transaction cannot be deleted, this method does not communicate with
+            the DB; instead, it merely removes the sale transaction from the corresponding map.
+
+            The Balance Operations map isn't updated either since a BO is inserted in the DB/map
+            only when the corresponding sale transaction is closed.
+         */
 
         this.saleTransactionMap.remove(saleNumber);
 
@@ -2253,6 +2287,12 @@ public class EZShop implements EZShopInterface {
         sale.setPrice(this.computeSaleTransactionPrice(sale));
         // remove the return transaction from the ST's list
         sale.deleteReturn(ret.getReturnID());
+
+        /*
+            NOTE: this method does not actually connect to the DB; see the comment
+            in deleteSaleTransaction for more info (the reason behind this decision
+            is practically the same).
+         */
 
         // update the ST map
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
