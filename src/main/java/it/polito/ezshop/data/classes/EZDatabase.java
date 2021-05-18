@@ -2,6 +2,8 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.*;
 
+import it.polito.ezshop.data.*;
+import sun.util.resources.LocaleData;
 
 import java.sql.*;
 import java.sql.Date;
@@ -179,6 +181,40 @@ public class EZDatabase {
 
         return true;
     }
+    public Map<Integer, Customer> getCustomerMap() throws SQLException{
+        String query = "SELECT * FROM CUSTOMERS;";
+        Statement statement = this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(query);
+        Map<Integer, Customer> cuMap = new HashMap<>();
+        while(rs.next()){
+            EZCustomerCard cuscard = new EZCustomerCard(rs.getString(3),rs.getInt(4));
+            EZCustomer cu = new EZCustomer(
+                    rs.getString(2),
+                    rs.getInt(1),
+                    cuscard
+            );
+            cuMap.put(cu.getId(),cu);
+        }
+        return cuMap;
+    }
+    public Integer getCustomerCard () throws SQLException{
+        String sql = "SELECT CustomerCard FROM CUSTOMERS;";
+        Statement statement = this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(sql);
+        String cucard = new String("");
+        Integer max = new Integer(0);
+        while(rs.next()){
+            if(max < Integer.parseInt(rs.getString(1))){
+                max = Integer.parseInt(rs.getString(1));
+                cucard = rs.getString(1);
+            }
+        }
+        cucard = cucard.substring(1);
+        while(cucard.charAt(0)==0){
+            cucard = cucard.substring(1);
+        }
+        return Integer.parseInt(cucard);
+        }
     public void deleteCustomer (Integer id) throws SQLException {
 
 
@@ -253,12 +289,32 @@ public class EZDatabase {
         pstm.executeUpdate();
 
     }
+    public int getLastProductId() throws SQLException{
+        String sql = "SELECT MAX(ProductId) FROM PRODUCTS ;";
+        Statement stmt  = this.connection.createStatement();
+        ResultSet rs   = stmt.executeQuery(sql);
+        return rs.getInt(1);
+    }
+    public Map<String, ProductType> getProductTypeMap() throws SQLException {
+        String query = "SELECT * FROM PRODUCTS;";
+        Statement statement = this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(query);
+        Map<String, ProductType> proMap = new HashMap<>();
 
+        while(rs.next()) {
+            EZProductType pro = new EZProductType(
+                    rs.getString(7),
+                    rs.getString(1),
+                    rs.getDouble(3),
+                    rs.getString(5),
+                    rs.getInt(2),
+                    rs.getString(4)
+            );
+            proMap.put(pro.getBarCode(), pro);
+        }
 
-
-
-
-
+        return proMap;
+    }
     // ---------------- METODI PER LA TABELLA BALANCEOPERATIONS ------------------- //
     public void addBalanceOperation(EZBalanceOperation bo) throws SQLException {
         String sql = "INSERT INTO BalanceOperations(id, money, date, type) VALUES (?, ?, ?, ?);";
@@ -624,10 +680,15 @@ public class EZDatabase {
 
         return rs.getInt("maxRetID");
     }
+
+
+
     /*******************************************************************************************/
+
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();
+        //db.createTableCustomer();
 
         //EZUser user =new EZUser(2, "antonino", "ciao2", "Manager");
         //db.insertUser(user);
@@ -638,6 +699,7 @@ public class EZDatabase {
         //order.setBalanceId(1);
         //order.setStatus("PAYED");
 
+        //db.insertOrder(order2);
 
         //List<EZOrder> ordini= db.getOrders();
 

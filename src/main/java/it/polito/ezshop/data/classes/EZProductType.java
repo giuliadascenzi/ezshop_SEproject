@@ -20,6 +20,14 @@ public class EZProductType implements ProductType {
         this.notes=note;
         this.productId=newProductId;
     }
+    public EZProductType(String description, String productCode, double pricePerUnit, String note, int newProductId,String location) {
+        this.barCode=productCode;
+        this.description=description;
+        this.sellPrice=pricePerUnit;
+        this.notes=note;
+        this.productId=newProductId;
+        this.location=location;
+    }
 
     @Override
     public Integer getQuantity() {

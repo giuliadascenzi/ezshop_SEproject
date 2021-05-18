@@ -67,9 +67,43 @@ public class EZShop implements EZShopInterface {
                 this.counter_returnTransactionID = 0;
             }
             this.orderTransactionMap = this.dbase.getOrders();
-            //TODO: inizializzare productTypeMap
-            // TODO: funzione per inizializzare productIds dal DB
-            this.productTypeMap = new HashMap<>();
+            //Customers
+            try {
+                this.customerMap = this.dbase.getCustomerMap();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.customerMap = new HashMap<>();
+            }
+            //CustomerId Card
+            try {
+                this.idCustomerCard = this.dbase.getCustomerCard();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.idCustomerCard=0;
+            }
+            //ProductIds Inizializzato da db
+            try{
+                this.productIds= this.dbase.getLastProductId();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.productIds= 0;
+            }
+
+            //ProductTypeMap inizializzato da db
+            try{
+                this.productTypeMap= this.dbase.getProductTypeMap();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                this.productTypeMap = new HashMap<>();
+            }
         }
         catch (SQLException e) {
             // Se la connessione al database fallisce, si inizializza tutto con i valori di default
@@ -524,7 +558,12 @@ public class EZShop implements EZShopInterface {
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
         this.productIds++;
         this.productTypeMap.put(productCode, pt);
-        //db.insertProductType(pt);
+        try {
+            this.dbase.insertProductType((EZProductType) pt);
+        } catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+        }
         //
         //TODO update db
 
@@ -589,8 +628,13 @@ public class EZShop implements EZShopInterface {
                 p.setNote(newNote);
                 //update map product type with the item associated with the new barcode
                 this.productTypeMap.put(p.getBarCode(), p);
-                //db.updateProduct(p);
-                return true; //TODO update db
+                try {
+                    this.dbase.updateProduct((EZProductType) p);
+                } catch (SQLException e) {
+                    System.out.println("There was a problem with the database:");
+                    System.out.println(e.getSQLState());
+                }
+                return true;
             }
 
         return false; //No product with that id found
@@ -621,7 +665,12 @@ public class EZShop implements EZShopInterface {
             if (p.getId().equals(id))
             { //Found
                 this.productTypeMap.remove(p.getBarCode());
-                //db.updateProduct(p);
+                try {
+                    this.dbase.deleteProduct((EZProductType) p);
+                } catch (SQLException e) {
+                    System.out.println("There was a problem with the database:");
+                    System.out.println(e.getSQLState());
+                }
                 return true; //TODO update db
             }
 
@@ -805,8 +854,14 @@ public class EZShop implements EZShopInterface {
             return false;
 
         //Everything good
-        // TODO update db
-        this.productTypeMap.get(barcodeProduct).setProductDescription(newPos);
+        EZProductType pr = (EZProductType) this.productTypeMap.get(barcodeProduct);
+        pr.setProductDescription(newPos);
+        try {
+            this.dbase.updateProduct((EZProductType) pr);
+        } catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+        }
 
         return true;
     }
@@ -1129,10 +1184,13 @@ public class EZShop implements EZShopInterface {
         int newCustomerId = this.idCustomer;
         EZCustomer c = new EZCustomer(customerName, newCustomerId);
         customerMap.put(newCustomerId,c);
-        //if(!dbase.insertCustomer(c))
-           //   return -1;
-        //TODO: if ( UPDATE DATABASE) //devo controllare anche altro per verificarne il corretto inserimento?
-        //return -1;
+        try {
+            if(!this.dbase.insertCustomer(c))
+                return -1;
+        } catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+        }
         this.idCustomer++;
         return newCustomerId;
     }
@@ -1181,21 +1239,37 @@ public class EZShop implements EZShopInterface {
         if (newCustomerCard.trim().equals("")){                     // if the customerCard is empty, delete the Card
             EZCustomer s = (EZCustomer) customerMap.get(id);
             s.removeCustomerCard();
-            //db.removeCustomerCard(s.getId());
+            try {
+                this.dbase.deleteCustomerCard(s.getId());
+            } catch (SQLException e) {
+                System.out.println("There was a problem with the database:");
+                System.out.println(e.getSQLState());
+                return false;
+            }
             //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
         }
 
         EZCustomer c = (EZCustomer) customerMap.get(id);
         c.setCustomerName(newCustomerName);
-        //if(!db.updateCustomer(c))
-        // return false
+        try {
+            this.dbase.updateCustomer(c);
+        } catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return false;
+        }
         //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
 
         if(newCustomerCard.matches( "[0-9]{10}" )){
             c.setCustomerCard(newCustomerCard);
-            //if(!db.updateCustomerCard(c.getId(), newCustomerCard))
-            // return false
-            //TODO:UPDATE DATABASE -> IF DB UNREACHABLE RETURN FALSE
+            try {
+                if(!this.dbase.updateCustomerCard(c.getId(), newCustomerCard))
+                    return false;
+            } catch (SQLException e) {
+                System.out.println("There was a problem with the database:");
+                System.out.println(e.getSQLState());
+                return false;
+            }
         }
 
         return true;
@@ -1223,9 +1297,14 @@ public class EZShop implements EZShopInterface {
         EZCustomer c = (EZCustomer) customerMap.get(id);
         customerMap.remove(id);
         c.removeCustomerCard();
-        //db.removeCustomer(c.getId());
+        try {
+            this.dbase.deleteCustomer(c.getId());
+        } catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return false;
+        }
         c=null;
-        //Todo: aggiorna il DB, return false nel caso in cui ci siano problemi.
 
         return true;
 
@@ -1331,7 +1410,14 @@ public class EZShop implements EZShopInterface {
 
         EZCustomer c = (EZCustomer) customerMap.get(customerId);
         c.setCustomerCard(customerCard);
-        //If(!updateCustomerCard(c.getId(), customerCard)
+        try {
+            if(!this.dbase.updateCustomerCard(c.getId(), customerCard))
+                return false;
+        } catch (SQLException e) {
+            System.out.println("There was a problem with the database:");
+            System.out.println(e.getSQLState());
+            return false;
+        }
 
         return true;
     }
@@ -1366,10 +1452,15 @@ public class EZShop implements EZShopInterface {
                 if(c.getPoints()<Math.abs(pointsToBeAdded) && pointsToBeAdded < 0)   // if pointsToBeAdded is negative and there were not enough points on that card before this operation
                     return false;
                 c.setPoints(c.getPoints() + pointsToBeAdded);
-                //if(!db.updatePoints(c.getId(),c.getPoints() + pointsToBeAdded))
-                   // return false;
-                //todo:UPDATE DB
-                break;
+                try {
+                    if(!this.dbase.updatePoints(c.getId(),c.getPoints() + pointsToBeAdded))
+                        return false;
+                    break;
+                } catch (SQLException e) {
+                    System.out.println("There was a problem with the database:");
+                    System.out.println(e.getSQLState());
+                    return false;
+                }
             }
         }
         return found;
