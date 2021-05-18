@@ -177,7 +177,6 @@ public class WB_UnitTesting {
         int balanceId = 5;
         o.setBalanceId(balanceId);
         assertSame(balanceId, o.getBalanceId());
-
     }
 
     @Test
@@ -196,10 +195,5 @@ public class WB_UnitTesting {
         role = "CASHIER";
         u.setRole(role);
         assertEquals(role, u.getRole());
-
-
     }
-
-
-
 }
