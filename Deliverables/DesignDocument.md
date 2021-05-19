@@ -21,7 +21,7 @@ The design must satisfy the Official Requirements document, notably functional a
 
 # High level design 
 
-Since the project is very simple and small, the application is composed of only four packages. The application follows the MVC pattern: the View is implemented in the GUI package, while the Model and Control are implemented in the Data, the Model and the Exceptions package.
+Since the project is very simple and small, the application is composed of only five packages. The application follows the MVC pattern: the View is implemented in the view package (that contains the GUI), while the Model and Control are implemented in the data, the classes and the exceptions package. The classes package contains the implementation of the classes interfaces defined in the data package.
 
 ![package diagram](Diagrams/Design/packageDiagram.png)
 
