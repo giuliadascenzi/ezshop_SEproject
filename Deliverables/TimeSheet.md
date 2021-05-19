@@ -14,9 +14,9 @@ These figures will not be used to evaluate neither the project nor the team, the
 | apr 12 - 18| 46ph | | | | | | | | 
 | apr 19 - 25| 8ph | | | | | | | | 
 | apr 26 - 2 | | 30ph | | | | | | | 
-| may 3 - 9  | | | 9ph | | | | | | 
-| may 10 - 16| | | | | | | | | 
-| may 17 - 23| | | | | | | | | 
+| may 3 - 9  | | | 60ph | | | | | | 
+| may 10 - 16| | | 27ph | 9ph |  | | | | 
+| may 17 - 23| | | 15ph | 3ph | | | | | 
 | may 24 - 30| | | | | | | | | 
 | jun 31 - 6 | | | | | | | | | 
 | jun 7 - 13 | | | | | | | | | 
