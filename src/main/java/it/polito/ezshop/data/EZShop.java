@@ -947,7 +947,7 @@ public class EZShop implements EZShopInterface {
     public Integer issueOrder(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("CASHIER"))
+                && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
         // check barcode validity
         if (productCode==null || productCode.trim().equals("")
@@ -1014,7 +1014,7 @@ public class EZShop implements EZShopInterface {
     public Integer payOrderFor(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("CASHIER"))
+                && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
         // check barcode validity
         if (productCode==null || productCode.trim().equals("")
@@ -1085,7 +1085,7 @@ public class EZShop implements EZShopInterface {
     public boolean payOrder(Integer orderId) throws InvalidOrderIdException, UnauthorizedException {
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("CASHIER"))
+                && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
         // check order code validity
         if (orderId==null || orderId<=0)
@@ -1154,7 +1154,7 @@ public class EZShop implements EZShopInterface {
     public boolean recordOrderArrival(Integer orderId) throws InvalidOrderIdException, UnauthorizedException, InvalidLocationException {
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("CASHIER"))
+                && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
         // check order code validity
         if (orderId==null || orderId<=0)
@@ -1213,7 +1213,7 @@ public class EZShop implements EZShopInterface {
     public List<Order> getAllOrders() throws UnauthorizedException {
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("CASHIER"))
+                && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
 
         return new ArrayList<>(this.orderTransactionMap.values());
