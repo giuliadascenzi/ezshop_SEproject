@@ -1,11 +1,11 @@
 # Design Document 
 
 
-Authors: Giulia D'Ascenzi, Francesco Di Franco, Mahmoud Hassan Ali, Antonino Monti
+Authors: Giulia D'Ascenzi, Francesco Di Franco, Antonino Monti
 
-Date: 30/04/2021
+Date: 19/05/2021
 
-Version: 1.0
+Version: 2.0 
 
 
 # Contents
