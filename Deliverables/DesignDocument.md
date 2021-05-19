@@ -40,20 +40,21 @@ All classes except for UserSession are persistent.
 
 # Verification traceability matrix
 
-| Class \ FR            | FR1  | FR3  | FR4  | FR5  | FR6  | FR7  | FR8  |
-| --------------------- | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| Shop                  |  X   |  X   |  X   |  X   |  X   |  X   |  X   |
-| User                  |  X   |      |      |      |      |      |      |
-| UserSession           |  X   |      |      |      |      |      |      |
-| BalanceOperation      |      |      |  X   |      |  X   |      |  X   |
-| ReturnTransaction     |      |      |      |      |  X   |      |  X   |
-| Order                 |      |      |  X   |      |      |      |  X   |
-| SaleTransaction       |      |      |      |      |  X   |      |  X   |
-| ProductType           |      |  X   |  X   |      |      |      |      |
-| Position              |      |  X   |  X   |      |      |      |      |
-| Sale_QuantityDiscount |      |      |      |      |  X   |      |  X   |
-| Customer              |      |      |      |  X   |      |      |      |
-| CustomerCard          |      |      |      |  X   |      |      |      |
+| Class \ FR        | FR1  | FR3  | FR4  | FR5  | FR6  | FR7  | FR8  |
+| ----------------- | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| Shop              |  X   |  X   |  X   |  X   |  X   |  X   |  X   |
+| User              |  X   |      |      |      |      |      |      |
+| BalanceOperation  |      |      |  X   |      |  X   |      |  X   |
+| ReturnTransaction |      |      |      |      |  X   |      |  X   |
+| Order             |      |      |  X   |      |      |      |  X   |
+| SaleTransaction   |      |      |      |      |  X   |      |  X   |
+| ProductType       |      |  X   |  X   |      |      |      |      |
+| Position          |      |  X   |  X   |      |      |      |      |
+| TicketEntry       |      |      |      |      |  X   |      |  X   |
+| Customer          |      |      |      |  X   |      |      |      |
+| EZFileReader      |      |      |      |      |      |      |      |
+| EZDatabase        |      |      |      |      |      |      |      |
+| EZCustomerCard    |      |      |      |  X   |      |      |      |
 
 # Verification sequence diagrams
 
@@ -100,5 +101,4 @@ All classes except for UserSession are persistent.
 #### Scenario 10.1: Return payment by credit card
 
 ![sequence 10.1](Diagrams/Design/10-1-ReturnPayment-CreditCard.png)
-
 

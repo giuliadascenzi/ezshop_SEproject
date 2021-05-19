@@ -119,6 +119,7 @@ public class EZDatabase {
 
     }
 
+    /*
     public void updateOrder (Order updatedOrder) throws SQLException {
         String sql = "UPDATE ORDERS SET balanceId = ?, productCode = ?, pricePerUnit = ?, quantity=?, status=? WHERE id = ?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
@@ -131,7 +132,7 @@ public class EZDatabase {
         pstm.setInt(6, updatedOrder.getOrderId());
 
         pstm.executeUpdate();
-    }
+    }*/
 
     public void updateOrderStatus(Integer orderId, String stat) throws SQLException {
         String sql = "UPDATE ORDERS SET  status=? WHERE id = ?";
@@ -200,7 +201,7 @@ public class EZDatabase {
         int cid = rs.getInt("maxcid");
         if( cid<=0 )
             return 0;
-        return cid;
+        return cid+1;
     }
     public Integer getCustomerCard () throws SQLException{
         String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS;";
@@ -220,7 +221,7 @@ public class EZDatabase {
         while(cucard.charAt(0)==0){
             cucard = cucard.substring(1);
         }
-        return Integer.parseInt(cucard);
+        return Integer.parseInt(cucard)+1;
     }
     public void deleteCustomer (Integer id) throws SQLException {
         String sql ="DELETE FROM CUSTOMERS WHERE id =?";
@@ -301,7 +302,7 @@ public class EZDatabase {
         int pid = rs.getInt("maxpid");
         if(pid <=0)
             return 0;
-        return pid;
+        return pid+1;
     }
     public Map<String, ProductType> getProductTypeMap() throws SQLException {
         String query = "SELECT * FROM PRODUCTS;";
