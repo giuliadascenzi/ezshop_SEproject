@@ -1,11 +1,10 @@
 # Design Document 
 
+Authors: Giulia D'Ascenzi, Francesco Di Franco, Antonino Monti
 
-Authors: Giulia D'Ascenzi, Francesco Di Franco, Mahmoud Hassan Ali, Antonino Monti
+Date: 19/05/2021
 
-Date: 30/04/2021
-
-Version: 1.0
+Version: 2.0 
 
 
 # Contents
@@ -21,39 +20,39 @@ The design must satisfy the Official Requirements document, notably functional a
 
 # High level design 
 
-Since the project is very simple and small, the application is composed of only four packages. The application follows the MVC pattern: the View is implemented in the GUI package, while the Model and Control are implemented in the Data, the Model and the Exceptions package.
+Since the project is very simple and small, the application is composed of only five packages. The application follows the MVC pattern: the View is implemented in the view package (that contains the GUI), while the Model and Control are implemented in the data, the classes and the exceptions package. The classes package contains the implementation of the classes interfaces defined in the data package.
 
 ![package diagram](Diagrams/Design/packageDiagram.png)
 
 
 # Low level design
 
-The Data package contains only the provided EZShopInterface file:
+EZShopInterface file (contained in the data package):
 
 ![data package diagram](Diagrams/Design/dataPackage.png)
 
-This interface is implemented by the Shop class in the Model package, the structure of which is reported below:
+This interface is implemented by the Shop class in the data package, the structure of which is reported below:
 
 ![model class diagram](Diagrams/Design/classDiagram.png)
 
-All classes except for UserSession are persistent.
+All classes except for EZFileReader are persistent.
 
 # Verification traceability matrix
 
-| Class \ FR            | FR1  | FR3  | FR4  | FR5  | FR6  | FR7  | FR8  |
-| --------------------- | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| Shop                  |  X   |  X   |  X   |  X   |  X   |  X   |  X   |
-| User                  |  X   |      |      |      |      |      |      |
-| UserSession           |  X   |      |      |      |      |      |      |
-| BalanceOperation      |      |      |  X   |      |  X   |      |  X   |
-| ReturnTransaction     |      |      |      |      |  X   |      |  X   |
-| Order                 |      |      |  X   |      |      |      |  X   |
-| SaleTransaction       |      |      |      |      |  X   |      |  X   |
-| ProductType           |      |  X   |  X   |      |      |      |      |
-| Position              |      |  X   |  X   |      |      |      |      |
-| Sale_QuantityDiscount |      |      |      |      |  X   |      |  X   |
-| Customer              |      |      |      |  X   |      |      |      |
-| CustomerCard          |      |      |      |  X   |      |      |      |
+| Class \ FR        | FR1  | FR3  | FR4  | FR5  | FR6  | FR7  | FR8  |
+| ----------------- | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| Shop              |  X   |  X   |  X   |  X   |  X   |  X   |  X   |
+| User              |  X   |      |      |      |      |      |      |
+| BalanceOperation  |      |      |  X   |      |  X   |      |  X   |
+| ReturnTransaction |      |      |      |      |  X   |      |      |
+| Order             |      |      |  X   |      |      |      |      |
+| SaleTransaction   |      |      |      |      |  X   |      |      |
+| ProductType       |      |  X   |  X   |      |      |      |      |
+| TicketEntry       |      |      |      |      |  X   |      |      |
+| Customer          |      |      |      |  X   |      |      |      |
+| EZCustomerCard    |      |      |      |  X   |      |      |      |
+| EZDatabase        |  X   |  X   |  X   |  X   |  X   |  X   |  X   |
+| EZFileReader      |      |      |      |      |      |  X   |      |
 
 # Verification sequence diagrams
 
@@ -100,5 +99,4 @@ All classes except for UserSession are persistent.
 #### Scenario 10.1: Return payment by credit card
 
 ![sequence 10.1](Diagrams/Design/10-1-ReturnPayment-CreditCard.png)
-
 

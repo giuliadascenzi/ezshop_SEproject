@@ -242,6 +242,7 @@ public interface EZShopInterface {
      * @throws InvalidProductIdException if the product id is less than or equal to 0 or if it is null
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
+
     public boolean updateQuantity(Integer productId, int toBeAdded) throws InvalidProductIdException, UnauthorizedException;
 
     /**
