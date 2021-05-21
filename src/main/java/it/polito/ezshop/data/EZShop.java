@@ -2012,7 +2012,15 @@ public class EZShop implements EZShopInterface {
             return null;
         }
 
-        return this.saleTransactionMap.get(transactionId);
+        EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+
+        // If the transaction hasn't been closed yet, return null
+        if (!st.getStatus().equalsIgnoreCase("CLOSED")
+                && !st.getStatus().equalsIgnoreCase("PAID")) {
+            return null;
+        }
+
+        return st;
     }
 
     // --- Manage Return Transactions --- //
