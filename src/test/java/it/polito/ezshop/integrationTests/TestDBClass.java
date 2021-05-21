@@ -111,7 +111,7 @@ public class TestDBClass {
         EZDatabase db;
         try {
             u = new EZUser(1, "ciao", "asddas", "SHOPMANAGER");
-           db = new EZDatabase();
+            db = new EZDatabase();
             db.insertUser(u);
 
             List<User> users = db.getUsers();

@@ -17,6 +17,12 @@ public class EZDatabase {
     public EZDatabase() throws SQLException {
         this.jdbcUrl = "jdbc:sqlite:EZshop.db";
         this.connection = DriverManager.getConnection(jdbcUrl);
+
+    }
+
+    public void openConnection() throws SQLException
+    {
+        this.connection = DriverManager.getConnection(jdbcUrl);
     }
 
     public void closeConnection() throws SQLException {
