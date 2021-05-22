@@ -1,4 +1,4 @@
-package it.polito.ezshop.integrationTest;
+package it.polito.ezshop.integrationTests;
 
 import it.polito.ezshop.data.BalanceOperation;
 import it.polito.ezshop.data.EZShop;
