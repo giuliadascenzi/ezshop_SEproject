@@ -333,23 +333,7 @@ public class EZShop implements EZShopInterface {
         this.productIds = 0;
     }
 
-    public void resetLocal() {
 
-        this.userList.clear();
-        this.orderTransactionMap.clear();
-        this.customerMap = new HashMap<>();
-        this.transactionMap = new HashMap<>();
-        this.saleTransactionMap = new HashMap<>();
-        this.returnTransactionMap = new HashMap<>();
-        this.productTypeMap = new HashMap<>();
-        this.userSession = null;
-        this.idUsers = 1;
-        this.idCustomer = 0;
-        this.idCustomerCard = 0;
-        this.counter_transactionID = 0;
-        this.counter_returnTransactionID = 0;
-        this.productIds = 0;
-    }
 
 
     /**
@@ -417,9 +401,7 @@ public class EZShop implements EZShopInterface {
      * @return  true if the user was deleted
      *          false if the user cannot be deleted
      *
-     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is
-     *
-     * .
+     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is null.
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
     @Override
@@ -477,12 +459,13 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public User getUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
-        //check userSession
-        if (!checkUserRole("Administrator"))
-            throw new UnauthorizedException();
+
         //Check id validity
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
+        //check userSession
+                if (!checkUserRole("Administrator"))
+                    throw new UnauthorizedException();
 
         /*Look for the user with the same id*/
         for (User u : this.userList)
@@ -510,16 +493,16 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean updateUserRights(Integer id, String role) throws InvalidUserIdException, InvalidRoleException, UnauthorizedException {
-        //check userSession
-        if (!checkUserRole("Administrator"))
-            throw new UnauthorizedException();
+
         //Check id validity
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
         //Check role validity
         if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
-
+        //check userSession
+        if (!checkUserRole("Administrator"))
+            throw new UnauthorizedException();
 
         /*Look for the user with the same id*/
         for (User u : this.userList)
