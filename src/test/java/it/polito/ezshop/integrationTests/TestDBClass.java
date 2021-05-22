@@ -39,7 +39,7 @@ public class TestDBClass {
             db.clearOrders();
             db.deleteProductTable(); /*Messa perchè mi serviva per testare order!!*/
 
-            db.closeConnection();
+
         }
         catch (SQLException throwables) {
 
@@ -70,7 +70,7 @@ public class TestDBClass {
             db.insertUser(o);
             List<User> users =db.getUsers();
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -94,7 +94,7 @@ public class TestDBClass {
             o = new EZUser(2, "ciao2", "asddas", "SHOPMANAGER");
             db.insertUser(o);
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -118,7 +118,7 @@ public class TestDBClass {
             assertEquals(1, users.size());
             assertEquals(u.getId(), users.get(0).getId());
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -145,7 +145,7 @@ public class TestDBClass {
             assertEquals(2, users.size());
             assertEquals(u.getId(), users.get(0).getId());
             assertEquals(o.getId(), users.get(1).getId());
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -168,7 +168,7 @@ public class TestDBClass {
             /*Two user with the same id!*/
             assertThrows(SQLException.class, ()->{db.insertUser(u);});
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -192,7 +192,7 @@ public class TestDBClass {
             /*Two user with the same username!*/
             assertThrows(SQLException.class, ()->{db.insertUser(o);});
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -215,7 +215,7 @@ public class TestDBClass {
             db = new EZDatabase();
             assertEquals(1, db.getNextUserId());
 
-            db.closeConnection();
+
         } catch (SQLException throwables) {
 
             fail(throwables.getMessage());
@@ -241,7 +241,7 @@ public class TestDBClass {
             db.insertUser(o);
             assertEquals(3, db.getNextUserId());
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -268,7 +268,7 @@ public class TestDBClass {
             db.deleteUser(u.getId());
 
             assertFalse(db.getUsers().stream().map(user -> user.getId()).collect(Collectors.toList()).contains(u.getId()));
-            db.closeConnection();
+
 
         } catch (SQLException throwables) {
 
@@ -291,7 +291,7 @@ public class TestDBClass {
 
             db.deleteUser(u.getId());
             /*Nothing should happen*/
-            db.closeConnection();
+
 
         } catch (SQLException throwables) {
 
@@ -317,7 +317,7 @@ public class TestDBClass {
             db.updateUserRole(1, "ADMINISTRATOR");
             assertEquals("ADMINISTRATOR", db.getUsers().get(0).getRole());
 
-            db.closeConnection();
+
 
         } catch (SQLException throwables) {
 
@@ -336,7 +336,7 @@ public class TestDBClass {
 
             /*It should happen nothing*/
 
-            db.closeConnection();
+
         } catch (SQLException throwables) {
 
             fail(throwables.getMessage());
@@ -365,7 +365,7 @@ public class TestDBClass {
             db.clearUsers();
             assertEquals(0, db.getUsers().size());
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -389,7 +389,7 @@ public class TestDBClass {
             assertEquals(0, db.getUsers().size());
 
             /*Nothing should happen*/
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -421,7 +421,7 @@ public class TestDBClass {
             db.insertOrder(u);
 
             Map<Integer, Order> orders = db.getOrders();
-            db.closeConnection();
+
 
 
 
@@ -445,7 +445,7 @@ public class TestDBClass {
             db= new EZDatabase();
             db.insertProductType(p);  //To have the dependency
             db.insertOrder(u);
-            db.closeConnection();
+
 
         } catch (SQLException throwables) {
 
@@ -469,7 +469,7 @@ public class TestDBClass {
 
             o = new EZOrder(1, "12345", 3, 2.5);
             assertThrows(SQLException.class, ()->{db.insertOrder(o);});
-            db.closeConnection();
+
 
         } catch (SQLException throwables) {
 
@@ -524,7 +524,7 @@ public class TestDBClass {
             assertEquals(2, orders.size());
             assertTrue(orders.containsKey(2));
 
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -555,7 +555,7 @@ public class TestDBClass {
             db.deleteOrder(u.getOrderId());
 
             assertFalse(db.getOrders().containsKey(u.getOrderId()));
-            db.closeConnection();
+
         } catch (SQLException throwables) {
 
             fail(throwables.getMessage());
@@ -579,7 +579,7 @@ public class TestDBClass {
 
             db.deleteOrder(u.getOrderId());
             /*Nothing should happen*/
-            db.closeConnection();
+
         } catch (SQLException throwables) {
 
             fail(throwables.getMessage());
@@ -611,7 +611,7 @@ public class TestDBClass {
             db.clearOrders();
             assertEquals(0, db.getOrders().size());
 
-            db.closeConnection();
+
         } catch (SQLException throwables) {
 
             fail(throwables.getMessage());
@@ -637,7 +637,7 @@ public class TestDBClass {
 
             db.updateOrderStatus(u.getOrderId(), "ISSUED");
             assertEquals("ISSUED", db.getOrders().get(u.getOrderId()).getStatus());
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
@@ -665,7 +665,7 @@ public class TestDBClass {
 
             db.updateOrderBalanceId(u.getOrderId(), 6);
             assertEquals(6,(int)db.getOrders().get(u.getOrderId()).getBalanceId());
-            db.closeConnection();
+
 
 
         } catch (SQLException throwables) {
