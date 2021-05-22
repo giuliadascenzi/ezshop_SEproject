@@ -2375,8 +2375,7 @@ public class EZShop implements EZShopInterface {
 
         EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
 
-        if (!result.getStatus().equalsIgnoreCase("CLOSED")
-            && !result.getStatus().equalsIgnoreCase("PAID")) {
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")) {
             return -1;
         }
 
@@ -2399,6 +2398,7 @@ public class EZShop implements EZShopInterface {
         catch (SQLException e) {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
+            e.printStackTrace();
             return -1;
         }
 
@@ -2453,6 +2453,10 @@ public class EZShop implements EZShopInterface {
         }
         // prendo la ST
         EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
+
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")) {
+            return false;
+        }
 
         // Controllo se la carta ha abbastanza soldi
         double ccAmount = ccMap.get(creditCard);
@@ -2712,7 +2716,7 @@ public class EZShop implements EZShopInterface {
         List<BalanceOperation> returnList = new ArrayList<>(this.transactionMap.values());
 
         // Filtra la lista rimuovendo tutte le transazioni al di fuori dell'intervallo di tempo
-        for (int i = 0; i < returnList.size(); i++) {
+        for (int i = returnList.size() - 1; i >= 0; i--) {
             if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
                 returnList.remove(i);
             }

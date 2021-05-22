@@ -61,6 +61,15 @@ public class BBIntegrationTest_Accounting {
                 );
 
             assertFalse(list.isEmpty());
+
+            List<BalanceOperation> emptyList = ez.getCreditsAndDebits(
+                    LocalDate.of(2021, 1, 1),
+                    LocalDate.of(2021, 2, 28)
+            );
+
+            assertTrue(emptyList.isEmpty());
+
+            assertFalse(ez.recordBalanceUpdate(-9999));
         }
         catch (Exception e) {
             System.out.println("Exception encountered when testing:");
