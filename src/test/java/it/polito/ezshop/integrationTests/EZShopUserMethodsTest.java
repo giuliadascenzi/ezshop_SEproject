@@ -19,7 +19,7 @@ public class EZShopUserMethodsTest {
     @Before
     public void resetShop()
     {    sp.resetLocal();
-          //sp.reset();
+          sp.reset();
 
     }
 

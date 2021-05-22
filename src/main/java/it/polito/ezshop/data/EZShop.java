@@ -325,7 +325,7 @@ public class EZShop implements EZShopInterface {
         this.productTypeMap = new HashMap<>();
 
         this.userSession = null;
-        this.idUsers = 0;
+        this.idUsers = 1;
         this.idCustomer = 0;
         this.idCustomerCard = 0;
         this.counter_transactionID = 0;
