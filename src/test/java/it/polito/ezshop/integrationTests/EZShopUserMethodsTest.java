@@ -26,7 +26,7 @@ public class EZShopUserMethodsTest {
 
 
 
-    /****************** TESTS USER********************************/
+    /****************** TESTS CREATE USER********************************/
     @Test
     public void createUserInvalidUsernameOrPasswordOrRole()
     {

@@ -2,6 +2,8 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Order;
 
+import java.util.Locale;
+
 /*Giulia*/
 
 public class EZOrder  implements Order  {
@@ -69,7 +71,7 @@ public class EZOrder  implements Order  {
 
     @Override
     public String getStatus() {
-        return this.status;
+        return this.status.toUpperCase(Locale.ROOT);
     }
 
     @Override

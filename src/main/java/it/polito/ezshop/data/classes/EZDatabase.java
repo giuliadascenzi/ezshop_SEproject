@@ -338,7 +338,7 @@ public class EZDatabase {
     }
     public void updateProduct (EZProductType product) throws SQLException {
         openConnection();
-        String sql = "UPDATE PRODUCTS SET productId= ?, PricePerUnit = ?, Location = ?, Note = ?, Quantity = ?,Description = ?, WHERE Barcode = ?";
+        String sql = "UPDATE PRODUCTS SET productId= ?, PricePerUnit = ?, Location = ?, Note = ?, Quantity = ?,Description = ? WHERE Barcode = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
         pstm.setInt(1, product.getId());
