@@ -116,7 +116,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
-                this.productIds= 0;
+                this.productIds= 1;
             }
 
             //ProductTypeMap inizializzato da db

@@ -31,7 +31,7 @@ public class EZProductType implements ProductType {
 
     @Override
     public Integer getQuantity() {
-        return quantity;
+        return this.quantity;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class EZProductType implements ProductType {
 
     @Override
     public String getLocation() {
-        return location;
+        return this.location;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class EZProductType implements ProductType {
     @Override
     public String getNote() {
 
-        return notes;
+        return this.notes;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class EZProductType implements ProductType {
     @Override
     public String getProductDescription() {
 
-        return description;
+        return this.description;
     }
 
     @Override
@@ -73,7 +73,7 @@ public class EZProductType implements ProductType {
 
     @Override
     public String getBarCode() {
-        return barCode;
+        return this.barCode;
     }
 
     @Override
@@ -83,7 +83,7 @@ public class EZProductType implements ProductType {
 
     @Override
     public Double getPricePerUnit() {
-        return sellPrice;
+        return this.sellPrice;
     }
 
     @Override
@@ -93,7 +93,7 @@ public class EZProductType implements ProductType {
 
     @Override
     public Integer getId() {
-        return productId;
+        return this.productId;
     }
 
     @Override
