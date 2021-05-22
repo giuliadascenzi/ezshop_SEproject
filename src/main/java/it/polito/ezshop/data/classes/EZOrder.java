@@ -7,11 +7,11 @@ import it.polito.ezshop.data.Order;
 public class EZOrder  implements Order  {
 
     private String productCode;
-    private Integer balanceId;
+    private Integer balanceId=-1;
     private double pricePerUnit;
     private int quantity;
     private Integer id;
-    private String status;
+    private String status="";
     //Possible status:
     //issued is sent to the supplier (and not paid),
     // completed  is when the physical product is received (and recorded in inventory) (Same as arrived)

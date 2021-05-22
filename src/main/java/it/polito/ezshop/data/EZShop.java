@@ -250,34 +250,37 @@ public class EZShop implements EZShopInterface {
     @Override
     public void reset() {
         /*Delete all users from the database and from the local structure*/
-        for (User u : this.userList) {
+
             try {
-                dbase.deleteUser(u.getId());
+                dbase.clearUsers();
             }
             catch (SQLException e) {
-                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println("USERS: There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                System.out.println(e.getMessage());
             }
-        }
+
         this.userList.clear();
 
         /*Delete all the orders from the database*/
-        for (Order o : this.orderTransactionMap.values()) {
+
             try {
-                dbase.deleteOrder(o.getOrderId());
+                dbase.clearOrders();
             }
             catch (SQLException e) {
-                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println("ORDERS: There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                System.out.println(e.getMessage());
             }
-        }
+
         this.orderTransactionMap.clear();
 
         try {
             this.dbase.deleteCustomerTable();
         } catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println("CUSTOMER: There was a problem in connecting with the SQLite database:");
             System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
         }
         this.customerMap = new HashMap<>();
 
@@ -286,8 +289,9 @@ public class EZShop implements EZShopInterface {
             this.dbase.clearBalanceOperations();
         }
         catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println("BALANCE OPERATIONS: There was a problem in connecting with the SQLite database:");
             System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
         }
         this.transactionMap = new HashMap<>();
         // --- Clear Sale Transactions
@@ -295,8 +299,9 @@ public class EZShop implements EZShopInterface {
             this.dbase.clearSaleTransactions();
         }
         catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println("SALE TRANSACTIONS: There was a problem in connecting with the SQLite database:");
             System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
         }
         this.saleTransactionMap = new HashMap<>();
         // --- Clear Return Transactions
@@ -304,27 +309,32 @@ public class EZShop implements EZShopInterface {
             this.dbase.clearReturnTransactions();
         }
         catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println("RETURN TRANSACTIONS: There was a problem in connecting with the SQLite database:");
             System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
         }
         this.returnTransactionMap = new HashMap<>();
 
         try {
             this.dbase.deleteProductTable();
         } catch (SQLException e) {
-            System.out.println("There was a problem in connecting with the SQLite database:");
+            System.out.println("PRODUCT : There was a problem in connecting with the SQLite database:");
             System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
         }
         this.productTypeMap = new HashMap<>();
 
         this.userSession = null;
-        this.idUsers = 0;
+        this.idUsers = 1;
         this.idCustomer = 0;
         this.idCustomerCard = 0;
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
     }
+
+
+
 
     /**
      * This method creates a new user with given username, password and role. The returned value is a unique identifier
@@ -350,18 +360,19 @@ public class EZShop implements EZShopInterface {
         if ( username==null|| username.trim().equals("") )
             throw new InvalidUsernameException();
 
+        //password not empty
+        if (password==null || password.trim().equals("")  )
+            throw new InvalidPasswordException();
+        //Role not valid
+        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
+            throw new InvalidRoleException();
+
         for (User u : this.userList) {
             if (u.getUsername().equals(username))
             {
                 return (-1);
             }
         }
-        //password not empty
-        if (password== null||password.trim().equals("")  )
-            throw new InvalidPasswordException();
-        //Role not valid
-        if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
-            throw new InvalidRoleException();
 
         int newuserId = this.idUsers;
         User newUsr =new EZUser(newuserId, username,password,role);
@@ -390,9 +401,7 @@ public class EZShop implements EZShopInterface {
      * @return  true if the user was deleted
      *          false if the user cannot be deleted
      *
-     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is
-     *
-     * .
+     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is null.
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
     @Override
@@ -450,12 +459,13 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public User getUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
-        //check userSession
-        if (!checkUserRole("Administrator"))
-            throw new UnauthorizedException();
+
         //Check id validity
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
+        //check userSession
+                if (!checkUserRole("Administrator"))
+                    throw new UnauthorizedException();
 
         /*Look for the user with the same id*/
         for (User u : this.userList)
@@ -483,16 +493,16 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean updateUserRights(Integer id, String role) throws InvalidUserIdException, InvalidRoleException, UnauthorizedException {
-        //check userSession
-        if (!checkUserRole("Administrator"))
-            throw new UnauthorizedException();
+
         //Check id validity
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
         //Check role validity
         if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
-
+        //check userSession
+        if (!checkUserRole("Administrator"))
+            throw new UnauthorizedException();
 
         /*Look for the user with the same id*/
         for (User u : this.userList)
