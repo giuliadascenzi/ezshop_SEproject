@@ -116,7 +116,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
-                this.productIds= 1;
+                this.productIds= 0;
             }
 
             //ProductTypeMap inizializzato da db
@@ -2022,15 +2022,7 @@ public class EZShop implements EZShopInterface {
             return null;
         }
 
-        EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
-
-        // If the transaction hasn't been closed yet, return null
-        if (!st.getStatus().equalsIgnoreCase("CLOSED")
-                && !st.getStatus().equalsIgnoreCase("PAID")) {
-            return null;
-        }
-
-        return st;
+        return this.saleTransactionMap.get(transactionId);
     }
 
     // --- Manage Return Transactions --- //
