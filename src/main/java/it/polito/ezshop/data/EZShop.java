@@ -343,25 +343,6 @@ public class EZShop implements EZShopInterface {
         this.productIds = 0;
     }
 
-    public void resetLocal() {
-
-        this.userList.clear();
-        this.orderTransactionMap.clear();
-        this.customerMap = new HashMap<>();
-        this.transactionMap = new HashMap<>();
-        this.saleTransactionMap = new HashMap<>();
-        this.returnTransactionMap = new HashMap<>();
-        this.productTypeMap = new HashMap<>();
-        this.userSession = null;
-        this.idUsers = 1;
-        this.idCustomer = 0;
-        this.idCustomerCard = 0;
-        this.counter_transactionID = 0;
-        this.counter_returnTransactionID = 0;
-        this.productIds = 0;
-    }
-
-
     /**
      * This method creates a new user with given username, password and role. The returned value is a unique identifier
      * for the new user.
