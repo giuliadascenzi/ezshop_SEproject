@@ -195,8 +195,8 @@ public class EZDatabase {
         String sql ="INSERT INTO CUSTOMERS VALUES ("+ values +")";
         Statement statement =this.connection.createStatement();
         if(statement.executeUpdate(sql)!=1) //ritorna il numero di righe cambiate executeUpdate -> in questo caso é una insert, quindi deve essere per forza una.
-            return false;
-        return true;
+        {closeConnection(); return false;}
+        closeConnection(); return true;
     }
     public boolean updateCustomer (EZCustomer updatedCustomer) throws SQLException {
         openConnection();
@@ -420,8 +420,8 @@ public class EZDatabase {
 
     public void updateBalanceOperation(EZBalanceOperation bo) throws SQLException {
         openConnection();
-        String sql = "UPDATE BalanceOperations" +
-                "SET money = ?, date = ?, type = ?" +
+        String sql = "UPDATE BalanceOperations " +
+                "SET money = ?, date = ?, type = ? " +
                 "WHERE id = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
@@ -429,18 +429,6 @@ public class EZDatabase {
         pstm.setString(2, bo.getDate().toString());
         pstm.setString(3, bo.getType());
         pstm.setInt(4, bo.getBalanceId());
-
-        pstm.executeUpdate();
-        closeConnection();
-    }
-
-    public void deleteBalanceOperation(int balanceId) throws SQLException {
-        openConnection();
-        String sql = "DELETE FROM BalanceOperations" +
-                "WHERE id = ?;";
-        PreparedStatement pstm = this.connection.prepareStatement(sql);
-
-        pstm.setInt(1, balanceId);
 
         pstm.executeUpdate();
         closeConnection();
@@ -523,7 +511,7 @@ public class EZDatabase {
 
     public void updateSaleTransaction(EZSaleTransaction st) throws SQLException {
         openConnection();
-        String sql = "UPDATE SaleTransactions" +
+        String sql = "UPDATE SaleTransactions " +
                 "SET discountRate = ?, price = ?, status = ?" +
                 "WHERE id = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
@@ -557,31 +545,6 @@ public class EZDatabase {
         closeConnection();
     }
 
-    public void deleteSaleTransaction(EZSaleTransaction st) throws SQLException {
-        openConnection();
-        String sql = "DELETE FROM SaleTransactions" +
-                "WHERE id = ?;";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
-
-        pstm.setInt(1, st.getTicketNumber());
-
-        // delete every entry associated with the st
-        List<TicketEntry> entryList = st.getEntries();
-
-        for (TicketEntry e : entryList) {
-            String query_e = "DELETE FROM ProductEntry WHERE barCode = ?, saleId = ?;";
-            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
-
-            stat_e.setString(1, e.getBarCode());
-            stat_e.setInt(2, st.getTicketNumber());
-
-            stat_e.executeUpdate();
-        }
-        // delete the st
-        pstm.executeUpdate();
-        closeConnection();
-    }
-
     public Map<Integer, SaleTransaction> getSaleTransactions() throws SQLException {
         openConnection();
         String query = "SELECT * FROM SaleTransactions;";
@@ -604,7 +567,7 @@ public class EZDatabase {
 
             pstat.setInt(1, st.getTicketNumber());
 
-            ResultSet rs_prod = pstat.executeQuery(productQuery);
+            ResultSet rs_prod = pstat.executeQuery();
             List<TicketEntry> entryList = new ArrayList<>();
 
             // for each product entry...
@@ -630,58 +593,6 @@ public class EZDatabase {
         return stMap;
     }
 
-    public EZSaleTransaction getSaleTransaction(int id) throws SQLException {
-        openConnection();
-        String query = "SELECT * FROM SaleTransactions WHERE id = ?;";
-        PreparedStatement statement = this.connection.prepareStatement(query);
-
-        statement.setInt(1, id);
-
-        ResultSet rs = statement.executeQuery(query);
-        List<EZSaleTransaction> stList = new ArrayList<>();
-
-        // for each sale transaction returned...
-        while(rs.next()) {
-            // create a new st object
-            EZSaleTransaction st = new EZSaleTransaction(
-                    rs.getInt("id"),
-                    rs.getDouble("discountRate"),
-                    rs.getDouble("price"),
-                    rs.getString("status")
-            );
-
-            // get all product entries associated with the st
-            String productQuery = "SELECT * FROM productEntry WHERE saleId = ?;";
-            PreparedStatement pstat = this.connection.prepareStatement(productQuery);
-
-            pstat.setInt(1, st.getTicketNumber());
-
-            ResultSet rs_prod = pstat.executeQuery(productQuery);
-            List<TicketEntry> entryList = new ArrayList<>();
-
-            // for each product entry...
-            while (rs_prod.next()) {
-                // create a new object
-                EZTicketEntry e = new EZTicketEntry(
-                        rs_prod.getString("barCode"),
-                        rs_prod.getString("prodDesc"),
-                        rs_prod.getInt("amount"),
-                        rs_prod.getDouble("pricePerUnit"),
-                        rs_prod.getDouble("discountRate")
-                );
-                // add it to the temporary list
-                entryList.add(e);
-            }
-            // set the list for the sale transaction
-            st.setEntries(entryList);
-            // add the st to the st list
-            stList.add(st);
-        }
-
-        closeConnection();
-        return stList.get(0);
-    }
-
     public void updateSaleInventoryQuantity(EZSaleTransaction st) throws SQLException {
         openConnection();
         // get list of entries
@@ -689,8 +600,8 @@ public class EZDatabase {
 
         // update all of the product quantities in the DB
         for (TicketEntry e : entryList) {
-            String query_e = "UPDATE Products" +
-                    "SET Quantity = Quantity - ?" +
+            String query_e = "UPDATE Products " +
+                    "SET Quantity = Quantity - ? " +
                     "WHERE barcode = ?;";
             PreparedStatement stat_e = this.connection.prepareStatement(query_e);
 
@@ -704,7 +615,7 @@ public class EZDatabase {
 
     public void clearSaleTransactions() throws SQLException {
         openConnection();
-        String sql = "DELETE FROM SaleTransactions;";
+        String sql = "DELETE FROM ProductEntry; DELETE FROM SaleTransactions;";
         Statement stat = this.connection.createStatement();
         stat.executeUpdate(sql);
         closeConnection();
@@ -726,7 +637,7 @@ public class EZDatabase {
         Map<String, Integer> prodMap = rt.getMapOfProducts();
 
         for(Map.Entry<String, Integer> e : prodMap.entrySet()) {
-            String query_e = "INSERT INTO ReturnProductEntry(returnId, barCode, amount)" +
+            String query_e = "INSERT INTO ReturnProductEntry(returnId, barCode, amount) " +
                     "VALUES(?, ?, ?);";
             PreparedStatement stat_e = this.connection.prepareStatement(query_e);
 
@@ -742,7 +653,7 @@ public class EZDatabase {
     public void updateReturnTransaction(EZReturnTransaction rt) throws SQLException {
         openConnection();
         String sql = "UPDATE ReturnTransactions " +
-                "SET status = ?, money = ?" +
+                "SET status = ?, money = ? " +
                 "WHERE returnId = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
@@ -755,7 +666,7 @@ public class EZDatabase {
         Map<String, Integer> prodMap = rt.getMapOfProducts();
 
         for(Map.Entry<String, Integer> e : prodMap.entrySet()) {
-            String query_e = "UPDATE ReturnProductEntry" +
+            String query_e = "UPDATE ReturnProductEntry " +
                     "SET amount = ?" +
                     "WHERE returnId = ? AND barCode = ?;";
             PreparedStatement stat_e = this.connection.prepareStatement(query_e);
@@ -784,13 +695,15 @@ public class EZDatabase {
                     rs.getString("status")
             );
 
+            rt.setMoneyReturned(rs.getDouble("money"));
+
             // get all return product entries associated with the rt
             String productQuery = "SELECT * FROM ReturnProductEntry WHERE returnId = ?;";
             PreparedStatement pstat = this.connection.prepareStatement(productQuery);
 
             pstat.setInt(1, rt.getReturnID());
 
-            ResultSet rs_prod = pstat.executeQuery(productQuery);
+            ResultSet rs_prod = pstat.executeQuery();
             Map<String, Integer> prodMap = rt.getMapOfProducts();
 
             // for each product entry...
@@ -821,14 +734,14 @@ public class EZDatabase {
 
     public void clearReturnTransactions() throws SQLException {
         openConnection();
-        String sql = "DELETE FROM ReturnTransactions;";
+        String sql = "DELETE FROM ReturnProductEntry; DELETE FROM ReturnTransactions;";
         Statement stat = this.connection.createStatement();
         stat.executeUpdate(sql);
         closeConnection();
     }
 
     /*******************************************************************************************/
-
+/*
     public static void main (String[] args) throws SQLException
     {
         EZDatabase db = new EZDatabase();
@@ -852,4 +765,6 @@ public class EZDatabase {
         //db.updateOrder(order);
 
     }
+
+ */
 }

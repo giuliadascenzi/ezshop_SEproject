@@ -39,6 +39,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.userList = new ArrayList<>();
                 this.idUsers = 0;
             }
@@ -50,6 +51,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.transactionMap = new HashMap<>();
                 this.counter_transactionID = 0;
             }
@@ -60,6 +62,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.saleTransactionMap = new HashMap<>();
             }
             // --- Return Transactions and respective ID counter
@@ -70,6 +73,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.returnTransactionMap = new HashMap<>();
                 this.counter_returnTransactionID = 0;
             }
@@ -80,6 +84,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.orderTransactionMap = new HashMap<>();
             }
             //Customers
@@ -89,6 +94,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.customerMap = new HashMap<>();
             }
             //CustomerID
@@ -98,6 +104,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.idCustomer=0;
             }
             //CustomerId Card
@@ -107,6 +114,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.idCustomerCard=0;
             }
             //ProductIds Inizializzato da db
@@ -116,6 +124,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.productIds= 0;
             }
 
@@ -126,6 +135,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.productTypeMap = new HashMap<>();
             }
         }
