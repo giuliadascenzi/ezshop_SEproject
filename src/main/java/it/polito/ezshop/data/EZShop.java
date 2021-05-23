@@ -343,6 +343,9 @@ public class EZShop implements EZShopInterface {
         this.productIds = 0;
     }
 
+
+
+
     /**
      * This method creates a new user with given username, password and role. The returned value is a unique identifier
      * for the new user.
@@ -408,9 +411,7 @@ public class EZShop implements EZShopInterface {
      * @return  true if the user was deleted
      *          false if the user cannot be deleted
      *
-     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is
-     *
-     * .
+     * @throws InvalidUserIdException if id is less than or equal to 0 or if it is null.
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
     @Override
@@ -468,12 +469,13 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public User getUser(Integer id) throws InvalidUserIdException, UnauthorizedException {
-        //check userSession
-        if (!checkUserRole("Administrator"))
-            throw new UnauthorizedException();
+
         //Check id validity
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
+        //check userSession
+                if (!checkUserRole("Administrator"))
+                    throw new UnauthorizedException();
 
         /*Look for the user with the same id*/
         for (User u : this.userList)
@@ -501,16 +503,16 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean updateUserRights(Integer id, String role) throws InvalidUserIdException, InvalidRoleException, UnauthorizedException {
-        //check userSession
-        if (!checkUserRole("Administrator"))
-            throw new UnauthorizedException();
+
         //Check id validity
         if (id==null ||id<=0 )
             throw new InvalidUserIdException();
         //Check role validity
         if (role==null|| role.trim().equals("" )  || (!role.equalsIgnoreCase("SHOPMANAGER") && !role.equalsIgnoreCase("ADMINISTRATOR") && !role.equalsIgnoreCase("CASHIER") ))
             throw new InvalidRoleException();
-
+        //check userSession
+        if (!checkUserRole("Administrator"))
+            throw new UnauthorizedException();
 
         /*Look for the user with the same id*/
         for (User u : this.userList)
@@ -632,9 +634,9 @@ public class EZShop implements EZShopInterface {
         if (this.productTypeMap.containsKey(productCode))
                 return -1;
         //create new ProductType
-        int newProductId=this.productIds;
+        int newProductId=++this.productIds;
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
-        this.productIds++;
+        //this.productIds++;
         this.productTypeMap.put(productCode, pt);
         try {
             this.dbase.insertProductType((EZProductType) pt);
@@ -920,9 +922,9 @@ public class EZShop implements EZShopInterface {
 
         for (ProductType p : this.productTypeMap.values()) {
             if (p.getId().equals(productId)) { //check if the producttype exists
-                barcodeProduct=p.getProductDescription();
+                barcodeProduct=p.getBarCode();
             }
-            if (p.getLocation().equals(newPos)) //check whether the position has already been assigned
+            if (p.getLocation()!=null) //check whether the position has already been assigned
                 return false;
         }
 
@@ -931,12 +933,12 @@ public class EZShop implements EZShopInterface {
 
         //Everything good
         EZProductType pr = (EZProductType) this.productTypeMap.get(barcodeProduct);
-        pr.setProductDescription(newPos);
+        pr.setLocation(newPos);
         try {
             this.dbase.updateProduct((EZProductType) pr);
         } catch (SQLException e) {
             System.out.println("There was a problem with the database:");
-            System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
         }
 
         return true;
@@ -963,10 +965,6 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public Integer issueOrder(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
-        //user session validity
-        if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("SHOPMANAGER"))
-            throw new UnauthorizedException();
         // check barcode validity
         if (productCode==null || productCode.trim().equals("")
            || !this.checkBarCodeValidity(productCode.trim())
@@ -978,6 +976,10 @@ public class EZShop implements EZShopInterface {
         //check price per unit validity
         if ( pricePerUnit <=0)
             throw new InvalidPricePerUnitException();
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("SHOPMANAGER"))
+            throw new UnauthorizedException();
 
 
         //check if the product is in the map
@@ -1030,11 +1032,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public Integer payOrderFor(String productCode, int quantity, double pricePerUnit) throws InvalidProductCodeException, InvalidQuantityException, InvalidPricePerUnitException, UnauthorizedException {
-        //user session validity
-        if (!this.checkUserRole("ADMINISTRATOR")
-                && !this.checkUserRole("SHOPMANAGER"))
-            throw new UnauthorizedException();
-        // check barcode validity
+         // check barcode validity
         if (productCode==null || productCode.trim().equals("")
             || !this.checkBarCodeValidity(productCode.trim())
         )
@@ -1045,6 +1043,10 @@ public class EZShop implements EZShopInterface {
         //check price per unit validity
         if ( pricePerUnit <=0)
             throw new InvalidPricePerUnitException();
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("SHOPMANAGER"))
+            throw new UnauthorizedException();
 
         //check if the product is in the map
         if (!this.productTypeMap.containsKey(productCode))
@@ -1065,6 +1067,9 @@ public class EZShop implements EZShopInterface {
 
         EZBalanceOperation blOp= new EZBalanceOperation(newID, LocalDate.now(),  -priceToPay);
 
+        //insertbalance id in order
+        newOrder.setBalanceId(newID);
+
         //Try insert it in the db
         try {
             this.dbase.insertOrder(newOrder);
@@ -1074,6 +1079,7 @@ public class EZShop implements EZShopInterface {
             System.out.println(e.getMessage());
             return -1;
         }
+
 
         //insert it in the map of orders
         this.orderTransactionMap.put(newID, newOrder);
@@ -1101,20 +1107,23 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public boolean payOrder(Integer orderId) throws InvalidOrderIdException, UnauthorizedException {
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
-        // check order code validity
-        if (orderId==null || orderId<=0)
-            throw new InvalidOrderIdException();
 
         //look for the order
         if (!this.orderTransactionMap.containsKey(orderId))
             return false;
         //check status
         String orderStatus = this.orderTransactionMap.get(orderId).getStatus();
-        if (!orderStatus.equalsIgnoreCase("issued") && !orderStatus.equalsIgnoreCase("payed"))
+        if (orderStatus.equalsIgnoreCase("payed") )
+            return true; //senza fare nulla
+        if (!orderStatus.equalsIgnoreCase("issued") )
             return false;
 
         // update balance
@@ -1162,7 +1171,7 @@ public class EZShop implements EZShopInterface {
      * @param orderId the id of the order that has arrived
      *
      * @return  true if the operation was successful
-     *          false if the order does not exist or if it was not in an ORDERED/COMPLETED state (payed no ordered!!!)
+     *          false if the order does not exist or if it was not in an PAYED/COMPLETED state (payed no ordered!!!)
      *
      * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
      * @throws InvalidLocationException if the ordered product type has not an assigned location.
@@ -1170,16 +1179,21 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean recordOrderArrival(Integer orderId) throws InvalidOrderIdException, UnauthorizedException, InvalidLocationException {
+
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+
         //user session validity
         if (!this.checkUserRole("ADMINISTRATOR")
                 && !this.checkUserRole("SHOPMANAGER"))
             throw new UnauthorizedException();
-        // check order code validity
-        if (orderId==null || orderId<=0)
-            throw new InvalidOrderIdException();
+
+
         //check if the order exists
         if (!this.orderTransactionMap.containsKey(orderId))
             return false;
+
         //check location productType
         String productCode= this.orderTransactionMap.get(orderId).getProductCode();
         if (this.productTypeMap.get(productCode).getLocation()==null)
@@ -1198,20 +1212,22 @@ public class EZShop implements EZShopInterface {
             this.dbase.updateOrderStatus(orderId, "COMPLETED");
 
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()+"ORDER STATUS");
             return false;
         }
         //state changes to completed
         this.orderTransactionMap.get(orderId).setStatus("completed");
         //update product Quantity
         int quantity=this.orderTransactionMap.get(orderId).getQuantity();
+
         int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
+
         this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
 
         try {
             this.dbase.updateProduct((EZProductType) this.productTypeMap.get(productCode));
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()+"UPDATE PRODUCT");
         }
 
 
@@ -2030,15 +2046,7 @@ public class EZShop implements EZShopInterface {
             return null;
         }
 
-        EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
-
-        // If the transaction hasn't been closed yet, return null
-        if (!st.getStatus().equalsIgnoreCase("CLOSED")
-                && !st.getStatus().equalsIgnoreCase("PAID")) {
-            return null;
-        }
-
-        return st;
+        return this.saleTransactionMap.get(transactionId);
     }
 
     // --- Manage Return Transactions --- //

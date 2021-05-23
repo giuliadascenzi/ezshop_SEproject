@@ -7,7 +7,7 @@ public class EZProductType implements ProductType {
     private String barCode;
     private String description;
     private Double sellPrice;
-    private Integer quantity;
+    private Integer quantity=0;
     private Integer productId;
     //private Double discountRate;
     private String notes;

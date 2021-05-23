@@ -51,13 +51,13 @@ public class EZUser implements User{
     @Override
     public String getRole() {
         if(this.role==UserRole.MANAGER){
-            return "SHOPMANAGER";
+            return "ShopManager";
         }
         if(this.role==UserRole.ADMINISTRATOR){
-            return "ADMINISTRATOR";
+            return "Administrator";
         }
         if(this.role==UserRole.CASHIER)
-            return "CASHIER";
+            return "Cashier";
         return "";
     }
 

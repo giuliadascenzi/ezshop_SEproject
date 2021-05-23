@@ -16,12 +16,15 @@ import static org.junit.Assert.*;
 public class TestDBClass {
     //EZShop ez = new EZShop();
 
+
+
     @Test
     public void testCreationDB()
     {
         try {
             EZDatabase db;
             db = new EZDatabase();
+
         }
         catch (SQLException throwables) {
             fail("Should have not thrown the exception creating the db");
@@ -67,7 +70,6 @@ public class TestDBClass {
             fail(throwables.getMessage());
         }
     }
-
     /****************** TESTS FOR INSERT USER********************************/
     @Test
     public void testInsertUsersNoException()
@@ -80,10 +82,16 @@ public class TestDBClass {
             db.insertUser(u);
             o = new EZUser(2, "ciao2", "asddas", "SHOPMANAGER");
             db.insertUser(o);
+
+
+
+
         } catch (SQLException throwables) {
             fail(throwables.getMessage());
         }
+
     }
+
 
     @Test
     public void testInsertUserValid() {
@@ -97,6 +105,10 @@ public class TestDBClass {
             List<User> users = db.getUsers();
             assertEquals(1, users.size());
             assertEquals(u.getId(), users.get(0).getId());
+
+
+
+
         } catch (SQLException throwables) {
             fail(throwables.getMessage());
         }
@@ -119,7 +131,11 @@ public class TestDBClass {
             assertEquals(2, users.size());
             assertEquals(u.getId(), users.get(0).getId());
             assertEquals(o.getId(), users.get(1).getId());
+
+
+
         } catch (SQLException throwables) {
+
             fail(throwables.getMessage());
         }
 
