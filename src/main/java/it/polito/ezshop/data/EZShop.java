@@ -2313,8 +2313,8 @@ public class EZShop implements EZShopInterface {
         EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
         EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
 
-        if (!ret.getStatus().equalsIgnoreCase("CLOSED")
-            && !ret.getStatus().equalsIgnoreCase("PAID")) {
+        if (ret.getStatus().equalsIgnoreCase("CLOSED")
+            || ret.getStatus().equalsIgnoreCase("PAID")) {
             return false;
         }
 
@@ -2448,7 +2448,7 @@ public class EZShop implements EZShopInterface {
     @Override
     public boolean receiveCreditCardPayment(Integer ticketNumber, String creditCard) throws InvalidTransactionIdException, InvalidCreditCardException, UnauthorizedException {
         if (!this.checkCreditCardValidity(creditCard)) {
-            return false;
+            throw new InvalidCreditCardException();
         }
 
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")

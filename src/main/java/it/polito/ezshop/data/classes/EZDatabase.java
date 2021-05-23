@@ -21,12 +21,6 @@ public class EZDatabase {
 
     public void openConnection() throws SQLException
     {
-        //this.connection = DriverManager.getConnection(jdbcUrl);
-
-    }
-
-    public void openConnection() throws SQLException
-    {
         this.connection = DriverManager.getConnection(jdbcUrl);
     }
 
@@ -530,9 +524,9 @@ public class EZDatabase {
         List<TicketEntry> entryList = st.getEntries();
 
         for (TicketEntry e : entryList) {
-            String query_e = "UPDATE ProductEntry" +
+            String query_e = "UPDATE ProductEntry " +
                     "SET prodDesc = ?, amount = ?,  discountRate = ?, pricePerUnit = ?" +
-                    "WHERE barCode = ?, saleId = ?;";
+                    "WHERE barCode = ? AND saleId = ?;";
             PreparedStatement stat_e = this.connection.prepareStatement(query_e);
 
             stat_e.setString(1, e.getProductDescription());

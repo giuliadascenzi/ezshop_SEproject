@@ -16,8 +16,6 @@ public class EZShopProductTypeTest {
 
     }
 
-
-
     @Test
     public void Test_createProductType(){
         Integer id;

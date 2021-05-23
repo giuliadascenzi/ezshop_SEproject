@@ -2,9 +2,7 @@ package it.polito.ezshop.integrationTests;
 
 import it.polito.ezshop.data.EZShop;
 import it.polito.ezshop.data.classes.EZSaleTransaction;
-import it.polito.ezshop.exceptions.InvalidPaymentException;
-import it.polito.ezshop.exceptions.InvalidTransactionIdException;
-import it.polito.ezshop.exceptions.UnauthorizedException;
+import it.polito.ezshop.exceptions.*;
 import org.junit.*;
 
 import static org.junit.Assert.*;
@@ -62,6 +60,7 @@ public class BBIntegrationTest_Payments {
 
         try {
             int a = ez.createProductType("potato", validBC, 1, "tasty");
+            ez.updatePosition(a,"2-C-4");
             ez.updateQuantity(a, 999);
         }
         catch (Exception e) {
@@ -82,8 +81,12 @@ public class BBIntegrationTest_Payments {
             assertEquals(-1, ez.receiveCashPayment(42, 1), 0.0);
             assertEquals(1, ez.receiveCashPayment(tID, 11), 0.0);
 
-            assertFalse(ez.receiveCreditCardPayment(tID2, "8"));
-            assertFalse(ez.receiveCreditCardPayment(-1, "4485370086510891"));
+            assertThrows(InvalidCreditCardException.class, () -> {
+                ez.receiveCreditCardPayment(tID2, "8");
+            });
+            assertThrows(InvalidTransactionIdException.class, () -> {
+                ez.receiveCreditCardPayment(-1, "4485370086510891");
+            });
             assertFalse(ez.receiveCreditCardPayment(tID2, "4716258050958645"));
 
             assertTrue(ez.receiveCreditCardPayment(tID2, "4485370086510891"));
@@ -93,6 +96,26 @@ public class BBIntegrationTest_Payments {
             assertTrue(st.getStatus().equalsIgnoreCase("PAID"));
 
             // TODO: test return payments
+            int rID = ez.startReturnTransaction(tID);
+
+            assertTrue(ez.returnProduct(rID, validBC, 2));
+
+            assertTrue(ez.endReturnTransaction(rID, true));
+
+            int wrongRID = ez.startReturnTransaction(tID);
+
+            assertEquals(-1, ez.returnCashPayment(wrongRID), 0.0);
+
+            assertEquals(2, ez.returnCashPayment(rID), 0.0);
+
+            assertThrows(InvalidCreditCardException.class, () -> {
+                ez.returnCreditCardPayment(rID, "8");
+            });
+            assertThrows(InvalidTransactionIdException.class, () -> {
+                ez.returnCreditCardPayment(-1, "4485370086510891");
+            });
+
+            assertEquals(2, ez.returnCreditCardPayment(rID, "4485370086510891"), 0.0);
         }
         catch (Exception e) {
             System.out.println("Exception encountered while testing:");
