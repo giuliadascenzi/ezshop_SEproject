@@ -20,7 +20,10 @@ public class EZShopUserMethodsTest {
     public void resetShop()
     {
         sp.reset();
+
     }
+
+
 
     /****************** TESTS USER********************************/
     /****************** TESTS CREATE USER********************************/
@@ -94,16 +97,9 @@ public class EZShopUserMethodsTest {
             int id3= sp.createUser("giulia3", "ciao3", "ShopManager");
             assertEquals(3, id3);
 
-        } catch (InvalidUsernameException e) {
-            fail(e.getMessage());
-        } catch (InvalidPasswordException e) {
-            fail(e.getMessage());
-        } catch (InvalidRoleException e) {
+        } catch (InvalidUsernameException | InvalidRoleException | InvalidPasswordException e) {
             fail(e.getMessage());
         }
-
-
-
 
 
     }

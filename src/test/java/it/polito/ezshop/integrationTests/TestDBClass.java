@@ -31,18 +31,24 @@ public class TestDBClass {
         }
     }
 
+
     @Before
     public void ResetDB()
     {
+
         try {
             EZDatabase db = new EZDatabase();
             db.clearUsers();
             db.clearOrders();
             db.deleteProductTable(); /*Messa perchè mi serviva per testare order!!*/
+
+
         }
         catch (SQLException throwables) {
+
             fail(throwables.getMessage());
         }
+
     }
 
     /*********************************************************************/
@@ -70,6 +76,7 @@ public class TestDBClass {
             fail(throwables.getMessage());
         }
     }
+
     /****************** TESTS FOR INSERT USER********************************/
     @Test
     public void testInsertUsersNoException()
@@ -89,7 +96,6 @@ public class TestDBClass {
         } catch (SQLException throwables) {
             fail(throwables.getMessage());
         }
-
     }
 
 
@@ -285,6 +291,10 @@ public class TestDBClass {
 
             db.updateUserRole(1, "ADMINISTRATOR");
             assertEquals("ADMINISTRATOR", db.getUsers().get(0).getRole());
+            assertEquals("ShopManager", db.getUsers().get(0).getRole());
+
+            db.updateUserRole(1, "ADMINISTRATOR");
+            assertEquals("Administrator", db.getUsers().get(0).getRole());
 
 
 

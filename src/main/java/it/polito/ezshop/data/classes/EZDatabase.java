@@ -17,6 +17,7 @@ public class EZDatabase {
     public EZDatabase() throws SQLException {
         this.jdbcUrl = "jdbc:sqlite:EZshop.db";
         //this.connection = DriverManager.getConnection(jdbcUrl);
+
     }
 
     public void openConnection() throws SQLException
@@ -194,8 +195,8 @@ public class EZDatabase {
         String sql ="INSERT INTO CUSTOMERS VALUES ("+ values +")";
         Statement statement =this.connection.createStatement();
         if(statement.executeUpdate(sql)!=1) //ritorna il numero di righe cambiate executeUpdate -> in questo caso é una insert, quindi deve essere per forza una.
-            return false;
-        return true;
+        {closeConnection(); return false;}
+        closeConnection(); return true;
     }
     public boolean updateCustomer (EZCustomer updatedCustomer) throws SQLException {
         openConnection();

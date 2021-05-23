@@ -768,7 +768,7 @@ public class EZShop implements EZShopInterface {
     @Override
     public List<ProductType> getAllProductTypes() throws UnauthorizedException {
         // check role administrator/shop manager
-        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager") )
             throw new UnauthorizedException();
 
         return new ArrayList<>(this.productTypeMap.values());
