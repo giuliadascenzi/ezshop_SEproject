@@ -1,11 +1,13 @@
 package it.polito.ezshop.integrationTests;
 import it.polito.ezshop.data.classes.*;
 import it.polito.ezshop.data.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -834,6 +836,201 @@ public class TestDBClass {
             throwables.printStackTrace();
         }
     }
+    // ------ DB Test for BalanceOperation ------ //
+    @Test
+    public void test_DBBalanceOperation() {
+        EZDatabase db;
+
+        try {
+            db = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting to the DB:");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            db.clearBalanceOperations();
+
+            EZBalanceOperation bo1 = new EZBalanceOperation(1,
+                    LocalDate.of(2021, 1, 3),
+                    22);
+            EZBalanceOperation bo2 = new EZBalanceOperation(2,
+                    LocalDate.of(2021, 11, 13),
+                    18);
+
+            db.addBalanceOperation(bo1);
+            db.addBalanceOperation(bo2);
+
+            assertThrows(SQLException.class, () -> {
+                db.addBalanceOperation(bo1);
+            });
+
+            assertEquals(2, db.getLastTransactionID());
+
+            bo2.setMoney(-42);
+
+            db.updateBalanceOperation(bo2);
+
+            Map<Integer, BalanceOperation> map = db.getBalanceOperations();
+
+            assertEquals(-42, map.get(2).getMoney(), 0.0);
+        }
+        catch (Exception e) {
+            System.out.println("Exception encountered while testing:");
+            e.printStackTrace();
+        }
+    }
+
+    // ------ DB Test for SaleTransaction ------ //
+    @Test
+    public void test_DBSaleTransaction() {
+        EZDatabase db;
+
+        try {
+            db = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting to the DB:");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            db.clearBalanceOperations();
+            db.clearSaleTransactions();
+
+            EZBalanceOperation bo1 = new EZBalanceOperation(1,
+                    LocalDate.of(2021, 1, 3),
+                    22);
+            EZBalanceOperation bo2 = new EZBalanceOperation(2,
+                    LocalDate.of(2021, 11, 13),
+                    18);
+
+            EZSaleTransaction st1 = new EZSaleTransaction(1, 0.0, 22, "CLOSED");
+            EZSaleTransaction st2 = new EZSaleTransaction(2, 0.0, 18, "PAID");
+
+            EZProductType pr = new EZProductType("potato", "42", 1.0, "tasty", 1);
+
+            db.insertProductType(pr);
+
+            st1.addEntry(pr, 42, 0.5);
+
+            db.addBalanceOperation(bo1);
+            db.addBalanceOperation(bo2);
+
+            db.addSaleTransaction(st1);
+            db.addSaleTransaction(st2);
+
+            assertThrows(SQLException.class, () -> {
+                db.addSaleTransaction(st1);
+            });
+
+            bo2.setMoney(42);
+            st2.setPrice(42);
+
+            db.updateBalanceOperation(bo2);
+            db.updateSaleTransaction(st2);
+
+            Map<Integer, SaleTransaction> map = db.getSaleTransactions();
+
+            assertEquals(42, map.get(2).getPrice(), 0.0);
+
+            db.updateSaleInventoryQuantity(st1);
+        }
+        catch (Exception e) {
+            System.out.println("Exception encountered while testing:");
+            e.printStackTrace();
+        }
+    }
+
+    // ------ DB Test for ReturnTransaction ------ //
+    @Test
+    public void test_DBReturnTransaction() {
+        EZDatabase db;
+
+        try {
+            db = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting to the DB:");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            db.clearBalanceOperations();
+            db.clearSaleTransactions();
+            db.deleteProductTable();
+            db.clearReturnTransactions();
+
+            EZBalanceOperation bo1 = new EZBalanceOperation(1,
+                    LocalDate.of(2021, 1, 3),
+                    22);
+            EZBalanceOperation bo2 = new EZBalanceOperation(2,
+                    LocalDate.of(2021, 11, 13),
+                    18);
+
+            EZSaleTransaction st1 = new EZSaleTransaction(1, 0.0, 22, "PAID");
+            EZSaleTransaction st2 = new EZSaleTransaction(2, 0.0, 18, "PAID");
+
+            EZProductType pr = new EZProductType("potato", "42", 1.0, "tasty", 1);
+
+            db.insertProductType(pr);
+
+            st1.addEntry(pr, 42, 0.5);
+
+            db.addBalanceOperation(bo1);
+            db.addBalanceOperation(bo2);
+
+            db.addSaleTransaction(st1);
+            db.addSaleTransaction(st2);
+
+            EZReturnTransaction rt1 = new EZReturnTransaction(1, 1, "CLOSED");
+            EZReturnTransaction rt2 = new EZReturnTransaction(1, 2, "PAID");
+
+            Map<String, Integer> pmap = new HashMap<>();
+
+            pmap.put("42", 10);
+
+            rt1.setMapOfProducts(pmap);
+
+            pmap.clear();
+            pmap.put("42", 20);
+
+            rt2.setMapOfProducts(pmap);
+
+            db.addReturnTransaction(rt1);
+            db.addReturnTransaction(rt2);
+
+            assertThrows(SQLException.class, () -> {
+                db.addReturnTransaction(rt1);
+            });
+
+            bo2.setMoney(42);
+            st2.setPrice(42);
+
+            db.updateBalanceOperation(bo2);
+            db.updateSaleTransaction(st2);
+
+            rt1.setMoneyReturned(42);
+
+            db.updateReturnTransaction(rt1);
+
+            Map<Integer, ReturnTransaction> map = db.getReturnTransactions();
+
+            assertEquals(42, map.get(1).getMoneyReturned(), 0.0);
+
+            assertEquals(2, db.getLastReturnID());
+        }
+        catch (Exception e) {
+            System.out.println("Exception encountered while testing:");
+            e.printStackTrace();
+        }
+    }
+}
+
 
 
 

@@ -261,7 +261,7 @@ public class EZShopOrderMethodsTest {
 
             //Product Does not exist
             double balance =sp.computeBalance();
-            System.out.print(balance);
+
             double pricePerunit= balance+100;
             assertEquals(-1, (int) this.sp.payOrderFor("6291041500213", 1,  pricePerunit));
 
@@ -270,7 +270,7 @@ public class EZShopOrderMethodsTest {
             assertTrue(this.sp.createProductType("milk", "6291041500213", 2.01, "ciao")>=0);
 
             double balance2 =sp.computeBalance();
-            System.out.print(balance2);
+
             double pricePerunit2= balance+100;
             assertEquals(-1, (int) this.sp.payOrderFor("6291041500213", 1, pricePerunit2));
 
@@ -415,8 +415,10 @@ public class EZShopOrderMethodsTest {
             sp.recordBalanceUpdate(100);
             assertEquals(100, (int)sp.computeBalance());
             assertEquals(2, (int) this.sp.payOrderFor("6291041500213", 1, 50));
-
-            assertFalse(sp.payOrder(2));
+            assertEquals(50, (int)sp.computeBalance());
+            //now order 2 is in payed state. payorder should return true without doing anything
+            assertTrue(sp.payOrder(2));
+            assertEquals(50, (int)sp.computeBalance());
 
 
 

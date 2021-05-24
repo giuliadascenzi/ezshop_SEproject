@@ -39,6 +39,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.userList = new ArrayList<>();
                 this.idUsers = 0;
             }
@@ -50,6 +51,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.transactionMap = new HashMap<>();
                 this.counter_transactionID = 0;
             }
@@ -60,6 +62,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.saleTransactionMap = new HashMap<>();
             }
             // --- Return Transactions and respective ID counter
@@ -70,6 +73,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.returnTransactionMap = new HashMap<>();
                 this.counter_returnTransactionID = 0;
             }
@@ -80,6 +84,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.orderTransactionMap = new HashMap<>();
             }
             //Customers
@@ -89,6 +94,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.customerMap = new HashMap<>();
             }
             //CustomerID
@@ -98,6 +104,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.idCustomer=0;
             }
             //CustomerId Card
@@ -107,6 +114,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.idCustomerCard=0;
             }
             //ProductIds Inizializzato da db
@@ -116,6 +124,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.productIds= 0;
             }
 
@@ -126,6 +135,7 @@ public class EZShop implements EZShopInterface {
             catch (SQLException e) {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
+                e.printStackTrace();
                 this.productTypeMap = new HashMap<>();
             }
         }
@@ -758,7 +768,7 @@ public class EZShop implements EZShopInterface {
     @Override
     public List<ProductType> getAllProductTypes() throws UnauthorizedException {
         // check role administrator/shop manager
-        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager"))
+        if (!checkUserRole("Administrator") && !checkUserRole("ShopManager") )
             throw new UnauthorizedException();
 
         return new ArrayList<>(this.productTypeMap.values());
@@ -1893,7 +1903,7 @@ public class EZShop implements EZShopInterface {
         EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
         // calcola e ritorna il numero di punti
-        return (int) (s.getPrice() / 10);
+        return (int) (this.computeSaleTransactionPrice(s) / 10);
     }
 
     /**
@@ -2303,8 +2313,8 @@ public class EZShop implements EZShopInterface {
         EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
         EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
 
-        if (!ret.getStatus().equalsIgnoreCase("CLOSED")
-            && !ret.getStatus().equalsIgnoreCase("PAID")) {
+        if (ret.getStatus().equalsIgnoreCase("CLOSED")
+            || ret.getStatus().equalsIgnoreCase("PAID")) {
             return false;
         }
 
@@ -2381,8 +2391,7 @@ public class EZShop implements EZShopInterface {
 
         EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
 
-        if (!result.getStatus().equalsIgnoreCase("CLOSED")
-            && !result.getStatus().equalsIgnoreCase("PAID")) {
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")) {
             return -1;
         }
 
@@ -2405,6 +2414,7 @@ public class EZShop implements EZShopInterface {
         catch (SQLException e) {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
+            e.printStackTrace();
             return -1;
         }
 
@@ -2438,7 +2448,7 @@ public class EZShop implements EZShopInterface {
     @Override
     public boolean receiveCreditCardPayment(Integer ticketNumber, String creditCard) throws InvalidTransactionIdException, InvalidCreditCardException, UnauthorizedException {
         if (!this.checkCreditCardValidity(creditCard)) {
-            return false;
+            throw new InvalidCreditCardException();
         }
 
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
@@ -2459,6 +2469,10 @@ public class EZShop implements EZShopInterface {
         }
         // prendo la ST
         EZSaleTransaction result = (EZSaleTransaction) this.saleTransactionMap.get(ticketNumber);
+
+        if (!result.getStatus().equalsIgnoreCase("CLOSED")) {
+            return false;
+        }
 
         // Controllo se la carta ha abbastanza soldi
         double ccAmount = ccMap.get(creditCard);
@@ -2715,10 +2729,10 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        List<BalanceOperation> returnList = (List<BalanceOperation>) this.transactionMap.values();
+        List<BalanceOperation> returnList = new ArrayList<>(this.transactionMap.values());
 
         // Filtra la lista rimuovendo tutte le transazioni al di fuori dell'intervallo di tempo
-        for (int i = 0; i < returnList.size(); i++) {
+        for (int i = returnList.size() - 1; i >= 0; i--) {
             if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
                 returnList.remove(i);
             }

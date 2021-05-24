@@ -7,7 +7,6 @@ import it.polito.ezshop.exceptions.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.xml.crypto.Data;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
@@ -20,12 +19,13 @@ public class EZShopUserMethodsTest {
     @Before
     public void resetShop()
     {
-          sp.reset();
+        sp.reset();
 
     }
 
 
 
+    /****************** TESTS USER********************************/
     /****************** TESTS CREATE USER********************************/
     @Test
     public void createUserInvalidUsernameOrPasswordOrRole()
@@ -97,16 +97,9 @@ public class EZShopUserMethodsTest {
             int id3= sp.createUser("giulia3", "ciao3", "ShopManager");
             assertEquals(3, id3);
 
-        } catch (InvalidUsernameException e) {
-            fail(e.getMessage());
-        } catch (InvalidPasswordException e) {
-            fail(e.getMessage());
-        } catch (InvalidRoleException e) {
+        } catch (InvalidUsernameException | InvalidRoleException | InvalidPasswordException e) {
             fail(e.getMessage());
         }
-
-
-
 
 
     }
@@ -202,15 +195,11 @@ public class EZShopUserMethodsTest {
 
     @Test
     public void testLogoutNoLoggedUsers() {
-
         assertFalse(sp.logout());
-
-
     }
 
     @Test
     public void testLogoutLoggedUsers() {
-
         try {
             int id = sp.createUser("giulia", "ciao", "Administrator");
             assertEquals(1, id);
