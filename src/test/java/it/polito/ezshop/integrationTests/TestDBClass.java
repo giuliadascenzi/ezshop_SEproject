@@ -287,11 +287,11 @@ public class TestDBClass {
             db = new EZDatabase();
             db.insertUser(u);
 
-            assertEquals("SHOPMANAGER", db.getUsers().get(0).getRole());
+            assertEquals("ShopManager", db.getUsers().get(0).getRole());
 
             db.updateUserRole(1, "ADMINISTRATOR");
-            assertEquals("ADMINISTRATOR", db.getUsers().get(0).getRole());
-            assertEquals("ShopManager", db.getUsers().get(0).getRole());
+            assertEquals("Administrator", db.getUsers().get(0).getRole());
+
 
             db.updateUserRole(1, "ADMINISTRATOR");
             assertEquals("Administrator", db.getUsers().get(0).getRole());
