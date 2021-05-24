@@ -10,7 +10,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class BBIntegrationTest_Accounting {
+public class IntegrationTest_Accounting {
     EZShop ez = new EZShop();
 
     @Before
