@@ -203,7 +203,7 @@ public class EZDatabase {
         String sql = "UPDATE CUSTOMERS SET CustomerName= ?, CustomerCard = ?, points = ? WHERE id = ?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
-        pstm.setString(1, updatedCustomer.getCustomerName());
+          pstm.setString(1, updatedCustomer.getCustomerName());
         pstm.setString(2, updatedCustomer.getCustomerCard());
         pstm.setInt(3, updatedCustomer.getPoints());
         pstm.setInt(4, updatedCustomer.getId());
@@ -353,7 +353,7 @@ public class EZDatabase {
     }
     public void deleteProduct (EZProductType product) throws SQLException {
         openConnection();
-        String sql ="DELETE FROM CUSTOMERS WHERE Barcode =?";
+        String sql ="DELETE FROM PRODUCTS WHERE Barcode =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setString(1, product.getBarCode());
         pstm.executeUpdate();

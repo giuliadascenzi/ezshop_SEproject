@@ -673,7 +673,167 @@ public class TestDBClass {
             fail(throwables.getMessage());
         }
     }
+    /****************** TESTS FOR CUSTOMER********************************/
+    @Test
+    public void Test_insertCustomerDB(){
+        EZCustomer u = new EZCustomer("Francesco Di Franco", 1);
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            assertTrue(db.insertCustomer(u));
+            assertEquals(u,db.getCustomerMap().get(u.getId()));
+            assertEquals(1,(int)db.getCustomerMap().get(u.getId()).getId());
 
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_updateCustomerDB(){
+        EZCustomer u = new EZCustomer("Francesco Di Franco", 1);
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            db.insertCustomer(u);
+            u.setCustomerName("Leonardo Di Nino");
+            u.setId(3);
+            assertTrue(db.updateCustomer(u));
+            assertEquals((Integer)3,db.getCustomerMap().get(3).getId());
+            assertEquals("Leonardo Di Nino",db.getCustomerMap().get(3).getCustomerName());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    @Test
+    public void Test_getCustomerMap() {
+        EZCustomer u = new EZCustomer("Francesco Di Franco", 1);
+        EZCustomer u1 = new EZCustomer("Antonino", 2);
+        EZCustomer u2 = new EZCustomer("Giulia", 3);
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            db.insertCustomer(u);
+            assertEquals(1,db.getCustomerMap().size());
+            db.insertCustomer(u1);
+            assertEquals(2,db.getCustomerMap().size());
+            db.insertCustomer(u2);
+            assertEquals(3,db.getCustomerMap().size());
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    /****************** TESTS FOR PRODUCT ********************************/
+    @Test
+    public void Test_insertProductDB() {
+       EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
+        EZDatabase db=null;
+        try {
+            db = new EZDatabase();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        try {
+            assertTrue(db.insertProductType(p));
+            assertEquals((Integer) 1,db.getProductTypeMap().get("6291041500213").getId());
+            assertEquals("Granarolo",db.getProductTypeMap().get("6291041500213").getProductDescription());
+            assertEquals((Double)1.5,db.getProductTypeMap().get("6291041500213").getPricePerUnit());
+            assertEquals("milk",db.getProductTypeMap().get("6291041500213").getNote());
+            assertEquals("2-C-4",db.getProductTypeMap().get("6291041500213").getLocation());
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+    }
+    public void Test_updateProductDB()  {
+
+        EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            db.insertProductType(p);
+            p.setPricePerUnit(2.30);
+            p.setQuantity(2);
+            p.setNote("latte");
+
+            db.updateProduct(p);
+            assertEquals((Double)2.30,db.getProductTypeMap().get("6291041500213").getPricePerUnit());
+            assertEquals(2,(int)db.getProductTypeMap().get("6291041500213").getQuantity());
+            assertEquals("latte",db.getProductTypeMap().get("6291041500213").getNote());
+
+        } catch (SQLException e) {
+           e.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_deleteProduct()  {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
+            db.insertProductType(p);
+            assertEquals(1,db.getProductTypeMap().size());
+            db.deleteProduct(p);
+            assertEquals(0,db.getProductTypeMap().size());
+            assertFalse(db.getProductTypeMap().containsValue(p));
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_deleteProductTable() {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
+            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 2, "2-T-4");
+            db.insertProductType(p);
+            assertEquals(1, db.getProductTypeMap().size());
+            db.insertProductType(d);
+            assertEquals(2, db.getProductTypeMap().size());
+            db.deleteProductTable();
+            assertEquals(0, db.getProductTypeMap().size());
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_getLastProductId() {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
+            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 59, "2-T-4");
+            db.insertProductType(p);
+            assertEquals(1, db.getProductTypeMap().size());
+            db.insertProductType(d);
+            assertEquals(2, db.getProductTypeMap().size());
+            assertEquals(60,db.getLastProductId());
+            db.deleteProduct(d);
+            assertEquals(2,db.getLastProductId());
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_getProductTypeMap() {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
+            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 59, "2-T-4");
+            db.insertProductType(p);
+            assertEquals(p,(EZProductType) db.getProductTypeMap().get("6291041500213"));
+            db.insertProductType(d);
+            assertEquals(d,(EZProductType) db.getProductTypeMap().get("3561041500223"));
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
 
 
 
