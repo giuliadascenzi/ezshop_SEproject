@@ -7,7 +7,7 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 
-public class BBIntegrationTest_Payments {
+public class IntegrationTest_Payments {
     EZShop ez = new EZShop();
 
     @Before

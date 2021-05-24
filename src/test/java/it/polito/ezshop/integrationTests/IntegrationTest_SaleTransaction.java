@@ -1,17 +1,16 @@
 package it.polito.ezshop.integrationTests;
 
 import it.polito.ezshop.data.EZShop;
+import it.polito.ezshop.data.classes.EZProductType;
 import it.polito.ezshop.data.classes.EZSaleTransaction;
-import it.polito.ezshop.exceptions.InvalidProductCodeException;
-import it.polito.ezshop.exceptions.InvalidQuantityException;
-import it.polito.ezshop.exceptions.InvalidTransactionIdException;
-import it.polito.ezshop.exceptions.UnauthorizedException;
+import it.polito.ezshop.data.classes.EZUser;
+import it.polito.ezshop.exceptions.*;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class BBIntegrationTest_ReturnTransaction {
+public class IntegrationTest_SaleTransaction {
     EZShop ez = new EZShop();
 
     @Before
@@ -20,7 +19,7 @@ public class BBIntegrationTest_ReturnTransaction {
     }
 
     @Test
-    public void test_ReturnTransactions() {
+    public void test_SaleTransactions() {
         // first create a user for testing
         try {
             ez.createUser("testSt", "equjoin", "SHOPMANAGER");
@@ -82,44 +81,22 @@ public class BBIntegrationTest_ReturnTransaction {
             });
 
             assertTrue(ez.addProductToSale(tID, validBC, 4));
+            assertTrue(ez.deleteProductFromSale(tID, validBC, 2));
+
+            assertTrue(ez.applyDiscountRateToProduct(tID, validBC, 0.5));
+            assertTrue(ez.applyDiscountRateToSale(tID, 0.5));
+
+            assertNotNull(ez.getSaleTransaction(tID));
+
+            double price = ez.computeSaleTransactionPrice(ez.getSaleTransaction(tID));
+
+            assertTrue(price > 0);
+
+            assertEquals(price / 10, ez.computePointsForSale(tID), 0.1);
 
             assertTrue(ez.endSaleTransaction(tID));
-            // the ST needs to be paid in order to successfully ask for a return
-            assertEquals(496, ez.receiveCashPayment(tID, 500), 0.0);
 
-            assertTrue(((EZSaleTransaction) ez.getSaleTransaction(tID)).getStatus().equalsIgnoreCase("PAID"));
-
-            assertThrows(InvalidTransactionIdException.class, () -> {
-                ez.startReturnTransaction(-1);
-            });
-
-            assertEquals(-1, (int) ez.startReturnTransaction(420));
-            assertTrue(ez.startReturnTransaction(tID) != -1);
-
-            int rID = ez.startReturnTransaction(tID);
-
-            int finalRID = rID;
-            assertThrows(InvalidProductCodeException.class, () -> {
-                ez.returnProduct(finalRID, "8", 2);
-            });
-            // too many potatoes
-            assertFalse(ez.returnProduct(rID, validBC, 800));
-            // return doesn't exist
-            assertFalse(ez.returnProduct(42, validBC, 2));
-
-            assertTrue(ez.returnProduct(rID, validBC, 2));
-
-            assertTrue(ez.deleteReturnTransaction(rID));
-
-            rID = ez.startReturnTransaction(tID);
-
-            assertTrue(ez.returnProduct(rID, validBC, 2));
-
-            assertTrue(ez.endReturnTransaction(rID, true));
-
-            assertEquals(997, (int) ez.getProductTypeByBarCode(validBC).getQuantity());
-
-            assertFalse(ez.deleteReturnTransaction(rID));
+            assertFalse(ez.deleteSaleTransaction(tID));
         }
         catch (Exception e) {
             System.out.println("Encountered exception while testing:");
