@@ -1,10 +1,10 @@
 # Integration and API Test Documentation
 
-Authors:
+Authors: Giulia D'Ascenzi, Francesco di Franco, Antonino Monti
 
-Date:
+Date: 26/05/2021
 
-Version:
+Version: 1.0
 
 # Contents
 
@@ -19,20 +19,20 @@ Version:
 - [Coverage of scenarios and FR](#scenario-coverage)
 - [Coverage of non-functional requirements](#nfr-coverage)
 
-
-
 # Dependency graph 
 
      <report the here the dependency graph of the classes in EzShop, using plantuml>
-     
+
+![dependency graph](TestingPNGs/dependencyGraph.png)
+
 # Integration approach
 
     <Write here the integration sequence you adopted, in general terms (top down, bottom up, mixed) and as sequence
     (ex: step1: class A, step 2: class A+B, step 3: class A+B+C, etc)> 
     <Some steps may  correspond to unit testing (ex step1 in ex above), presented in other document UnitTestReport.md>
     <One step will  correspond to API testing>
-    
 
+We adopted a **bottom-up** approach for testing, in which we started from the classes and methods which did not have any significant dependencies (i.e. unit testing), then tested the DB class and finally the EZShop API methods. The testing sequence is described in the section below.
 
 #  Tests
 
@@ -42,74 +42,88 @@ Version:
 ## Step 1
 | Classes  | JUnit test cases |
 |--|--|
-|||
+|EZBalanceOperation|WB_UnitTesting.test_BalanceOperation|
+|EZSaleTransaction|WB_UnitTesting.test_SaleTransaction|
+|EZTicketEntry|WB_UnitTesting.test_TicketEntry|
+|EZReturnTransaction|WB_UnitTesting.test_ReturnTransaction|
+|EZOrder|WB_UnitTesting.test_OrderClassMethods|
+|EZUser|WB_UnitTesting.test_UserClassMethods|
+|EZCustomer, EZCustomerCard|WB_UnitTesting.test_CustomerClassMethod|
+|EZProductType|WB_UnitTesting.test_ProductTypeMethod|
+|EZFileReader|BB_UnitTesting.test_readFromFile, BB_UnitTesting.test_writeToFile|
 
 
 ## Step 2
 | Classes  | JUnit test cases |
 |--|--|
-|||
+|EZDatabase|TestDBClass|
 
 
-## Step n 
-
-   
+## Step 3
 
 | Classes  | JUnit test cases |
 |--|--|
-|||
-
-
+|EZShop|IntegrationTest_Accounting|
+||IntegrationTest_Payments|
+||IntegrationTest_ReturnTransaction|
+||IntegrationTest_SaleTransaction|
+||EZShopOrderMethodsTest|
+||EZShopProductTypeTest|
+||EZShopUserMethodsTest|
+||...|
+||...|
 
 
 # Scenarios
 
-
-<If needed, define here additional scenarios for the application. Scenarios should be named
- referring the UC in the OfficialRequirements that they detail>
-
-## Scenario UCx.y
-
-| Scenario |  name |
-| ------------- |:-------------:| 
-|  Precondition     |  |
-|  Post condition     |   |
-| Step#        | Description  |
-|  1     |  ... |  
-|  2     |  ... |
-
-
+No additional scenarios defined.
 
 # Coverage of Scenarios and FR
-
 
 <Report in the following table the coverage of  scenarios (from official requirements and from above) vs FR. 
 Report also for each of the scenarios the (one or more) API JUnit tests that cover it. >
 
 
-
-
-| Scenario ID | Functional Requirements covered | JUnit  Test(s) | 
-| ----------- | ------------------------------- | ----------- | 
-|  ..         | FRx                             |             |             
-|  ..         | FRy                             |             |             
-| ...         |                                 |             |             
-| ...         |                                 |             |             
-| ...         |                                 |             |             
-| ...         |                                 |             |             
-
-
+| Scenario ID | Functional Requirements covered | JUnit  Test(s) |
+| ----------- | ------------------------------- | ----------- |
+|  1.1      | (products)                   |             |
+|  1.2      |                              |             |
+| 1.3      |                                 |             |
+| 2.1      | (users and rights) |             |
+| 2.2    |                                 |             |
+| 2.3      |                                 |             |
+| 3.1 | (inventory and orders) | |
+| 3.2 | | |
+| 3.3 | | |
+| 4.1 | (customers and cards) | |
+| 4.2 | | |
+| 4.3 | | |
+| 4.4 | | |
+| 5.1 | (login, logout) | |
+| 5.2 | | |
+| 6.1 | FR6, FR7, FR8 | IntegrationTest_SaleTransaction.test_SaleTransactions, <br/>IntegrationTest_Payments.test_paymentTest |
+| 6.2 | " | " |
+| 6.3 | " | " |
+| 6.4 | FR5, FR6, FR7, FR8 | " |
+| 6.5 | FR6 | " |
+| 6.6 | FR8 | "                                                            |
+| 7.1 | FR7 | IntegrationTest_Payments.test_paymentTest |
+| 7.2 | FR7 | " |
+| 7.3 | FR7 | " |
+| 7.4 | FR7 | "                                                            |
+| 8.1 | FR6, FR7, FR8 | IntegrationTest_ReturnTransaction.test_ReturnTransactions, <br/>IntegrationTest_Payments.test_paymentTest |
+| 8.2 | " | " |
+| 9.1 | FR8 | IntegrationTest_Accounting.test_AccountingMethods |
+| 10.1 | FR7 | IntegrationTest_Payments.test_paymentTest |
+| 10.2 | FR7 | " |
 
 # Coverage of Non Functional Requirements
 
-
 <Report in the following table the coverage of the Non Functional Requirements of the application - only those that can be tested with automated testing frameworks.>
 
-
-### 
-
-| Non Functional Requirement | Test name |
-| -------------------------- | --------- |
-|                            |           |
-
+| Non Functional Requirement | Test name                                                    |
+| -------------------------- | ------------------------------------------------------------ |
+| NFR4                       | BBUnitTesting.test_InvalidBarCode, BBUnitTesting.test_ValidBarCode |
+| NFR5                       | BBUnitTesting.test_InvalidCreditCard, BBUnitTesting.test_ValidCreditCard |
+| NFR6                       | ... (customer card = string of 10 digits)                    |
 
