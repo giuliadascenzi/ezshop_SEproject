@@ -200,15 +200,15 @@ public class EZDatabase {
     }
     public boolean updateCustomer (EZCustomer updatedCustomer) throws SQLException {
         openConnection();
-        String sql = "UPDATE CUSTOMERS SET CustomerName= ?, CustomerCard = ?, points = ? WHERE id = ?";
+        String sql = "UPDATE CUSTOMERS SET CustomerName= ?, CustomerCard = ?, points = ? WHERE CustomerId = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
-          pstm.setString(1, updatedCustomer.getCustomerName());
+        pstm.setString(1, updatedCustomer.getCustomerName());
         pstm.setString(2, updatedCustomer.getCustomerCard());
         pstm.setInt(3, updatedCustomer.getPoints());
         pstm.setInt(4, updatedCustomer.getId());
 
-        if(pstm.executeUpdate()!=4)
+        if(pstm.executeUpdate()!=1)
         {
             closeConnection();
             return false;}
@@ -244,7 +244,7 @@ public class EZDatabase {
 
         closeConnection();
         if( cid<=0 )
-            return 0;
+            return 1;
         return cid+1;
     }
     public Integer getCustomerCard () throws SQLException{
@@ -262,7 +262,7 @@ public class EZDatabase {
         }
         closeConnection();
         if (cucard==null || cucard.trim().equals(""))
-            return 0;
+            return 1;
         cucard = cucard.substring(1);
         while(cucard.charAt(0)==0){
             cucard = cucard.substring(1);
@@ -271,7 +271,7 @@ public class EZDatabase {
     }
     public void deleteCustomer (Integer id) throws SQLException {
         openConnection();
-        String sql ="DELETE FROM CUSTOMERS WHERE id =?";
+        String sql ="DELETE FROM CUSTOMERS WHERE CustomerId =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, id);
         pstm.executeUpdate();
@@ -286,7 +286,7 @@ public class EZDatabase {
     }
     public boolean deleteCustomerCard (Integer id) throws SQLException {
         openConnection();
-        String sql ="UPDATE CUSTOMERS SET CustomerCard = NULL WHERE id =?";
+        String sql ="UPDATE CUSTOMERS SET CustomerCard = NULL WHERE CustomerId =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, id);
         if(pstm.executeUpdate() != 1)
@@ -298,11 +298,11 @@ public class EZDatabase {
     }
     public boolean updateCustomerCard (Integer id, String newCustomerCard) throws SQLException {
         openConnection();
-        String sql ="UPDATE CUSTOMERS SET CustomerCard = ?  WHERE id =?";
+        String sql ="UPDATE CUSTOMERS SET CustomerCard = ?  WHERE CustomerId  =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setString(1, newCustomerCard);
         pstm.setInt(2, id);
-        if(pstm.executeUpdate()!=2)
+        if(pstm.executeUpdate()!=1)
         {closeConnection();
             return false;}
 
@@ -311,11 +311,11 @@ public class EZDatabase {
     }
     public boolean updatePoints (Integer id, Integer Points) throws SQLException {
         openConnection();
-        String sql ="UPDATE CUSTOMERS SET Points = ? WHERE id =?";
+        String sql ="UPDATE CUSTOMERS SET Points = ? WHERE CustomerId  =?";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
         pstm.setInt(1, Points);
         pstm.setInt(2, id);
-        if(pstm.executeUpdate()!=2)
+        if(pstm.executeUpdate()!=1)
         { closeConnection();
             return false;}
 
@@ -378,7 +378,7 @@ public class EZDatabase {
 
         closeConnection();
         if(pid <=0)
-            return 0;
+            return 1;
         return pid+1;
     }
     public Map<String, ProductType> getProductTypeMap() throws SQLException {
