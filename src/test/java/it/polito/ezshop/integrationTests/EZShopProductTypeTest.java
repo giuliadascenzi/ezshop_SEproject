@@ -1,6 +1,7 @@
 package it.polito.ezshop.integrationTests;
 
 import it.polito.ezshop.data.EZShop;
+import it.polito.ezshop.data.classes.EZProductType;
 import it.polito.ezshop.exceptions.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -166,5 +167,60 @@ public class EZShopProductTypeTest {
         System.out.println(e);
     }
     }
+    @Test
+    public void Test_getAllProductTypes(){
+        Integer id;
+        assertThrows(UnauthorizedException.class, ()->{sp.getAllProductTypes();});
+        try {
+            sp.createUser("fridanco1","pass","Cashier"); //Created,but no logged
+            assertThrows(UnauthorizedException.class, ()->{sp.getAllProductTypes();});
+            sp.login("fridanco1","pass");//Wrong Authorization
+            assertThrows(UnauthorizedException.class, ()->{sp.getAllProductTypes();});
+            sp.logout();
+            sp.createUser("fridanco","pass","Administrator");
+            sp.login("fridanco","pass");
+
+            assertEquals(0,sp.getAllProductTypes().size());
+            id = sp.createProductType("Granarolo", "6291041500213", 1.5, "milk");
+            assertEquals(1,sp.getAllProductTypes().size());
+
+        } catch (InvalidUsernameException | InvalidPasswordException | InvalidRoleException | UnauthorizedException | InvalidProductDescriptionException | InvalidProductCodeException | InvalidPricePerUnitException e ) {
+            System.out.println(e);
+        }
+
+    }
+    @Test
+    public void Test_getProductbyBarcode(){
+        Integer id;
+        assertThrows(UnauthorizedException.class, ()->{sp.getProductTypeByBarCode("6291041500213");});
+        try {
+            sp.createUser("fridanco1","pass","Cashier"); //Created,but no logged
+            assertThrows(UnauthorizedException.class, ()->{sp.getProductTypeByBarCode("6291041500213");});
+            sp.login("fridanco1","pass");//Wrong Authorization
+            assertThrows(UnauthorizedException.class, ()->{sp.getProductTypeByBarCode("6291041500213");});
+            sp.logout();
+            sp.createUser("fridanco","pass","Administrator");
+            sp.login("fridanco","pass");
+            assertThrows(InvalidProductCodeException.class, ()->{sp.getProductTypeByBarCode(null);});
+            assertThrows(InvalidProductCodeException.class, ()->{sp.getProductTypeByBarCode("");});
+            assertThrows(InvalidProductCodeException.class, ()->{sp.getProductTypeByBarCode("I'm not number");});
+            assertThrows(InvalidProductCodeException.class, ()->{sp.getProductTypeByBarCode("6291041500218");});
+
+            assertNull(sp.getProductTypeByBarCode("6291041500213"));
+            id = sp.createProductType("Granarolo", "6291041500213", 1.5, "milk");
+            EZProductType pr = (EZProductType) sp.getProductTypeByBarCode("6291041500213");
+            assertEquals("Granarolo",pr.getProductDescription());
+            assertEquals("6291041500213",pr.getBarCode());
+            assertEquals((Double)1.5,pr.getPricePerUnit());
+            assertEquals("milk",pr.getNote());
+
+
+        } catch (InvalidUsernameException | InvalidPasswordException | InvalidRoleException | UnauthorizedException | InvalidProductDescriptionException | InvalidProductCodeException | InvalidPricePerUnitException e ) {
+            System.out.println(e);
+        }
+
+    }
+
+
 }
 
