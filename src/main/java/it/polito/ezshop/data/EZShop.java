@@ -2249,6 +2249,12 @@ public class EZShop implements EZShopInterface {
             }
             double prevMoney = sale.getPrice();
             double newMoney = this.computeSaleTransactionPrice(sale);
+
+            // (extra check) check if there's enough money to refund
+            if (this.computeBalance() - (prevMoney - newMoney) < 0) {
+                return false;
+            }
+
             // set the amount of money returned in the return transaction
             ret.setMoneyReturned(prevMoney - newMoney);
             // change the return transaction's status
