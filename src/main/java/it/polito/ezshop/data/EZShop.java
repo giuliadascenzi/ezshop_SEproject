@@ -1962,10 +1962,11 @@ public class EZShop implements EZShopInterface {
         }
 
         EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+        st.setPrice(this.computeSaleTransactionPrice(st) * (1 - st.getDiscountRate()));
         st.setStatus("CLOSED");
 
         // Aggiungo una BalanceOperation corrispondente alla SaleTransaction
-        EZBalanceOperation bo = new EZBalanceOperation(transactionId, LocalDate.now(), st.getPrice());
+        EZBalanceOperation bo = new EZBalanceOperation(transactionId, LocalDate.now(), this.computeSaleTransactionPrice(st) * (1 - st.getDiscountRate()));
 
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
         try {
