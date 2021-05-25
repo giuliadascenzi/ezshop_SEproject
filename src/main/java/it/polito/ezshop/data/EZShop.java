@@ -868,16 +868,33 @@ public class EZShop implements EZShopInterface {
             throw new InvalidProductIdException();
 
         //check if the product exists in the map
-        for (ProductType p: this.productTypeMap.values())
+        for (ProductType p : this.productTypeMap.values())
         {
             if (p.getId().equals(productId)) //Found
             {
-                int newQuantity =p.getQuantity() + toBeAdded;
+                int newQuantity = p.getQuantity() + toBeAdded;
 
                 if (toBeAdded<0 && newQuantity<0)
                     return false;
                 if (p.getLocation()==null)  //not assigned to a location
                     return false;
+
+                try {
+                    EZProductType e = new EZProductType(p.getProductDescription(),
+                                p.getBarCode(),
+                                p.getPricePerUnit(),
+                                p.getNote(),
+                                p.getId(),
+                                p.getLocation());
+                    e.setQuantity(newQuantity);
+                    this.dbase.updateProduct(e);
+                }
+                catch (SQLException e) {
+                    System.out.println("There was a problem with the DB:");
+                    e.printStackTrace();
+                    return false;
+                }
+
                 //all good, update quantity
                 p.setQuantity(newQuantity);
                 return true;
@@ -1656,6 +1673,12 @@ public class EZShop implements EZShopInterface {
             s.addEntry(p, amount, s.getDiscountRate());
             s.setPrice(this.computeSaleTransactionPrice(s));
 
+            // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
+            p.setQuantity(p.getQuantity() - amount);
+
+            // aggiorna la mappa dei prodotti
+            productTypeMap.put(productCode, p);
+
             // aggiorna la mappa
             saleTransactionMap.put(transactionId, s);
 
@@ -1742,13 +1765,13 @@ public class EZShop implements EZShopInterface {
             s.setPrice(this.computeSaleTransactionPrice(s));
             saleTransactionMap.put(transactionId, s);
 
-            /*
+
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
 
             // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
-            */
+
 
             return true;
         }
@@ -1957,7 +1980,7 @@ public class EZShop implements EZShopInterface {
         }
 
         // aggiorna dati in locale
-        List<TicketEntry> entryList = st.getEntries();
+        /*List<TicketEntry> entryList = st.getEntries();
 
         for (TicketEntry e : entryList) {
             ProductType p = this.productTypeMap.get(e.getBarCode());
@@ -1965,7 +1988,7 @@ public class EZShop implements EZShopInterface {
             // aggiorna la quantità del prodotto
             p.setQuantity(p.getQuantity() - e.getAmount());
             productTypeMap.put(p.getBarCode(), p);
-        }
+        }*/
 
         this.transactionMap.put(transactionId, bo);
         this.saleTransactionMap.put(transactionId, st);
@@ -2016,6 +2039,15 @@ public class EZShop implements EZShopInterface {
             The Balance Operations map isn't updated either since a BO is inserted in the DB/map
             only when the corresponding sale transaction is closed.
          */
+
+        // riaggiunge le quantità dei prodotti temporaneamente eliminate
+        for (TicketEntry e : st.getEntries()) {
+            ProductType p = this.productTypeMap.get(e.getBarCode());
+
+            p.setQuantity(p.getQuantity() + e.getAmount());
+
+            this.productTypeMap.put(p.getBarCode(), p);
+        }
 
         this.saleTransactionMap.remove(saleNumber);
 
@@ -2241,8 +2273,6 @@ public class EZShop implements EZShopInterface {
                 // update the quantity for each product in the return list
                 EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
                 int quantity = rMap.get(prodCode);
-                p.setQuantity(p.getQuantity() + quantity);
-                this.productTypeMap.put(prodCode, p);
 
                 // update corresponding sale entry
                 sale.updateProductInEntry(prodCode, -quantity);
@@ -2268,6 +2298,7 @@ public class EZShop implements EZShopInterface {
                 this.dbase.addReturnTransaction(ret);
                 this.dbase.updateBalanceOperation(bo);
                 this.dbase.updateSaleTransaction(sale);
+                this.dbase.updateReturnInventoryQuantity(ret);
             }
             catch (SQLException e) {
                 System.out.println("There was a problem with the database:");
@@ -2284,6 +2315,14 @@ public class EZShop implements EZShopInterface {
 
             // update the map
             this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+
+            // update quantities in inventory
+            for (String prodCode : ret.getMapOfProducts().keySet()) {
+                EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
+                int quantity = rMap.get(prodCode);
+                p.setQuantity(p.getQuantity() + quantity);
+                this.productTypeMap.put(prodCode, p);
+            }
         }
 
         return true;

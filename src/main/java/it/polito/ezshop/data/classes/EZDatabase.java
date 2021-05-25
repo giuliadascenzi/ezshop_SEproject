@@ -399,6 +399,8 @@ public class EZDatabase {
                     rs.getInt(2),
                     rs.getString(4)
             );
+            pro.setQuantity(rs.getInt(6));
+
             proMap.put(pro.getBarCode(), pro);
         }
 
@@ -676,6 +678,24 @@ public class EZDatabase {
             stat_e.setInt(1, e.getValue());
             stat_e.setInt(2, rt.getReturnID());
             stat_e.setString(3, e.getKey());
+
+            stat_e.executeUpdate();
+        }
+        closeConnection();
+    }
+
+    public void updateReturnInventoryQuantity(EZReturnTransaction rt) throws SQLException {
+        openConnection();
+        Map<String, Integer> prodMap = rt.getMapOfProducts();
+
+        for(Map.Entry<String, Integer> e : prodMap.entrySet()) {
+            String query_e = "UPDATE Products " +
+                    "SET Quantity = Quantity + ?" +
+                    "WHERE barCode = ?;";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setInt(1, e.getValue());
+            stat_e.setString(2, e.getKey());
 
             stat_e.executeUpdate();
         }
