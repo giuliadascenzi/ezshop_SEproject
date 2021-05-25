@@ -2732,9 +2732,30 @@ public class EZShop implements EZShopInterface {
         List<BalanceOperation> returnList = new ArrayList<>(this.transactionMap.values());
 
         // Filtra la lista rimuovendo tutte le transazioni al di fuori dell'intervallo di tempo
-        for (int i = returnList.size() - 1; i >= 0; i--) {
-            if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
-                returnList.remove(i);
+        // Se sia from che to sono == null allora non si filtra nulla
+        if (from == null) {
+            if (to != null) {
+                for (int i = returnList.size() - 1; i >= 0; i--) {
+                    if (returnList.get(i).getDate().isAfter(to)) {
+                        returnList.remove(i);
+                    }
+                }
+            }
+        }
+        else {
+            if (to == null) {
+                for (int i = returnList.size() - 1; i >= 0; i--) {
+                    if (returnList.get(i).getDate().isBefore(from)) {
+                        returnList.remove(i);
+                    }
+                }
+            }
+            else {
+                for (int i = returnList.size() - 1; i >= 0; i--) {
+                    if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
+                        returnList.remove(i);
+                    }
+                }
             }
         }
 
