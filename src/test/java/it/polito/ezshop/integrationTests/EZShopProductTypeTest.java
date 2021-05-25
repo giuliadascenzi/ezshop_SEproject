@@ -128,8 +128,43 @@ public class EZShopProductTypeTest {
             System.out.println(e);
         }
     }
-    public void Test_updatePosition(){
-    }
+@Test
+    public void Test_deleteProductType() {
+        Integer id;
+        assertThrows(UnauthorizedException.class, () -> {
+         sp.deleteProductType(1);
+      });
+        try {
+        assertThrows(UnauthorizedException.class, () -> {
+            sp.deleteProductType(1);
+        });
+        sp.createUser("fridanco1", "pass", "Cashier"); //Created,but no logged
+        assertThrows(UnauthorizedException.class, () -> {
+            sp.deleteProductType(1);
+        });
+        sp.login("fridanco1", "pass");//Wrong Authorization
+        assertThrows(UnauthorizedException.class, () -> {
+            sp.deleteProductType(1);
+        });
+        sp.logout();
+        sp.createUser("fridanco", "pass", "Administrator");
+        sp.login("fridanco", "pass");
+        assertFalse(sp.deleteProductType(3)); // The product type map is empty
+        id = sp.createProductType("Granarolo", "6291041500213", 1.5, "milk");
+        assertThrows(InvalidProductIdException.class, () -> {
+            sp.deleteProductType(null);
+        });
+        assertThrows(InvalidProductIdException.class, () -> {
+            sp.deleteProductType(-3);
+        });
+        assertTrue(sp.deleteProductType(id));
+        assertNull(sp.getProductTypeByBarCode("6291041500213"));
 
+
+    } catch (InvalidUsernameException | InvalidPasswordException | InvalidRoleException | InvalidProductDescriptionException | InvalidProductCodeException | InvalidPricePerUnitException | UnauthorizedException | InvalidProductIdException e) {
+        e.printStackTrace();
+        System.out.println(e);
+    }
+    }
 }
 

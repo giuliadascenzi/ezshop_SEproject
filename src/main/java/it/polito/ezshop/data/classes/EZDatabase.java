@@ -249,11 +249,12 @@ public class EZDatabase {
     }
     public Integer getCustomerCard () throws SQLException{
         openConnection();
-        String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS;";
+        String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS WHERE CustomerCard <> '';";
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(sql);
         String cucard = new String("");
         Integer max = new Integer(0);
+
         while(rs.next()){
             if(max < Integer.parseInt(rs.getString("cucard"))){
                 max = Integer.parseInt(rs.getString("cucard"));

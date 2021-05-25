@@ -760,6 +760,7 @@ public class TestDBClass {
             EZCustomer u = new EZCustomer("Francesco Di Franco", 1,c1);
             EZCustomer u1 = new EZCustomer("Antonino", 2,c2);
             EZCustomer u2 = new EZCustomer("Giulia", 59,c3);
+
             assertEquals((Integer) 1,db.getCustomerCard());
             db.insertCustomer(u);
             assertEquals((Integer) 2, db.getCustomerCard());
