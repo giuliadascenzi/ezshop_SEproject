@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
 public class TestDBClass {
-    //EZShop ez = new EZShop();
 
 
 
@@ -40,7 +39,8 @@ public class TestDBClass {
             EZDatabase db = new EZDatabase();
             db.clearUsers();
             db.clearOrders();
-            db.deleteProductTable(); /*Messa perchè mi serviva per testare order!!*/
+            db.deleteProductTable();
+            db.deleteCustomerTable();/*Messa perchè mi serviva per testare order!!*/
 
 
         }
@@ -72,6 +72,10 @@ public class TestDBClass {
             o = new EZUser(2, "ciao2", "asddas", "SHOPMANAGER");
             db.insertUser(o);
             List<User> users =db.getUsers();
+
+
+
+
         } catch (SQLException throwables) {
             fail(throwables.getMessage());
         }
