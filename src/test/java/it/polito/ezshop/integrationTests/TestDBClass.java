@@ -100,6 +100,7 @@ public class TestDBClass {
         } catch (SQLException throwables) {
             fail(throwables.getMessage());
         }
+
     }
 
 
@@ -185,6 +186,7 @@ public class TestDBClass {
         }
     }
     /****************** TESTS FOR GET NEXT USER ID********************************/
+
     @Test
     public void testGetNextUserIdEmptyTable()
     {
@@ -873,6 +875,7 @@ public class TestDBClass {
     /**                       PRODUCT                                    */
     /**                                                                  */
     /*********************************************************************/
+    /****************** TESTS FOR PRODUCT ********************************/
     @Test
     public void Test_insertProductDB() {
         EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
@@ -985,7 +988,6 @@ public class TestDBClass {
             throwables.printStackTrace();
         }
     }
-
 
     /*********************************************************************/
     /**                                                                  */
