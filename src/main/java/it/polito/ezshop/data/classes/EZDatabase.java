@@ -222,6 +222,7 @@ public class EZDatabase {
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(query);
         Map<Integer, Customer> cuMap = new HashMap<>();
+
         while(rs.next()){
             EZCustomerCard cuscard = new EZCustomerCard(rs.getString(3),rs.getInt(4));
             EZCustomer cu = new EZCustomer(
@@ -249,14 +250,15 @@ public class EZDatabase {
     }
     public Integer getCustomerCard () throws SQLException{
         openConnection();
-        String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS;";
+        String sql = "SELECT CustomerCard AS cucard FROM CUSTOMERS WHERE CustomerCard <> '';";
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(sql);
         String cucard = new String("");
-        Integer max = new Integer(0);
+        Long max = new Long(0);
+
         while(rs.next()){
-            if(max < Integer.parseInt(rs.getString("cucard"))){
-                max = Integer.parseInt(rs.getString("cucard"));
+            if(max < Long.parseLong(rs.getString("cucard"))){
+                max = Long.parseLong(rs.getString("cucard"));
                 cucard = rs.getString("cucard");
             }
         }

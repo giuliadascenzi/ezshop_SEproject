@@ -635,6 +635,8 @@ public class EZShop implements EZShopInterface {
                 return -1;
         //create new ProductType
         int newProductId=++this.productIds;
+        //note null
+        if (note==null) note="";
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
         //this.productIds++;
         this.productTypeMap.put(productCode, pt);

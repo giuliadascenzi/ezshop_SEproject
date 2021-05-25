@@ -89,18 +89,18 @@ Report also for each of the scenarios the (one or more) API JUnit tests that cov
 |  1.1      | (products)                   |             |
 |  1.2      |                              |             |
 | 1.3      |                                 |             |
-| 2.1      | (users and rights) |             |
-| 2.2    |                                 |             |
-| 2.3      |                                 |             |
-| 3.1 | (inventory and orders) | |
-| 3.2 | | |
-| 3.3 | | |
+| 2.1      | FR1.1 | EZShopUserMethodsTest.createUserValid() |
+| 2.2    | FR1.2, FR1.4 | EZShopUserMethodsTest.testDeleteUserValid() |
+| 2.3      | FR1.5 | EZShopUserMethodsTest.testUpdateUserRightsValid() |
+| 3.1 | FR4.4 | EZShopOrderMethodsTest.IssueOrderValid() |
+| 3.2 | FR4.5 | EZShopOrderMethodsTest.PayOrderOrderValid() |
+| 3.3 | FR4.6 | EZShopOrderMethodsTest.RecordOrderArrivalValid() |
 | 4.1 | (customers and cards) | |
 | 4.2 | | |
 | 4.3 | | |
 | 4.4 | | |
-| 5.1 | (login, logout) | |
-| 5.2 | | |
+| 5.1 | FR1.4, FR1.5 | EZShopUserMethodsTest.testLoginValid() |
+| 5.2 | " | EZShopUserMethodsTest.testLogoutLoggedUsers() |
 | 6.1 | FR6, FR7, FR8 | IntegrationTest_SaleTransaction.test_SaleTransactions, <br/>IntegrationTest_Payments.test_paymentTest |
 | 6.2 | " | " |
 | 6.3 | " | " |
