@@ -105,7 +105,7 @@ public class EZShop implements EZShopInterface {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
                 e.printStackTrace();
-                this.idCustomer=0;
+                this.idCustomer=1;
             }
             //CustomerId Card
             try {
@@ -115,7 +115,7 @@ public class EZShop implements EZShopInterface {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
                 e.printStackTrace();
-                this.idCustomerCard=0;
+                this.idCustomerCard=1;
             }
             //ProductIds Inizializzato da db
             try{
@@ -152,8 +152,8 @@ public class EZShop implements EZShopInterface {
             this.productTypeMap = new HashMap<>();
 
             this.idUsers = 0;
-            this.idCustomer = 0;
-            this.idCustomerCard = 0;
+            this.idCustomer = 1;
+            this.idCustomerCard = 1;
             this.counter_transactionID = 0;
             this.counter_returnTransactionID = 0;
             this.productIds = 0;
@@ -336,8 +336,8 @@ public class EZShop implements EZShopInterface {
 
         this.userSession = null;
         this.idUsers = 1;
-        this.idCustomer = 0;
-        this.idCustomerCard = 0;
+        this.idCustomer = 1;
+        this.idCustomerCard = 1;
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
@@ -1307,6 +1307,7 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public boolean modifyCustomer(Integer id, String newCustomerName, String newCustomerCard) throws InvalidCustomerNameException, InvalidCustomerCardException, InvalidCustomerIdException, UnauthorizedException {
+        boolean flag = false;
         if (newCustomerName==null || newCustomerName.trim().equals(""))  // Check if the newCustomerName is valid.
             throw new InvalidCustomerNameException();
 
@@ -1316,25 +1317,39 @@ public class EZShop implements EZShopInterface {
         if(userSession == null)                                         //if the user is not logged
             throw new UnauthorizedException();
 
-        if(!newCustomerCard.matches( "[0-9]{10}" ))             //newCustomerCard is not in a valid format
-            throw new InvalidCustomerCardException();
 
-        for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
-            if (c.getCustomerCard().equals(newCustomerCard))
-            {
-                return false;
+        if(newCustomerCard != null){
+            if (!newCustomerCard.equals("")){
+                if( !newCustomerCard.matches( "[0-9]{10}"))             //newCustomerCard is not in a valid format
+                    throw new InvalidCustomerCardException();
+
+                for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
+                 if (c.getCustomerCard().equals(newCustomerCard)) {
+                     return false;
+                    }
             }
-        }
-
-        if (newCustomerCard.trim().equals("")){                     // if the customerCard is empty, delete the Card
-            EZCustomer s = (EZCustomer) customerMap.get(id);
-            s.removeCustomerCard();
-            try {
-                this.dbase.deleteCustomerCard(s.getId());
-            } catch (SQLException e) {
-                System.out.println("There was a problem with the database:");
-                System.out.println(e.getSQLState());
-                return false;
+                if(newCustomerCard.matches( "[0-9]{10}" )) {
+                 EZCustomer c = (EZCustomer) customerMap.get(id);
+                 c.setCustomerCard(newCustomerCard);
+                 try {
+                        if (!this.dbase.updateCustomerCard(c.getId(), newCustomerCard))
+                            return false;
+                 } catch (SQLException e) {
+                     System.out.println("There was a problem with the database:");
+                      System.out.println(e.getSQLState());
+                      return false;
+                  }
+             }
+            }else{
+                    EZCustomer s = (EZCustomer) customerMap.get(id);        // if the customerCard is empty, delete the Card
+                    s.removeCustomerCard();
+                    try {
+                        this.dbase.deleteCustomerCard(s.getId());
+                    } catch (SQLException e) {
+                        System.out.println("There was a problem with the database:");
+                        System.out.println(e.getSQLState());
+                        return false;
+                    }
             }
         }
 
@@ -1346,18 +1361,6 @@ public class EZShop implements EZShopInterface {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
             return false;
-        }
-
-        if(newCustomerCard.matches( "[0-9]{10}" )){
-            c.setCustomerCard(newCustomerCard);
-            try {
-                if(!this.dbase.updateCustomerCard(c.getId(), newCustomerCard))
-                    return false;
-            } catch (SQLException e) {
-                System.out.println("There was a problem with the database:");
-                System.out.println(e.getSQLState());
-                return false;
-            }
         }
 
         return true;
@@ -1415,8 +1418,10 @@ public class EZShop implements EZShopInterface {
     public Customer getCustomer(Integer id) throws InvalidCustomerIdException, UnauthorizedException {
         if(id==null || id<=0)
             throw new InvalidCustomerIdException();
-        if(userSession==null || !customerMap.containsKey(id))
+        if(userSession==null )
             throw new UnauthorizedException();
+        if(!customerMap.containsKey(id))
+            return null;
         return customerMap.get(id);
     }
 

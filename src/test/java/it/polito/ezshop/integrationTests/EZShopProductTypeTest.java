@@ -220,6 +220,33 @@ public class EZShopProductTypeTest {
         }
 
     }
+    @Test
+    public void Test_getProductbyDescription(){
+        Integer id;
+        assertThrows(UnauthorizedException.class, ()->{sp.getProductTypesByDescription("Granarolo");});
+        try {
+            sp.createUser("fridanco1","pass","Cashier"); //Created,but no logged
+            assertThrows(UnauthorizedException.class, ()->{sp.getProductTypesByDescription("Granarolo");});
+            sp.login("fridanco1","pass");//Wrong Authorization
+            assertThrows(UnauthorizedException.class, ()->{sp.getProductTypesByDescription("Granarolo");});
+            sp.logout();
+            sp.createUser("fridanco","pass","Administrator");
+            sp.login("fridanco","pass");
+            sp.createProductType("Granarolo", "6291041500213", 1.5, "milk");
+            sp.createProductType("", "889654050810", 1.5, "milk");
+            sp.createProductType("Granarolo", "654291598588", 1.5, "milk");
+            assertEquals(1,sp.getProductTypesByDescription(null).size());
+            assertEquals("889654050810",sp.getProductTypesByDescription(null).get(1).getBarCode());
+            assertEquals(2,sp.getProductTypesByDescription("Granarolo").size());
+            assertEquals(0,sp.getProductTypesByDescription("asd").size());
+
+
+
+        } catch (InvalidUsernameException | InvalidPasswordException | InvalidRoleException | UnauthorizedException | InvalidProductDescriptionException | InvalidProductCodeException | InvalidPricePerUnitException e ) {
+            System.out.println(e);
+        }
+
+    }
 
 
 }
