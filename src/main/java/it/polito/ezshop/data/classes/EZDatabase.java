@@ -222,6 +222,7 @@ public class EZDatabase {
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(query);
         Map<Integer, Customer> cuMap = new HashMap<>();
+
         while(rs.next()){
             EZCustomerCard cuscard = new EZCustomerCard(rs.getString(3),rs.getInt(4));
             EZCustomer cu = new EZCustomer(
