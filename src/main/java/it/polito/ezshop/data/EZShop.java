@@ -635,6 +635,8 @@ public class EZShop implements EZShopInterface {
                 return -1;
         //create new ProductType
         int newProductId=++this.productIds;
+        //note null
+        if (note==null) note="";
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
         //this.productIds++;
         this.productTypeMap.put(productCode, pt);
@@ -2733,7 +2735,7 @@ public class EZShop implements EZShopInterface {
 
         // Filtra la lista rimuovendo tutte le transazioni al di fuori dell'intervallo di tempo
         for (int i = returnList.size() - 1; i >= 0; i--) {
-            System.out.println(returnList.get(i).getDate());
+
             if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
                 returnList.remove(i);
             }

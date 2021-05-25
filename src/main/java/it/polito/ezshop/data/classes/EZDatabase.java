@@ -254,11 +254,11 @@ public class EZDatabase {
         Statement statement = this.connection.createStatement();
         ResultSet rs = statement.executeQuery(sql);
         String cucard = new String("");
-        Integer max = new Integer(0);
+        Long max = new Long(0);
 
         while(rs.next()){
-            if(max < Integer.parseInt(rs.getString("cucard"))){
-                max = Integer.parseInt(rs.getString("cucard"));
+            if(max < Long.parseLong(rs.getString("cucard"))){
+                max = Long.parseLong(rs.getString("cucard"));
                 cucard = rs.getString("cucard");
             }
         }
