@@ -1671,7 +1671,7 @@ public class EZShop implements EZShopInterface {
 
             // aggiorna la lista di prodotti della transazione e ricalcola il prezzo totale
             s.addEntry(p, amount, s.getDiscountRate());
-            s.setPrice(this.computeSaleTransactionPrice(s));
+            s.setPrice(this.computeSaleTransactionPrice(s) * (1 - s.getDiscountRate()));
 
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() - amount);
@@ -1762,9 +1762,8 @@ public class EZShop implements EZShopInterface {
             s.updateProductInEntry(productCode, -amount);
 
             // aggiorna il prezzo della transazione e la mappa
-            s.setPrice(this.computeSaleTransactionPrice(s));
+            s.setPrice(this.computeSaleTransactionPrice(s) * (1 - s.getDiscountRate()));
             saleTransactionMap.put(transactionId, s);
-
 
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
@@ -1844,7 +1843,7 @@ public class EZShop implements EZShopInterface {
             }
 
             // Aggiorna il prezzo della transazione e la mappa
-            s.setPrice(this.computeSaleTransactionPrice(s));
+            s.setPrice(this.computeSaleTransactionPrice(s) * (1 - s.getDiscountRate()));
             saleTransactionMap.put(transactionId, s);
 
             return true;
@@ -1888,8 +1887,9 @@ public class EZShop implements EZShopInterface {
 
         EZSaleTransaction s = (EZSaleTransaction) saleTransactionMap.get(transactionId);
 
-        // aggiorna il tasso di sconto per la transazione
+        // aggiorna il tasso di sconto per la transazione e il prezzo
         s.setDiscountRate(discountRate);
+        s.setPrice(this.computeSaleTransactionPrice(s) * (1 - s.getDiscountRate()));
         // aggiorna la mappa delle transazioni
         saleTransactionMap.put(transactionId, s);
 
