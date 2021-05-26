@@ -30,6 +30,7 @@ public class EZShop implements EZShopInterface {
     public EZShop() {
         try {
             this.dbase = new EZDatabase();
+            System.out.println("sto costruendo ezshop");
 
             // --- Users
             try {
@@ -394,7 +395,10 @@ public class EZShop implements EZShopInterface {
             System.out.println(e.getMessage());
             return -1;  /*Error while saving*/
         }
+        System.out.println("sto aggiungendo user"+username);
         userList.add(newUsr);
+        System.out.println(userList.size());
+
 
         this.idUsers++;
 
@@ -453,6 +457,8 @@ public class EZShop implements EZShopInterface {
         if (!checkUserRole("Administrator"))
             throw new UnauthorizedException();
         else
+            System.out.println("++++++++++++++");
+            for (User  u: this.userList) System.out.println(u.getUsername());
             return this.userList;
     }
 
@@ -679,6 +685,7 @@ public class EZShop implements EZShopInterface {
         //check product validity
         if (id==null || id<=0)
             throw new InvalidProductIdException();
+
         //check description validity
         if (newDescription==null || newDescription.trim().equals(""))
             throw new InvalidProductDescriptionException();
@@ -693,13 +700,16 @@ public class EZShop implements EZShopInterface {
         if (newPrice<=0 || newDescription.trim().equals(""))
             throw new InvalidPricePerUnitException();
 
-        //check if it already exists a product with that given barcode
-        if (this.productTypeMap.containsKey(newCode))
-            return false;
-        //check if there is already a product with the same id
+
+        //check if there is a product with the same id
         for (ProductType p: this.productTypeMap.values())
             if (p.getId().equals(id))
             { //Found
+
+                //check if it already exists a product with that given barcode (that is a new barcode for the prodoct selected)
+                if (!p.getBarCode().equals(newCode) && this.productTypeMap.containsKey(newCode))
+                    return false;
+
                 //update map product type, deleting the record with the barcode to update
                 this.productTypeMap.remove(p.getBarCode());
                 p.setBarCode(newCode);
@@ -932,7 +942,7 @@ public class EZShop implements EZShopInterface {
 
         // Nota: assicurarsi che quello nell'espressione regolare sia effettivamente
         // il pattern corretto. In questo momento è generico
-        if (!newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
+        if (newPos!=null && !newPos.equals("") && !newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
             throw new InvalidLocationException();
         }
 
@@ -943,12 +953,14 @@ public class EZShop implements EZShopInterface {
             if (p.getId().equals(productId)) { //check if the producttype exists
                 barcodeProduct=p.getBarCode();
             }
-            if (p.getLocation()!=null) //check whether the position has already been assigned
+            if ((newPos!=null && !newPos.equals(""))  && p.getLocation()!=null && p.getLocation().equals(newPos)) //check whether the position has already been assigned
                 return false;
         }
 
         if (barcodeProduct==null) //product not found
             return false;
+
+        if (newPos.equals("")) newPos=null;
 
         //Everything good
         EZProductType pr = (EZProductType) this.productTypeMap.get(barcodeProduct);
@@ -1147,6 +1159,8 @@ public class EZShop implements EZShopInterface {
 
         // update balance
         double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
+        if (toPay> this.computeBalance())
+            return false; //If the balance is not enough return false!
         //new balance operation
         EZBalanceOperation balOp =new EZBalanceOperation(orderId, LocalDate.now(),  -toPay);
 
