@@ -256,6 +256,9 @@ public class EZShop implements EZShopInterface {
 
         return (sum % 10 == 0);
     }
+    public boolean checkCustomerCardValidity(String CCard){
+        return CCard.matches("[0-9]{10}");
+    }
 
     @Override
     public void reset() {
@@ -1346,7 +1349,7 @@ public class EZShop implements EZShopInterface {
 
         if(newCustomerCard != null){
             if (!newCustomerCard.equals("")){
-                if( !newCustomerCard.matches( "[0-9]{10}"))             //newCustomerCard is not in a valid format
+                if(!checkCustomerCardValidity(newCustomerCard))             //newCustomerCard is not in a valid format
                     throw new InvalidCustomerCardException();
 
                 for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
@@ -1354,7 +1357,7 @@ public class EZShop implements EZShopInterface {
                      return false;
                     }
             }
-                if(newCustomerCard.matches( "[0-9]{10}" )) {
+                if(checkCustomerCardValidity(newCustomerCard)) {
                  EZCustomer c = (EZCustomer) customerMap.get(id);
                  c.setCustomerCard(newCustomerCard);
                  try {
@@ -1515,7 +1518,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         if(customerId==null || customerId<=0)
             throw new InvalidCustomerIdException();
-        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+        if( customerCard==null || !checkCustomerCardValidity(customerCard) )         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
             throw new InvalidCustomerCardException();
 
         for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
@@ -1562,7 +1565,7 @@ public class EZShop implements EZShopInterface {
         boolean found = false;
         if(userSession==null)
             throw new UnauthorizedException();
-        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+        if( customerCard==null || !checkCustomerCardValidity(customerCard))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
             throw new InvalidCustomerCardException();
         for (Customer c : customerMap.values()){
             if (c.getCustomerCard().equals(customerCard))
