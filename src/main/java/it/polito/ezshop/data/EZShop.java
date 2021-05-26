@@ -2185,6 +2185,7 @@ public class EZShop implements EZShopInterface {
         for (TicketEntry e : sale.getEntries()) {
             if (e.getBarCode().equals(productCode)) {
                 prodAmt = e.getAmount();
+                break;
             }
         }
         // this happens if the product is not in the transaction
@@ -2549,10 +2550,6 @@ public class EZShop implements EZShopInterface {
 
         this.saleTransactionMap.put(result.getTicketNumber(), result);
 
-        // aggiorna la carta di credito
-        ccMap.put(creditCard, ccAmount - result.getPrice());
-        reader.setCreditCards(ccMap, "testFiles/creditCardFile_test.csv");
-
         return true;
     }
 
@@ -2707,10 +2704,6 @@ public class EZShop implements EZShopInterface {
 
         this.saleTransactionMap.put(sale.getTicketNumber(), sale);
         this.returnTransactionMap.put(result.getReturnID(), result);
-
-        // aggiorna la carta di credito
-        ccMap.put(creditCard, ccMap.get(creditCard) + result.getMoneyReturned());
-        reader.setCreditCards(ccMap, "testFiles/creditCardFile_test.csv");
 
         return result.getMoneyReturned();
     }
