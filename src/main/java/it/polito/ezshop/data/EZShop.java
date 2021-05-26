@@ -30,7 +30,7 @@ public class EZShop implements EZShopInterface {
     public EZShop() {
         try {
             this.dbase = new EZDatabase();
-            System.out.println("sto costruendo ezshop");
+
 
             // --- Users
             try {
@@ -395,9 +395,9 @@ public class EZShop implements EZShopInterface {
             System.out.println(e.getMessage());
             return -1;  /*Error while saving*/
         }
-        System.out.println("sto aggiungendo user"+username);
+
         userList.add(newUsr);
-        System.out.println(userList.size());
+
 
 
         this.idUsers++;
@@ -457,8 +457,6 @@ public class EZShop implements EZShopInterface {
         if (!checkUserRole("Administrator"))
             throw new UnauthorizedException();
         else
-            System.out.println("++++++++++++++");
-            for (User  u: this.userList) System.out.println(u.getUsername());
             return this.userList;
     }
 
@@ -1574,7 +1572,8 @@ public class EZShop implements EZShopInterface {
                     return false;
                 c.setPoints(c.getPoints() + pointsToBeAdded);
                 try {
-                    if(!this.dbase.updatePoints(c.getId(),c.getPoints() + pointsToBeAdded))
+                    if(!this.dbase.updatePoints(c.getId(),c.getPoints()))
+                    if(!this.dbase.updatePoints(c.getId(),c.getPoints()))
                         return false;
                     break;
                 } catch (SQLException e) {
@@ -1582,6 +1581,7 @@ public class EZShop implements EZShopInterface {
                     System.out.println(e.getSQLState());
                     return false;
                 }
+
             }
         }
         return found;
