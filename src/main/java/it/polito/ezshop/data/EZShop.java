@@ -958,7 +958,7 @@ public class EZShop implements EZShopInterface {
         if (barcodeProduct==null) //product not found
             return false;
 
-        if (newPos.equals("")) newPos=null;
+        if (newPos!=null && newPos.equals("")) newPos=null;
 
         //Everything good
         EZProductType pr = (EZProductType) this.productTypeMap.get(barcodeProduct);
