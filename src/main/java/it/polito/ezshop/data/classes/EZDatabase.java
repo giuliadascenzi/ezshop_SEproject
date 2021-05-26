@@ -340,7 +340,7 @@ public class EZDatabase {
     }
     public void updateProduct (EZProductType product) throws SQLException {
         openConnection();
-        String sql = "UPDATE PRODUCTS SET productId= ?, PricePerUnit = ?, Location = ?, Note = ?, Quantity = ?,Description = ? WHERE Barcode = ?;";
+        String sql = "UPDATE PRODUCTS SET productId= ?, PricePerUnit = ?, Location = ?, Note = ?, Quantity = ?,Description = ?, Barcode=? WHERE productId = ?;";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
         pstm.setInt(1, product.getId());
@@ -350,6 +350,7 @@ public class EZDatabase {
         pstm.setInt(5, product.getQuantity());
         pstm.setString(6, product.getProductDescription());
         pstm.setString(7, product.getBarCode());
+        pstm.setInt(8, product.getId());
         pstm.executeUpdate();
         closeConnection();
     }

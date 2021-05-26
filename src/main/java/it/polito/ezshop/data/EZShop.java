@@ -105,7 +105,7 @@ public class EZShop implements EZShopInterface {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
                 e.printStackTrace();
-                this.idCustomer=0;
+                this.idCustomer=1;
             }
             //CustomerId Card
             try {
@@ -115,7 +115,7 @@ public class EZShop implements EZShopInterface {
                 System.out.println("There was a problem in connecting with the SQLite database:");
                 System.out.println(e.getSQLState());
                 e.printStackTrace();
-                this.idCustomerCard=0;
+                this.idCustomerCard=1;
             }
             //ProductIds Inizializzato da db
             try{
@@ -152,8 +152,8 @@ public class EZShop implements EZShopInterface {
             this.productTypeMap = new HashMap<>();
 
             this.idUsers = 0;
-            this.idCustomer = 0;
-            this.idCustomerCard = 0;
+            this.idCustomer = 1;
+            this.idCustomerCard = 1;
             this.counter_transactionID = 0;
             this.counter_returnTransactionID = 0;
             this.productIds = 0;
@@ -256,6 +256,9 @@ public class EZShop implements EZShopInterface {
 
         return (sum % 10 == 0);
     }
+    public boolean checkCustomerCardValidity(String CCard){
+        return CCard.matches("[0-9]{10}");
+    }
 
     @Override
     public void reset() {
@@ -336,8 +339,8 @@ public class EZShop implements EZShopInterface {
 
         this.userSession = null;
         this.idUsers = 1;
-        this.idCustomer = 0;
-        this.idCustomerCard = 0;
+        this.idCustomer = 1;
+        this.idCustomerCard = 1;
         this.counter_transactionID = 0;
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
@@ -693,13 +696,16 @@ public class EZShop implements EZShopInterface {
         if (newPrice<=0 || newDescription.trim().equals(""))
             throw new InvalidPricePerUnitException();
 
-        //check if it already exists a product with that given barcode
-        if (this.productTypeMap.containsKey(newCode))
-            return false;
-        //check if there is already a product with the same id
+
+        //check if there is a product with the same id
         for (ProductType p: this.productTypeMap.values())
             if (p.getId().equals(id))
             { //Found
+
+                //check if it already exists a product with that given barcode (that is a new barcode for the prodoct selected)
+                if (!p.getBarCode().equals(newCode) && this.productTypeMap.containsKey(newCode))
+                    return false;
+
                 //update map product type, deleting the record with the barcode to update
                 this.productTypeMap.remove(p.getBarCode());
                 p.setBarCode(newCode);
@@ -868,11 +874,11 @@ public class EZShop implements EZShopInterface {
             throw new InvalidProductIdException();
 
         //check if the product exists in the map
-        for (ProductType p : this.productTypeMap.values())
+        for (ProductType p: this.productTypeMap.values())
         {
             if (p.getId().equals(productId)) //Found
             {
-                int newQuantity = p.getQuantity() + toBeAdded;
+                int newQuantity =p.getQuantity() + toBeAdded;
 
                 if (toBeAdded<0 && newQuantity<0)
                     return false;
@@ -932,7 +938,7 @@ public class EZShop implements EZShopInterface {
 
         // Nota: assicurarsi che quello nell'espressione regolare sia effettivamente
         // il pattern corretto. In questo momento è generico
-        if (!newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
+        if (newPos!=null && !newPos.equals("") && !newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
             throw new InvalidLocationException();
         }
 
@@ -943,12 +949,14 @@ public class EZShop implements EZShopInterface {
             if (p.getId().equals(productId)) { //check if the producttype exists
                 barcodeProduct=p.getBarCode();
             }
-            if (p.getLocation()!=null) //check whether the position has already been assigned
+            if ((newPos!=null && !newPos.equals(""))  && p.getLocation()!=null && p.getLocation().equals(newPos)) //check whether the position has already been assigned
                 return false;
         }
 
         if (barcodeProduct==null) //product not found
             return false;
+
+        if (newPos != null && newPos.equals("")) newPos=null;
 
         //Everything good
         EZProductType pr = (EZProductType) this.productTypeMap.get(barcodeProduct);
@@ -1147,6 +1155,8 @@ public class EZShop implements EZShopInterface {
 
         // update balance
         double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
+        if (toPay> this.computeBalance())
+            return false; //If the balance is not enough return false!
         //new balance operation
         EZBalanceOperation balOp =new EZBalanceOperation(orderId, LocalDate.now(),  -toPay);
 
@@ -1326,6 +1336,7 @@ public class EZShop implements EZShopInterface {
 
     @Override
     public boolean modifyCustomer(Integer id, String newCustomerName, String newCustomerCard) throws InvalidCustomerNameException, InvalidCustomerCardException, InvalidCustomerIdException, UnauthorizedException {
+        boolean flag = false;
         if (newCustomerName==null || newCustomerName.trim().equals(""))  // Check if the newCustomerName is valid.
             throw new InvalidCustomerNameException();
 
@@ -1335,25 +1346,39 @@ public class EZShop implements EZShopInterface {
         if(userSession == null)                                         //if the user is not logged
             throw new UnauthorizedException();
 
-        if(!newCustomerCard.matches( "[0-9]{10}" ))             //newCustomerCard is not in a valid format
-            throw new InvalidCustomerCardException();
 
-        for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
-            if (c.getCustomerCard().equals(newCustomerCard))
-            {
-                return false;
+        if(newCustomerCard != null){
+            if (!newCustomerCard.equals("")){
+                if(!checkCustomerCardValidity(newCustomerCard))             //newCustomerCard is not in a valid format
+                    throw new InvalidCustomerCardException();
+
+                for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
+                 if (c.getCustomerCard().equals(newCustomerCard)) {
+                     return false;
+                    }
             }
-        }
-
-        if (newCustomerCard.trim().equals("")){                     // if the customerCard is empty, delete the Card
-            EZCustomer s = (EZCustomer) customerMap.get(id);
-            s.removeCustomerCard();
-            try {
-                this.dbase.deleteCustomerCard(s.getId());
-            } catch (SQLException e) {
-                System.out.println("There was a problem with the database:");
-                System.out.println(e.getSQLState());
-                return false;
+                if(checkCustomerCardValidity(newCustomerCard)) {
+                 EZCustomer c = (EZCustomer) customerMap.get(id);
+                 c.setCustomerCard(newCustomerCard);
+                 try {
+                        if (!this.dbase.updateCustomerCard(c.getId(), newCustomerCard))
+                            return false;
+                 } catch (SQLException e) {
+                     System.out.println("There was a problem with the database:");
+                      System.out.println(e.getSQLState());
+                      return false;
+                  }
+             }
+            }else{
+                    EZCustomer s = (EZCustomer) customerMap.get(id);        // if the customerCard is empty, delete the Card
+                    s.removeCustomerCard();
+                    try {
+                        this.dbase.deleteCustomerCard(s.getId());
+                    } catch (SQLException e) {
+                        System.out.println("There was a problem with the database:");
+                        System.out.println(e.getSQLState());
+                        return false;
+                    }
             }
         }
 
@@ -1365,18 +1390,6 @@ public class EZShop implements EZShopInterface {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
             return false;
-        }
-
-        if(newCustomerCard.matches( "[0-9]{10}" )){
-            c.setCustomerCard(newCustomerCard);
-            try {
-                if(!this.dbase.updateCustomerCard(c.getId(), newCustomerCard))
-                    return false;
-            } catch (SQLException e) {
-                System.out.println("There was a problem with the database:");
-                System.out.println(e.getSQLState());
-                return false;
-            }
         }
 
         return true;
@@ -1434,8 +1447,10 @@ public class EZShop implements EZShopInterface {
     public Customer getCustomer(Integer id) throws InvalidCustomerIdException, UnauthorizedException {
         if(id==null || id<=0)
             throw new InvalidCustomerIdException();
-        if(userSession==null || !customerMap.containsKey(id))
+        if(userSession==null )
             throw new UnauthorizedException();
+        if(!customerMap.containsKey(id))
+            return null;
         return customerMap.get(id);
     }
 
@@ -1503,7 +1518,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         if(customerId==null || customerId<=0)
             throw new InvalidCustomerIdException();
-        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+        if( customerCard==null || !checkCustomerCardValidity(customerCard) )         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
             throw new InvalidCustomerCardException();
 
         for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
@@ -1550,7 +1565,7 @@ public class EZShop implements EZShopInterface {
         boolean found = false;
         if(userSession==null)
             throw new UnauthorizedException();
-        if( customerCard==null || !customerCard.matches( "[0-9]{10}" ))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
+        if( customerCard==null || !checkCustomerCardValidity(customerCard))         //newCustomerCard is not in a valid format, the regex expression should check also if the string is empty.
             throw new InvalidCustomerCardException();
         for (Customer c : customerMap.values()){
             if (c.getCustomerCard().equals(customerCard))
@@ -1765,12 +1780,13 @@ public class EZShop implements EZShopInterface {
             s.setPrice(this.computeSaleTransactionPrice(s) * (1 - s.getDiscountRate()));
             saleTransactionMap.put(transactionId, s);
 
+            /*
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
 
             // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
-
+            */
 
             return true;
         }
@@ -2275,6 +2291,8 @@ public class EZShop implements EZShopInterface {
                 // update the quantity for each product in the return list
                 EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
                 int quantity = rMap.get(prodCode);
+                p.setQuantity(p.getQuantity() + quantity);
+                this.productTypeMap.put(prodCode, p);
 
                 // update corresponding sale entry
                 sale.updateProductInEntry(prodCode, -quantity);
