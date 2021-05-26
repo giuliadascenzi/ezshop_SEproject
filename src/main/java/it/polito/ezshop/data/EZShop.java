@@ -31,6 +31,7 @@ public class EZShop implements EZShopInterface {
         try {
             this.dbase = new EZDatabase();
 
+
             // --- Users
             try {
                 this.userList = this.dbase.getUsers();
@@ -1780,13 +1781,13 @@ public class EZShop implements EZShopInterface {
             s.setPrice(this.computeSaleTransactionPrice(s) * (1 - s.getDiscountRate()));
             saleTransactionMap.put(transactionId, s);
 
-            /*
+
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
 
             // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
-            */
+
 
             return true;
         }
@@ -2291,8 +2292,6 @@ public class EZShop implements EZShopInterface {
                 // update the quantity for each product in the return list
                 EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
                 int quantity = rMap.get(prodCode);
-                p.setQuantity(p.getQuantity() + quantity);
-                this.productTypeMap.put(prodCode, p);
 
                 // update corresponding sale entry
                 sale.updateProductInEntry(prodCode, -quantity);
