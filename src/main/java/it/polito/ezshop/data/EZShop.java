@@ -1354,32 +1354,32 @@ public class EZShop implements EZShopInterface {
                     throw new InvalidCustomerCardException();
 
                 for (Customer c : this.customerMap.values()) {              //if the new customerCard already exists, return false
-                 if (c.getCustomerCard().equals(newCustomerCard)) {
-                     return false;
+                    if (c.getCustomerCard().equals(newCustomerCard)) {
+                        return false;
                     }
-            }
+                }
                 if(checkCustomerCardValidity(newCustomerCard)) {
-                 EZCustomer c = (EZCustomer) customerMap.get(id);
-                 c.setCustomerCard(newCustomerCard);
-                 try {
+                    EZCustomer c = (EZCustomer) customerMap.get(id);
+                    c.setCustomerCard(newCustomerCard);
+                    try {
                         if (!this.dbase.updateCustomerCard(c.getId(), newCustomerCard))
                             return false;
-                 } catch (SQLException e) {
-                     System.out.println("There was a problem with the database:");
-                      System.out.println(e.getSQLState());
-                      return false;
-                  }
-             }
-            }else{
-                    EZCustomer s = (EZCustomer) customerMap.get(id);        // if the customerCard is empty, delete the Card
-                    s.removeCustomerCard();
-                    try {
-                        this.dbase.deleteCustomerCard(s.getId());
                     } catch (SQLException e) {
                         System.out.println("There was a problem with the database:");
                         System.out.println(e.getSQLState());
                         return false;
                     }
+                }
+            }else{
+                EZCustomer s = (EZCustomer) customerMap.get(id);        // if the customerCard is empty, delete the Card
+                s.removeCustomerCard();
+                try {
+                    this.dbase.deleteCustomerCard(s.getId());
+                } catch (SQLException e) {
+                    System.out.println("There was a problem with the database:");
+                    System.out.println(e.getSQLState());
+                    return false;
+                }
             }
         }
 
@@ -1605,7 +1605,7 @@ public class EZShop implements EZShopInterface {
         double total = 0;
 
         for (TicketEntry e : list) {
-            total += e.getPricePerUnit() * e.getAmount() * e.getDiscountRate();
+            total += e.getPricePerUnit() * e.getAmount() * (1 - e.getDiscountRate());
         }
 
         return total;
@@ -2528,7 +2528,7 @@ public class EZShop implements EZShopInterface {
 
         // Controllo se la carta esiste tra quelle registrate
         EZFileReader reader = new EZFileReader();
-        Map<String, Double> ccMap = reader.readCreditCards("testFiles/creditCardFile_test.csv");
+        Map<String, Double> ccMap = reader.readCreditCards("testFiles/creditCardFile.csv");
 
         if (!ccMap.containsKey(creditCard)) {
             return false;
@@ -2676,7 +2676,7 @@ public class EZShop implements EZShopInterface {
 
         // Controllo se la carta esiste tra quelle registrate
         EZFileReader reader = new EZFileReader();
-        Map<String, Double> ccMap = reader.readCreditCards("testFiles/creditCardFile_test.csv");
+        Map<String, Double> ccMap = reader.readCreditCards("testFiles/creditCardFile.csv");
 
         if (!ccMap.containsKey(creditCard)) {
             return -1;
