@@ -444,10 +444,10 @@ public class EZShopOrderMethodsTest {
             //add credit to have enough balance
             sp.recordBalanceUpdate(100);
             assertEquals(100, (int)sp.computeBalance());
-            assertEquals(2, (int) this.sp.issueOrder("6291041500213", 1, 50));
+            assertEquals(2, (int) this.sp.issueOrder("6291041500213", 2, 50));
             assertEquals(100, (int)sp.computeBalance());
             assertTrue(sp.payOrder(2));
-            assertEquals(50, (int)sp.computeBalance());
+            assertEquals(0, (int)sp.computeBalance());
 
 
 
@@ -636,12 +636,13 @@ public class EZShopOrderMethodsTest {
             //add credit to have enough balance
             sp.recordBalanceUpdate(100);
             assertEquals(100, (int)sp.computeBalance());
-            assertEquals(2, (int) this.sp.issueOrder("6291041500213", 1, 50));
+            assertEquals(2, (int) this.sp.issueOrder("6291041500213", 10, 5));
             assertTrue(sp.payOrder(2));
             //The product should be in a location
             assertTrue(sp.updatePosition(productId, "2-b-3"));
             //Order 2 is in PAYED state
             assertTrue(sp.recordOrderArrival(2));
+
             assertEquals(sp.getAllOrders().get(0).getStatus(), "COMPLETED");
 
 

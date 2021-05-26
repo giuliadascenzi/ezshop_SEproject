@@ -92,6 +92,8 @@ public class EZShopUserMethodsTest {
         try {
             int id = sp.createUser("giulia", "ciao", "Administrator");
             assertEquals(1, id);
+            sp.login("giulia", "ciao");
+
             int id2= sp.createUser("giulia2", "ciao2", "Cashier");
             assertEquals(2, id2);
             int id3= sp.createUser("giulia3", "ciao3", "ShopManager");

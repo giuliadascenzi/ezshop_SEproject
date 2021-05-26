@@ -77,12 +77,9 @@ public class TestDBClass {
 
 
         } catch (SQLException throwables) {
-
             fail(throwables.getMessage());
         }
-
     }
-
 
     /****************** TESTS FOR INSERT USER********************************/
     @Test
@@ -101,7 +98,6 @@ public class TestDBClass {
 
 
         } catch (SQLException throwables) {
-
             fail(throwables.getMessage());
         }
 
@@ -125,10 +121,8 @@ public class TestDBClass {
 
 
         } catch (SQLException throwables) {
-
             fail(throwables.getMessage());
         }
-
     }
 
     @Test
@@ -158,7 +152,6 @@ public class TestDBClass {
 
     }
 
-
     @Test
     public void testInsertUserIdAlreadyExists() {
         User u;
@@ -170,15 +163,9 @@ public class TestDBClass {
 
             /*Two user with the same id!*/
             assertThrows(SQLException.class, ()->{db.insertUser(u);});
-
-
-
-
         } catch (SQLException throwables) {
-
             fail(throwables.getMessage());
         }
-
     }
 
     @Test
@@ -194,19 +181,10 @@ public class TestDBClass {
 
             /*Two user with the same username!*/
             assertThrows(SQLException.class, ()->{db.insertUser(o);});
-
-
-
-
         } catch (SQLException throwables) {
-
             fail(throwables.getMessage());
         }
-
     }
-
-
-
     /****************** TESTS FOR GET NEXT USER ID********************************/
 
     @Test
@@ -316,6 +294,10 @@ public class TestDBClass {
             db.insertUser(u);
 
             assertEquals("ShopManager", db.getUsers().get(0).getRole());
+
+            db.updateUserRole(1, "ADMINISTRATOR");
+            assertEquals("Administrator", db.getUsers().get(0).getRole());
+
 
             db.updateUserRole(1, "ADMINISTRATOR");
             assertEquals("Administrator", db.getUsers().get(0).getRole());
@@ -676,7 +658,343 @@ public class TestDBClass {
             fail(throwables.getMessage());
         }
     }
-    /****************** TESTS FOR CUSTOMER********************************/
+
+
+    /*********************************************************************/
+    /**                                                                  */
+    /**                       BALANCE OPERATIONS                         */
+    /**                                                                  */
+    /*********************************************************************/
+    // ------ DB Test for BalanceOperation ------ //
+    @Test
+    public void test_DBBalanceOperation() {
+        EZDatabase db;
+
+        try {
+            db = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting to the DB:");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            db.clearBalanceOperations();
+
+            EZBalanceOperation bo1 = new EZBalanceOperation(1,
+                    LocalDate.of(2021, 1, 3),
+                    22);
+            EZBalanceOperation bo2 = new EZBalanceOperation(2,
+                    LocalDate.of(2021, 11, 13),
+                    18);
+
+            db.addBalanceOperation(bo1);
+            db.addBalanceOperation(bo2);
+
+            assertThrows(SQLException.class, () -> {
+                db.addBalanceOperation(bo1);
+            });
+
+            assertEquals(2, db.getLastTransactionID());
+
+            bo2.setMoney(-42);
+
+            db.updateBalanceOperation(bo2);
+
+            Map<Integer, BalanceOperation> map = db.getBalanceOperations();
+
+            assertEquals(-42, map.get(2).getMoney(), 0.0);
+        }
+        catch (Exception e) {
+            System.out.println("Exception encountered while testing:");
+            e.printStackTrace();
+        }
+    }
+
+    /*********************************************************************/
+    /**                                                                  */
+    /**                       SALE OPERATIONS                            */
+    /**                                                                  */
+    /*********************************************************************/
+
+    // ------ DB Test for SaleTransaction ------ //
+    @Test
+    public void test_DBSaleTransaction() {
+        EZDatabase db;
+
+        try {
+            db = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting to the DB:");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            db.clearBalanceOperations();
+            db.clearSaleTransactions();
+
+            EZBalanceOperation bo1 = new EZBalanceOperation(1,
+                    LocalDate.of(2021, 1, 3),
+                    22);
+            EZBalanceOperation bo2 = new EZBalanceOperation(2,
+                    LocalDate.of(2021, 11, 13),
+                    18);
+
+            EZSaleTransaction st1 = new EZSaleTransaction(1, 0.0, 22, "CLOSED");
+            EZSaleTransaction st2 = new EZSaleTransaction(2, 0.0, 18, "PAID");
+
+            EZProductType pr = new EZProductType("potato", "42", 1.0, "tasty", 1);
+
+            db.insertProductType(pr);
+
+            st1.addEntry(pr, 42, 0.5);
+
+            db.addBalanceOperation(bo1);
+            db.addBalanceOperation(bo2);
+
+            db.addSaleTransaction(st1);
+            db.addSaleTransaction(st2);
+
+            assertThrows(SQLException.class, () -> {
+                db.addSaleTransaction(st1);
+            });
+
+            bo2.setMoney(42);
+            st2.setPrice(42);
+
+            db.updateBalanceOperation(bo2);
+            db.updateSaleTransaction(st2);
+
+            Map<Integer, SaleTransaction> map = db.getSaleTransactions();
+
+            assertEquals(42, map.get(2).getPrice(), 0.0);
+
+            db.updateSaleInventoryQuantity(st1);
+        }
+        catch (Exception e) {
+            System.out.println("Exception encountered while testing:");
+            e.printStackTrace();
+        }
+    }
+    /*********************************************************************/
+    /**                                                                  */
+    /**                       RETURN TRANSACTION                         */
+    /**                                                                  */
+    /*********************************************************************/
+
+    // ------ DB Test for ReturnTransaction ------ //
+    @Test
+    public void test_DBReturnTransaction() {
+        EZDatabase db;
+
+        try {
+            db = new EZDatabase();
+        }
+        catch (SQLException e) {
+            System.out.println("There was a problem in connecting to the DB:");
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            db.clearBalanceOperations();
+            db.clearSaleTransactions();
+            db.deleteProductTable();
+            db.clearReturnTransactions();
+
+            EZBalanceOperation bo1 = new EZBalanceOperation(1,
+                    LocalDate.of(2021, 1, 3),
+                    22);
+            EZBalanceOperation bo2 = new EZBalanceOperation(2,
+                    LocalDate.of(2021, 11, 13),
+                    18);
+
+            EZSaleTransaction st1 = new EZSaleTransaction(1, 0.0, 22, "PAID");
+            EZSaleTransaction st2 = new EZSaleTransaction(2, 0.0, 18, "PAID");
+
+            EZProductType pr = new EZProductType("potato", "42", 1.0, "tasty", 1);
+
+            db.insertProductType(pr);
+
+            st1.addEntry(pr, 42, 0.5);
+
+            db.addBalanceOperation(bo1);
+            db.addBalanceOperation(bo2);
+
+            db.addSaleTransaction(st1);
+            db.addSaleTransaction(st2);
+
+            EZReturnTransaction rt1 = new EZReturnTransaction(1, 1, "CLOSED");
+            EZReturnTransaction rt2 = new EZReturnTransaction(1, 2, "PAID");
+
+            Map<String, Integer> pmap = new HashMap<>();
+
+            pmap.put("42", 10);
+
+            rt1.setMapOfProducts(pmap);
+
+            pmap.clear();
+            pmap.put("42", 20);
+
+            rt2.setMapOfProducts(pmap);
+
+            db.addReturnTransaction(rt1);
+            db.addReturnTransaction(rt2);
+
+            assertThrows(SQLException.class, () -> {
+                db.addReturnTransaction(rt1);
+            });
+
+            bo2.setMoney(42);
+            st2.setPrice(42);
+
+            db.updateBalanceOperation(bo2);
+            db.updateSaleTransaction(st2);
+
+            rt1.setMoneyReturned(42);
+
+            db.updateReturnTransaction(rt1);
+
+            Map<Integer, ReturnTransaction> map = db.getReturnTransactions();
+
+            assertEquals(42, map.get(1).getMoneyReturned(), 0.0);
+
+            assertEquals(2, db.getLastReturnID());
+        }
+        catch (Exception e) {
+            System.out.println("Exception encountered while testing:");
+            e.printStackTrace();
+        }
+    }
+
+    /*********************************************************************/
+    /**                                                                  */
+    /**                       PRODUCT                                    */
+    /**                                                                  */
+    /*********************************************************************/
+    /****************** TESTS FOR PRODUCT ********************************/
+    @Test
+    public void Test_insertProductDB() {
+        EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
+        EZDatabase db=null;
+        try {
+            db = new EZDatabase();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        try {
+            assertTrue(db.insertProductType(p));
+            assertEquals((Integer) 1,db.getProductTypeMap().get("6291041500213").getId());
+            assertEquals("Granarolo",db.getProductTypeMap().get("6291041500213").getProductDescription());
+            assertEquals((Double)1.5,db.getProductTypeMap().get("6291041500213").getPricePerUnit());
+            assertEquals("milk",db.getProductTypeMap().get("6291041500213").getNote());
+            assertEquals("2-C-4",db.getProductTypeMap().get("6291041500213").getLocation());
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+    }
+    public void Test_updateProductDB()  {
+
+        EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            db.insertProductType(p);
+            p.setPricePerUnit(2.30);
+            p.setQuantity(2);
+            p.setNote("latte");
+
+            db.updateProduct(p);
+            assertEquals((Double)2.30,db.getProductTypeMap().get("6291041500213").getPricePerUnit());
+            assertEquals(2,(int)db.getProductTypeMap().get("6291041500213").getQuantity());
+            assertEquals("latte",db.getProductTypeMap().get("6291041500213").getNote());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_deleteProduct()  {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
+            db.insertProductType(p);
+            assertEquals(1,db.getProductTypeMap().size());
+            db.deleteProduct(p);
+            assertEquals(0,db.getProductTypeMap().size());
+            assertFalse(db.getProductTypeMap().containsValue(p));
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_deleteProductTable() {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
+            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 2, "2-T-4");
+            db.insertProductType(p);
+            assertEquals(1, db.getProductTypeMap().size());
+            db.insertProductType(d);
+            assertEquals(2, db.getProductTypeMap().size());
+            db.deleteProductTable();
+            assertEquals(0, db.getProductTypeMap().size());
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_getLastProductId() {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
+            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 59, "2-T-4");
+            assertEquals(1,db.getLastProductId());
+            db.insertProductType(p);
+            assertEquals(1, db.getProductTypeMap().size());
+            db.insertProductType(d);
+            assertEquals(2, db.getProductTypeMap().size());
+            assertEquals(60,db.getLastProductId());
+            db.deleteProduct(d);
+            assertEquals(2,db.getLastProductId());
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+    @Test
+    public void Test_getProductTypeMap() {
+        EZDatabase db = null;
+        try {
+            db = new EZDatabase();
+            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
+            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 59, "2-T-4");
+            db.insertProductType(p);
+            assertEquals(p.getProductDescription(),db.getProductTypeMap().get("6291041500213").getProductDescription());
+            assertEquals(p.getPricePerUnit(),db.getProductTypeMap().get("6291041500213").getPricePerUnit());
+            assertEquals(p.getNote(),db.getProductTypeMap().get("6291041500213").getNote());
+            assertEquals(p.getId(),db.getProductTypeMap().get("6291041500213").getId());
+            assertEquals(p.getLocation(),db.getProductTypeMap().get("6291041500213").getLocation());
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    /*********************************************************************/
+    /**                                                                  */
+    /**                       CUSTOMER                                   */
+    /**                                                                  */
+    /*********************************************************************/
+
     @Test
     public void Test_insertCustomerDB(){
         EZCustomer u = new EZCustomer("Francesco Di Franco", 1);
@@ -760,7 +1078,6 @@ public class TestDBClass {
             EZCustomer u = new EZCustomer("Francesco Di Franco", 1,c1);
             EZCustomer u1 = new EZCustomer("Antonino", 2,c2);
             EZCustomer u2 = new EZCustomer("Giulia", 59,c3);
-
             assertEquals((Integer) 1,db.getCustomerCard());
             db.insertCustomer(u);
             assertEquals((Integer) 2, db.getCustomerCard());
@@ -865,310 +1182,5 @@ public class TestDBClass {
     }
 
 
-    /****************** TESTS FOR PRODUCT ********************************/
-    @Test
-    public void Test_insertProductDB() {
-       EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
-        EZDatabase db=null;
-        try {
-            db = new EZDatabase();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        try {
-            assertTrue(db.insertProductType(p));
-            assertEquals((Integer) 1,db.getProductTypeMap().get("6291041500213").getId());
-            assertEquals("Granarolo",db.getProductTypeMap().get("6291041500213").getProductDescription());
-            assertEquals((Double)1.5,db.getProductTypeMap().get("6291041500213").getPricePerUnit());
-            assertEquals("milk",db.getProductTypeMap().get("6291041500213").getNote());
-            assertEquals("2-C-4",db.getProductTypeMap().get("6291041500213").getLocation());
 
-        } catch (SQLException e) {
-            System.out.println(e);
-        }
-    }
-    public void Test_updateProductDB()  {
-
-        EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
-        EZDatabase db = null;
-        try {
-            db = new EZDatabase();
-            db.insertProductType(p);
-            p.setPricePerUnit(2.30);
-            p.setQuantity(2);
-            p.setNote("latte");
-
-            db.updateProduct(p);
-            assertEquals((Double)2.30,db.getProductTypeMap().get("6291041500213").getPricePerUnit());
-            assertEquals(2,(int)db.getProductTypeMap().get("6291041500213").getQuantity());
-            assertEquals("latte",db.getProductTypeMap().get("6291041500213").getNote());
-
-        } catch (SQLException e) {
-           e.printStackTrace();
-        }
-    }
-    @Test
-    public void Test_deleteProduct()  {
-        EZDatabase db = null;
-        try {
-            db = new EZDatabase();
-            EZProductType p = new EZProductType("Granarolo","6291041500213",1.5,"milk",1,"2-C-4");
-            db.insertProductType(p);
-            assertEquals(1,db.getProductTypeMap().size());
-            db.deleteProduct(p);
-            assertEquals(0,db.getProductTypeMap().size());
-            assertFalse(db.getProductTypeMap().containsValue(p));
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-    @Test
-    public void Test_deleteProductTable() {
-        EZDatabase db = null;
-        try {
-            db = new EZDatabase();
-            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
-            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 2, "2-T-4");
-            db.insertProductType(p);
-            assertEquals(1, db.getProductTypeMap().size());
-            db.insertProductType(d);
-            assertEquals(2, db.getProductTypeMap().size());
-            db.deleteProductTable();
-            assertEquals(0, db.getProductTypeMap().size());
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-    @Test
-    public void Test_getLastProductId() {
-        EZDatabase db = null;
-        try {
-            db = new EZDatabase();
-            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
-            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 59, "2-T-4");
-            assertEquals(1,db.getLastProductId());
-            db.insertProductType(p);
-            assertEquals(1, db.getProductTypeMap().size());
-            db.insertProductType(d);
-            assertEquals(2, db.getProductTypeMap().size());
-            assertEquals(60,db.getLastProductId());
-            db.deleteProduct(d);
-            assertEquals(2,db.getLastProductId());
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-    @Test
-    public void Test_getProductTypeMap() {
-        EZDatabase db = null;
-        try {
-            db = new EZDatabase();
-            EZProductType p = new EZProductType("Granarolo", "6291041500213", 1.5, "milk", 1, "2-C-4");
-            EZProductType d = new EZProductType("Parmalat", "3561041500223", 1.3, "milk", 59, "2-T-4");
-            db.insertProductType(p);
-            assertEquals(p.getProductDescription(),db.getProductTypeMap().get("6291041500213").getProductDescription());
-            assertEquals(p.getPricePerUnit(),db.getProductTypeMap().get("6291041500213").getPricePerUnit());
-            assertEquals(p.getNote(),db.getProductTypeMap().get("6291041500213").getNote());
-            assertEquals(p.getId(),db.getProductTypeMap().get("6291041500213").getId());
-            assertEquals(p.getLocation(),db.getProductTypeMap().get("6291041500213").getLocation());
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-    // ------ DB Test for BalanceOperation ------ //
-    @Test
-    public void test_DBBalanceOperation() {
-        EZDatabase db;
-
-        try {
-            db = new EZDatabase();
-        }
-        catch (SQLException e) {
-            System.out.println("There was a problem in connecting to the DB:");
-            e.printStackTrace();
-            return;
-        }
-
-        try {
-            db.clearBalanceOperations();
-
-            EZBalanceOperation bo1 = new EZBalanceOperation(1,
-                    LocalDate.of(2021, 1, 3),
-                    22);
-            EZBalanceOperation bo2 = new EZBalanceOperation(2,
-                    LocalDate.of(2021, 11, 13),
-                    18);
-
-            db.addBalanceOperation(bo1);
-            db.addBalanceOperation(bo2);
-
-            assertThrows(SQLException.class, () -> {
-                db.addBalanceOperation(bo1);
-            });
-
-            assertEquals(2, db.getLastTransactionID());
-
-            bo2.setMoney(-42);
-
-            db.updateBalanceOperation(bo2);
-
-            Map<Integer, BalanceOperation> map = db.getBalanceOperations();
-
-            assertEquals(-42, map.get(2).getMoney(), 0.0);
-        }
-        catch (Exception e) {
-            System.out.println("Exception encountered while testing:");
-            e.printStackTrace();
-        }
-    }
-
-    // ------ DB Test for SaleTransaction ------ //
-    @Test
-    public void test_DBSaleTransaction() {
-        EZDatabase db;
-
-        try {
-            db = new EZDatabase();
-        }
-        catch (SQLException e) {
-            System.out.println("There was a problem in connecting to the DB:");
-            e.printStackTrace();
-            return;
-        }
-
-        try {
-            db.clearBalanceOperations();
-            db.clearSaleTransactions();
-
-            EZBalanceOperation bo1 = new EZBalanceOperation(1,
-                    LocalDate.of(2021, 1, 3),
-                    22);
-            EZBalanceOperation bo2 = new EZBalanceOperation(2,
-                    LocalDate.of(2021, 11, 13),
-                    18);
-
-            EZSaleTransaction st1 = new EZSaleTransaction(1, 0.0, 22, "CLOSED");
-            EZSaleTransaction st2 = new EZSaleTransaction(2, 0.0, 18, "PAID");
-
-            EZProductType pr = new EZProductType("potato", "42", 1.0, "tasty", 1);
-
-            db.insertProductType(pr);
-
-            st1.addEntry(pr, 42, 0.5);
-
-            db.addBalanceOperation(bo1);
-            db.addBalanceOperation(bo2);
-
-            db.addSaleTransaction(st1);
-            db.addSaleTransaction(st2);
-
-            assertThrows(SQLException.class, () -> {
-                db.addSaleTransaction(st1);
-            });
-
-            bo2.setMoney(42);
-            st2.setPrice(42);
-
-            db.updateBalanceOperation(bo2);
-            db.updateSaleTransaction(st2);
-
-            Map<Integer, SaleTransaction> map = db.getSaleTransactions();
-
-            assertEquals(42, map.get(2).getPrice(), 0.0);
-
-            db.updateSaleInventoryQuantity(st1);
-        }
-        catch (Exception e) {
-            System.out.println("Exception encountered while testing:");
-            e.printStackTrace();
-        }
-    }
-
-    // ------ DB Test for ReturnTransaction ------ //
-    @Test
-    public void test_DBReturnTransaction() {
-        EZDatabase db;
-
-        try {
-            db = new EZDatabase();
-        }
-        catch (SQLException e) {
-            System.out.println("There was a problem in connecting to the DB:");
-            e.printStackTrace();
-            return;
-        }
-
-        try {
-            db.clearBalanceOperations();
-            db.clearSaleTransactions();
-            db.deleteProductTable();
-            db.clearReturnTransactions();
-
-            EZBalanceOperation bo1 = new EZBalanceOperation(1,
-                    LocalDate.of(2021, 1, 3),
-                    22);
-            EZBalanceOperation bo2 = new EZBalanceOperation(2,
-                    LocalDate.of(2021, 11, 13),
-                    18);
-
-            EZSaleTransaction st1 = new EZSaleTransaction(1, 0.0, 22, "PAID");
-            EZSaleTransaction st2 = new EZSaleTransaction(2, 0.0, 18, "PAID");
-
-            EZProductType pr = new EZProductType("potato", "42", 1.0, "tasty", 1);
-
-            db.insertProductType(pr);
-
-            st1.addEntry(pr, 42, 0.5);
-
-            db.addBalanceOperation(bo1);
-            db.addBalanceOperation(bo2);
-
-            db.addSaleTransaction(st1);
-            db.addSaleTransaction(st2);
-
-            EZReturnTransaction rt1 = new EZReturnTransaction(1, 1, "CLOSED");
-            EZReturnTransaction rt2 = new EZReturnTransaction(1, 2, "PAID");
-
-            Map<String, Integer> pmap = new HashMap<>();
-
-            pmap.put("42", 10);
-
-            rt1.setMapOfProducts(pmap);
-
-            pmap.clear();
-            pmap.put("42", 20);
-
-            rt2.setMapOfProducts(pmap);
-
-            db.addReturnTransaction(rt1);
-            db.addReturnTransaction(rt2);
-
-            assertThrows(SQLException.class, () -> {
-                db.addReturnTransaction(rt1);
-            });
-
-            bo2.setMoney(42);
-            st2.setPrice(42);
-
-            db.updateBalanceOperation(bo2);
-            db.updateSaleTransaction(st2);
-
-            rt1.setMoneyReturned(42);
-
-            db.updateReturnTransaction(rt1);
-
-            Map<Integer, ReturnTransaction> map = db.getReturnTransactions();
-
-            assertEquals(42, map.get(1).getMoneyReturned(), 0.0);
-
-            assertEquals(2, db.getLastReturnID());
-        }
-        catch (Exception e) {
-            System.out.println("Exception encountered while testing:");
-            e.printStackTrace();
-        }
-    }
 }

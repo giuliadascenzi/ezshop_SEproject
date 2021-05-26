@@ -30,6 +30,7 @@ public class EZShop implements EZShopInterface {
     public EZShop() {
         try {
             this.dbase = new EZDatabase();
+            System.out.println("sto costruendo ezshop");
 
             // --- Users
             try {
@@ -394,7 +395,10 @@ public class EZShop implements EZShopInterface {
             System.out.println(e.getMessage());
             return -1;  /*Error while saving*/
         }
+        System.out.println("sto aggiungendo user"+username);
         userList.add(newUsr);
+        System.out.println(userList.size());
+
 
         this.idUsers++;
 
@@ -453,6 +457,8 @@ public class EZShop implements EZShopInterface {
         if (!checkUserRole("Administrator"))
             throw new UnauthorizedException();
         else
+            System.out.println("++++++++++++++");
+            for (User  u: this.userList) System.out.println(u.getUsername());
             return this.userList;
     }
 
@@ -635,6 +641,8 @@ public class EZShop implements EZShopInterface {
                 return -1;
         //create new ProductType
         int newProductId=++this.productIds;
+        //note null
+        if (note==null) note="";
         ProductType pt=new EZProductType(description, productCode, pricePerUnit, note, newProductId);
         //this.productIds++;
         this.productTypeMap.put(productCode, pt);
@@ -677,6 +685,7 @@ public class EZShop implements EZShopInterface {
         //check product validity
         if (id==null || id<=0)
             throw new InvalidProductIdException();
+
         //check description validity
         if (newDescription==null || newDescription.trim().equals(""))
             throw new InvalidProductDescriptionException();
@@ -691,13 +700,16 @@ public class EZShop implements EZShopInterface {
         if (newPrice<=0 || newDescription.trim().equals(""))
             throw new InvalidPricePerUnitException();
 
-        //check if it already exists a product with that given barcode
-        if (this.productTypeMap.containsKey(newCode))
-            return false;
-        //check if there is already a product with the same id
+
+        //check if there is a product with the same id
         for (ProductType p: this.productTypeMap.values())
             if (p.getId().equals(id))
             { //Found
+
+                //check if it already exists a product with that given barcode (that is a new barcode for the prodoct selected)
+                if (!p.getBarCode().equals(newCode) && this.productTypeMap.containsKey(newCode))
+                    return false;
+
                 //update map product type, deleting the record with the barcode to update
                 this.productTypeMap.remove(p.getBarCode());
                 p.setBarCode(newCode);
@@ -866,16 +878,33 @@ public class EZShop implements EZShopInterface {
             throw new InvalidProductIdException();
 
         //check if the product exists in the map
-        for (ProductType p: this.productTypeMap.values())
+        for (ProductType p : this.productTypeMap.values())
         {
             if (p.getId().equals(productId)) //Found
             {
-                int newQuantity =p.getQuantity() + toBeAdded;
+                int newQuantity = p.getQuantity() + toBeAdded;
 
                 if (toBeAdded<0 && newQuantity<0)
                     return false;
                 if (p.getLocation()==null)  //not assigned to a location
                     return false;
+
+                try {
+                    EZProductType e = new EZProductType(p.getProductDescription(),
+                                p.getBarCode(),
+                                p.getPricePerUnit(),
+                                p.getNote(),
+                                p.getId(),
+                                p.getLocation());
+                    e.setQuantity(newQuantity);
+                    this.dbase.updateProduct(e);
+                }
+                catch (SQLException e) {
+                    System.out.println("There was a problem with the DB:");
+                    e.printStackTrace();
+                    return false;
+                }
+
                 //all good, update quantity
                 p.setQuantity(newQuantity);
                 return true;
@@ -913,7 +942,7 @@ public class EZShop implements EZShopInterface {
 
         // Nota: assicurarsi che quello nell'espressione regolare sia effettivamente
         // il pattern corretto. In questo momento è generico
-        if (!newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
+        if (newPos!=null && !newPos.equals("") && !newPos.trim().matches("[0-9]+-[A-Za-z]+-[0-9]+")) {
             throw new InvalidLocationException();
         }
 
@@ -924,12 +953,14 @@ public class EZShop implements EZShopInterface {
             if (p.getId().equals(productId)) { //check if the producttype exists
                 barcodeProduct=p.getBarCode();
             }
-            if (p.getLocation()!=null) //check whether the position has already been assigned
+            if ((newPos!=null && !newPos.equals(""))  && p.getLocation()!=null && p.getLocation().equals(newPos)) //check whether the position has already been assigned
                 return false;
         }
 
         if (barcodeProduct==null) //product not found
             return false;
+
+        if (newPos.equals("")) newPos=null;
 
         //Everything good
         EZProductType pr = (EZProductType) this.productTypeMap.get(barcodeProduct);
@@ -1128,6 +1159,8 @@ public class EZShop implements EZShopInterface {
 
         // update balance
         double toPay =this.orderTransactionMap.get(orderId).getQuantity()*this.orderTransactionMap.get(orderId).getPricePerUnit();
+        if (toPay> this.computeBalance())
+            return false; //If the balance is not enough return false!
         //new balance operation
         EZBalanceOperation balOp =new EZBalanceOperation(orderId, LocalDate.now(),  -toPay);
 
@@ -1659,6 +1692,12 @@ public class EZShop implements EZShopInterface {
             s.addEntry(p, amount, s.getDiscountRate());
             s.setPrice(this.computeSaleTransactionPrice(s));
 
+            // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
+            p.setQuantity(p.getQuantity() - amount);
+
+            // aggiorna la mappa dei prodotti
+            productTypeMap.put(productCode, p);
+
             // aggiorna la mappa
             saleTransactionMap.put(transactionId, s);
 
@@ -1745,13 +1784,13 @@ public class EZShop implements EZShopInterface {
             s.setPrice(this.computeSaleTransactionPrice(s));
             saleTransactionMap.put(transactionId, s);
 
-            /*
+
             // aggiorna (temporaneamente) la quantità del prodotto e la mappa dei prodotti
             p.setQuantity(p.getQuantity() + amount);
 
             // aggiorna la mappa dei prodotti
             productTypeMap.put(productCode, p);
-            */
+
 
             return true;
         }
@@ -1942,10 +1981,11 @@ public class EZShop implements EZShopInterface {
         }
 
         EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+        st.setPrice(this.computeSaleTransactionPrice(st) * (1 - st.getDiscountRate()));
         st.setStatus("CLOSED");
 
         // Aggiungo una BalanceOperation corrispondente alla SaleTransaction
-        EZBalanceOperation bo = new EZBalanceOperation(transactionId, LocalDate.now(), st.getPrice());
+        EZBalanceOperation bo = new EZBalanceOperation(transactionId, LocalDate.now(), this.computeSaleTransactionPrice(st) * (1 - st.getDiscountRate()));
 
         // Nota: le mappe vengono salvate in memoria in modo persistente solo qui
         try {
@@ -1960,7 +2000,7 @@ public class EZShop implements EZShopInterface {
         }
 
         // aggiorna dati in locale
-        List<TicketEntry> entryList = st.getEntries();
+        /*List<TicketEntry> entryList = st.getEntries();
 
         for (TicketEntry e : entryList) {
             ProductType p = this.productTypeMap.get(e.getBarCode());
@@ -1968,7 +2008,7 @@ public class EZShop implements EZShopInterface {
             // aggiorna la quantità del prodotto
             p.setQuantity(p.getQuantity() - e.getAmount());
             productTypeMap.put(p.getBarCode(), p);
-        }
+        }*/
 
         this.transactionMap.put(transactionId, bo);
         this.saleTransactionMap.put(transactionId, st);
@@ -2019,6 +2059,15 @@ public class EZShop implements EZShopInterface {
             The Balance Operations map isn't updated either since a BO is inserted in the DB/map
             only when the corresponding sale transaction is closed.
          */
+
+        // riaggiunge le quantità dei prodotti temporaneamente eliminate
+        for (TicketEntry e : st.getEntries()) {
+            ProductType p = this.productTypeMap.get(e.getBarCode());
+
+            p.setQuantity(p.getQuantity() + e.getAmount());
+
+            this.productTypeMap.put(p.getBarCode(), p);
+        }
 
         this.saleTransactionMap.remove(saleNumber);
 
@@ -2244,14 +2293,18 @@ public class EZShop implements EZShopInterface {
                 // update the quantity for each product in the return list
                 EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
                 int quantity = rMap.get(prodCode);
-                p.setQuantity(p.getQuantity() + quantity);
-                this.productTypeMap.put(prodCode, p);
 
                 // update corresponding sale entry
                 sale.updateProductInEntry(prodCode, -quantity);
             }
             double prevMoney = sale.getPrice();
             double newMoney = this.computeSaleTransactionPrice(sale);
+
+            // (extra check) check if there's enough money to refund
+            if (this.computeBalance() - (prevMoney - newMoney) < 0) {
+                return false;
+            }
+
             // set the amount of money returned in the return transaction
             ret.setMoneyReturned(prevMoney - newMoney);
             // change the return transaction's status
@@ -2265,6 +2318,7 @@ public class EZShop implements EZShopInterface {
                 this.dbase.addReturnTransaction(ret);
                 this.dbase.updateBalanceOperation(bo);
                 this.dbase.updateSaleTransaction(sale);
+                this.dbase.updateReturnInventoryQuantity(ret);
             }
             catch (SQLException e) {
                 System.out.println("There was a problem with the database:");
@@ -2281,6 +2335,14 @@ public class EZShop implements EZShopInterface {
 
             // update the map
             this.saleTransactionMap.put(sale.getTicketNumber(), sale);
+
+            // update quantities in inventory
+            for (String prodCode : ret.getMapOfProducts().keySet()) {
+                EZProductType p = (EZProductType) this.productTypeMap.get(prodCode);
+                int quantity = rMap.get(prodCode);
+                p.setQuantity(p.getQuantity() + quantity);
+                this.productTypeMap.put(prodCode, p);
+            }
         }
 
         return true;
@@ -2737,9 +2799,30 @@ public class EZShop implements EZShopInterface {
         List<BalanceOperation> returnList = new ArrayList<>(this.transactionMap.values());
 
         // Filtra la lista rimuovendo tutte le transazioni al di fuori dell'intervallo di tempo
-        for (int i = returnList.size() - 1; i >= 0; i--) {
-            if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
-                returnList.remove(i);
+        // Se sia from che to sono == null allora non si filtra nulla
+        if (from == null) {
+            if (to != null) {
+                for (int i = returnList.size() - 1; i >= 0; i--) {
+                    if (returnList.get(i).getDate().isAfter(to)) {
+                        returnList.remove(i);
+                    }
+                }
+            }
+        }
+        else {
+            if (to == null) {
+                for (int i = returnList.size() - 1; i >= 0; i--) {
+                    if (returnList.get(i).getDate().isBefore(from)) {
+                        returnList.remove(i);
+                    }
+                }
+            }
+            else {
+                for (int i = returnList.size() - 1; i >= 0; i--) {
+                    if (returnList.get(i).getDate().isBefore(from) || returnList.get(i).getDate().isAfter(to)) {
+                        returnList.remove(i);
+                    }
+                }
             }
         }
 

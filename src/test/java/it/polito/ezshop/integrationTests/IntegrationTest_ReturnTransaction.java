@@ -115,6 +115,14 @@ public class IntegrationTest_ReturnTransaction {
 
             assertTrue(ez.returnProduct(rID, validBC, 2));
 
+            double prevBal = ez.computeBalance();
+
+            ez.recordBalanceUpdate(-prevBal);
+
+            assertFalse(ez.endReturnTransaction(rID, true));
+
+            ez.recordBalanceUpdate(prevBal);
+
             assertTrue(ez.endReturnTransaction(rID, true));
 
             assertEquals(997, (int) ez.getProductTypeByBarCode(validBC).getQuantity());

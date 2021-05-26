@@ -58,16 +58,17 @@ public class EZUser implements User{
         }
         if(this.role==UserRole.CASHIER)
             return "Cashier";
+        System.out.println(this.username+ this.role);
         return "";
     }
 
     @Override
     public void setRole(String role) {
-        if((role).equalsIgnoreCase("SHOPMANAGER"))
+        if((role).trim().equalsIgnoreCase("SHOPMANAGER"))
             this.role=UserRole.MANAGER;
-        if((role).equalsIgnoreCase("ADMINISTRATOR"))
+        if((role).trim().equalsIgnoreCase("ADMINISTRATOR"))
             this.role=UserRole.ADMINISTRATOR;
-        if((role).equalsIgnoreCase("CASHIER"))
+        if((role).trim().equalsIgnoreCase("CASHIER"))
             this.role=UserRole.CASHIER;
     }
 }

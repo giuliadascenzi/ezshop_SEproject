@@ -62,6 +62,27 @@ public class IntegrationTest_Accounting {
 
             assertFalse(list.isEmpty());
 
+            list = ez.getCreditsAndDebits(
+                    LocalDate.of(2021, 1, 1),
+                    null
+            );
+
+            assertFalse(list.isEmpty());
+
+            list = ez.getCreditsAndDebits(
+                    null,
+                    LocalDate.of(2021, 12, 31)
+            );
+
+            assertFalse(list.isEmpty());
+
+            list = ez.getCreditsAndDebits(
+                    null,
+                    null
+            );
+
+            assertFalse(list.isEmpty());
+
             List<BalanceOperation> emptyList = ez.getCreditsAndDebits(
                     LocalDate.of(2021, 1, 1),
                     LocalDate.of(2021, 2, 28)
