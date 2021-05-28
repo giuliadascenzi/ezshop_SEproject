@@ -203,13 +203,13 @@ public class WB_UnitTesting {
         assert(4== u.getId());
         assertEquals("giulia", u.getUsername());
         assertEquals("ciaociao", u.getPassword());
-        assertEquals("SHOPMANAGER", u.getRole());
+        assertEquals("ShopManager", u.getRole());
 
-        String role = "ADMINISTRATOR";
+        String role = "Administrator";
         u.setRole(role);
         assertEquals(role, u.getRole());
 
-        role = "CASHIER";
+        role = "Cashier";
         u.setRole(role);
         assertEquals(role, u.getRole());
 

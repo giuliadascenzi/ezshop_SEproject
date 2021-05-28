@@ -2,16 +2,18 @@ package it.polito.ezshop.data.classes;
 
 import it.polito.ezshop.data.Order;
 
+import java.util.Locale;
+
 /*Giulia*/
 
 public class EZOrder  implements Order  {
 
     private String productCode;
-    private Integer balanceId;
+    private Integer balanceId=-1;
     private double pricePerUnit;
     private int quantity;
     private Integer id;
-    private String status;
+    private String status="";
     //Possible status:
     //issued is sent to the supplier (and not paid),
     // completed  is when the physical product is received (and recorded in inventory) (Same as arrived)
@@ -69,7 +71,7 @@ public class EZOrder  implements Order  {
 
     @Override
     public String getStatus() {
-        return this.status;
+        return this.status.toUpperCase(Locale.ROOT);
     }
 
     @Override
