@@ -86,7 +86,9 @@ public class IntegrationTest_SaleTransaction {
             assertTrue(ez.applyDiscountRateToProduct(tID, validBC, 0.5));
             assertTrue(ez.applyDiscountRateToSale(tID, 0.5));
 
-            assertNotNull(ez.getSaleTransaction(tID));
+            assertNull(ez.getSaleTransaction(tID));
+
+            assertTrue(ez.endSaleTransaction(tID));
 
             double price = ez.computeSaleTransactionPrice(ez.getSaleTransaction(tID));
 
@@ -94,15 +96,11 @@ public class IntegrationTest_SaleTransaction {
 
             assertEquals(price / 10, ez.computePointsForSale(tID), 0.1);
 
-            assertTrue(ez.endSaleTransaction(tID));
-
             assertEquals(price * (1 - ez.getSaleTransaction(tID).getDiscountRate()), ez.getCreditsAndDebits(null, null).get(0).getMoney(), 0.0);
-
-            System.out.println(ez.computeBalance());
 
             assertEquals(price * (1 - ez.getSaleTransaction(tID).getDiscountRate()), ez.computeBalance(), 0.0);
 
-            assertFalse(ez.deleteSaleTransaction(tID));
+            assertTrue(ez.deleteSaleTransaction(tID));
         }
         catch (Exception e) {
             System.out.println("Encountered exception while testing:");

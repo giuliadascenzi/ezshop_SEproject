@@ -46,11 +46,6 @@ public class EZShopCustomerMethodTest {
     }
     @Test
     public void Test_ModifyCustomer(){
-        assertThrows(InvalidCustomerNameException.class,()->{sp.defineCustomer(null);});
-        assertThrows(InvalidCustomerNameException.class,()->{sp.defineCustomer("");});
-
-        assertThrows(InvalidCustomerIdException.class,()->{sp.modifyCustomer(3,"FrankN","5000000001");});
-
 
         try {
             sp.createUser("fridanco1","pass","Cashier");
@@ -66,6 +61,11 @@ public class EZShopCustomerMethodTest {
 
             sp.login("fridanco1","pass");
 
+            assertThrows(InvalidCustomerNameException.class,()->{sp.defineCustomer(null);});
+            assertThrows(InvalidCustomerNameException.class,()->{sp.defineCustomer("");});
+
+            assertThrows(InvalidCustomerIdException.class,()->{sp.modifyCustomer(-1,"FrankN","5000000001");});
+            assertThrows(InvalidCustomerIdException.class,()->{sp.modifyCustomer(null,"FrankN","5000000001");});
 
             assertThrows(InvalidCustomerCardException.class,()->{sp.modifyCustomer(1,"FrankN","55000000001");});
             assertThrows(InvalidCustomerCardException.class,()->{sp.modifyCustomer(1,"FrankN","55000001");});
