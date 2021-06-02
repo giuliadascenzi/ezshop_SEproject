@@ -65,3 +65,10 @@ with all elements explosed, all dependencies, NO tangles; and report it here as 
 <Discuss if the current structure shows weaknesses that should be fixed>
 ```
 
+The main difference between the current design and the one delivered on April 30th is the relationship between the class BalanceOperation and the classes Order, SaleTransaction and ReturnTransaction. While in the old version we chose to have a relationship implemented through the inheritance of the three classes from BalanceOperation, now the three classes are separated and do not inherit from BalanceOperation. We chose to change the design in this way to comply with the provided APIs.
+
+To simplicity we also decided to remove the class Position and implement the position directly in the class ProductType through a String. 
+
+After the analysis about the complexity of the design chosen, we realized the the weakness of our structure is that the classes EZShop and EZDatabase present to much fat percentage. EZDatabase is a class that is fat because it manages all the methods of all the tables of the database. To decrease the fatness we could therefore create one class for each database table and implement the different methods in their respective class. 
+
+As for EZDatabase, also EZShop could be improved adding more intermediate classes to whom EZShop delegates to implement all the APIs methods. For example there could be a class Inventory that manages all the methods about the transactions. 
