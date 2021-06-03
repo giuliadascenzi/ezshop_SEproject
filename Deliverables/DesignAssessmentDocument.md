@@ -71,5 +71,5 @@ For simplicity we also decided to remove the Position class and implement the po
 
 After the analysis about the complexity of the chosen design, we realized that the main weakness of our structure is that the classes EZShop and EZDatabase present too much fat percentage. EZDatabase is a class that is fat because it manages all the methods used to access all the tables of the database. To decrease the LOCs and the percentage we could therefore create one class for each database table and implement the different methods in their respective class. 
 
-As for EZDatabase, also EZShop could be improved adding more intermediate classes to which EZShop delegates to implement all the APIs methods. For example there could be an Inventory class that manages all the methods about the transactions. 
+Like for EZDatabase, EZShop could also be improved by adding more intermediate classes to which EZShop delegates the implementation of all or most of the APIs methods. For example, there could be an AccountBook class that manages all the methods about the transactions and balance operations. 
 
