@@ -1341,17 +1341,26 @@ public class EZShop implements EZShopInterface {
     @Override
     public boolean modifyCustomer(Integer id, String newCustomerName, String newCustomerCard) throws InvalidCustomerNameException, InvalidCustomerCardException, InvalidCustomerIdException, UnauthorizedException {
         boolean flag = false;
-        if (newCustomerName==null || newCustomerName.trim().equals(""))  // Check if the newCustomerName is valid.
-            throw new InvalidCustomerNameException();
-
-        if(!customerMap.containsKey(id))                                 //If the Customer id doesn't exist or the customerMap doesn't contain the id
-            throw new InvalidCustomerIdException();
-
         if(userSession == null)                                         //if the user is not logged
             throw new UnauthorizedException();
 
+        if (newCustomerName==null || newCustomerName.trim().equals(""))  // Check if the newCustomerName is valid.
+            throw new InvalidCustomerNameException();
 
-        if(newCustomerCard != null){
+        if (id == null || id <= 0) {
+            throw new InvalidCustomerIdException();
+        }
+
+        if (newCustomerCard != null && !newCustomerCard.equals("")
+         && !checkCustomerCardValidity(newCustomerCard)) {
+            throw new InvalidCustomerCardException();
+        }
+
+        if(!customerMap.containsKey(id))                                 //If the Customer id doesn't exist or the customerMap doesn't contain the id
+            return false;
+            //throw new InvalidCustomerIdException();
+
+        if (newCustomerCard != null) {
             if (!newCustomerCard.equals("")){
                 if(!checkCustomerCardValidity(newCustomerCard))             //newCustomerCard is not in a valid format
                     throw new InvalidCustomerCardException();
@@ -1604,6 +1613,10 @@ public class EZShop implements EZShopInterface {
         @return il prezzo calcolato
      */
     public double computeSaleTransactionPrice(SaleTransaction st) {
+        if (st == null) {
+            return -1;
+        }
+
         List<TicketEntry> list = st.getEntries();
         double total = 0;
 
@@ -1668,8 +1681,12 @@ public class EZShop implements EZShopInterface {
             throw new InvalidQuantityException();
         }
 
+        if (productCode == null) {
+            throw new InvalidProductCodeException();
+        }
+
         productCode = productCode.trim();
-        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
+        if (productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
             throw new InvalidProductCodeException();
         }
 
@@ -1739,8 +1756,12 @@ public class EZShop implements EZShopInterface {
             throw new InvalidQuantityException();
         }
 
+        if (productCode == null) {
+            throw new InvalidProductCodeException();
+        }
+
         productCode = productCode.trim();
-        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
+        if (productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
             throw new InvalidProductCodeException();
         }
 
@@ -1822,16 +1843,20 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId == null||transactionId <= 0  ) {
+        if (transactionId == null || transactionId <= 0  ) {
             throw new InvalidTransactionIdException();
         }
 
-        if (discountRate < 0 || discountRate > 1) {
+        if (discountRate < 0 || discountRate >= 1) {
             throw new InvalidDiscountRateException();
         }
 
+        if (productCode == null) {
+            throw new InvalidProductCodeException();
+        }
+
         productCode = productCode.trim();
-        if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
+        if (productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
             throw new InvalidProductCodeException();
         }
 
@@ -1893,11 +1918,11 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null || transactionId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
-        if (discountRate < 0 || discountRate > 1) {
+        if (discountRate < 0 || discountRate >= 1) {
             throw new InvalidDiscountRateException();
         }
 
@@ -1937,7 +1962,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null || transactionId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -1973,7 +1998,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null || transactionId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -2038,7 +2063,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (saleNumber <= 0 || saleNumber == null) {
+        if (saleNumber == null || saleNumber <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -2047,8 +2072,7 @@ public class EZShop implements EZShopInterface {
         }
 
         EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(saleNumber);
-        if (st.getStatus().equalsIgnoreCase("CLOSED")
-            || st.getStatus().equalsIgnoreCase("PAID")) {
+        if (st.getStatus().equalsIgnoreCase("PAID")) {
             return false;
         }
 
@@ -2093,11 +2117,18 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (transactionId <= 0 || transactionId == null) {
+        if (transactionId == null || transactionId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
         if (!saleTransactionMap.containsKey(transactionId)) {
+            return null;
+        }
+
+        EZSaleTransaction st = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+
+        if (!st.getStatus().equalsIgnoreCase("PAID")
+         && !st.getStatus().equalsIgnoreCase("CLOSED")) {
             return null;
         }
 
@@ -2124,7 +2155,7 @@ public class EZShop implements EZShopInterface {
                 && !this.checkUserRole("CASHIER")) {
             throw new UnauthorizedException();
         }
-        if (saleNumber < 0) {
+        if (saleNumber == null || saleNumber <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -2171,7 +2202,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean returnProduct(Integer returnId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
-        if (returnId <= 0 || returnId == null) {
+        if (returnId == null || returnId <= 0) {
             throw new InvalidTransactionIdException();
         }
         if (productCode == null || productCode.equals("") || !this.checkBarCodeValidity(productCode)) {
@@ -2252,7 +2283,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean endReturnTransaction(Integer returnId, boolean commit) throws InvalidTransactionIdException, UnauthorizedException {
-        if (returnId < 0 || returnId == null) {
+        if (returnId == null || returnId <= 0) {
             throw new InvalidTransactionIdException();
         }
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
@@ -2367,7 +2398,7 @@ public class EZShop implements EZShopInterface {
      */
     @Override
     public boolean deleteReturnTransaction(Integer returnId) throws InvalidTransactionIdException, UnauthorizedException {
-        if (returnId < 0 || returnId == null) {
+        if (returnId == null || returnId <= 0 ) {
             throw new InvalidTransactionIdException();
         }
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
@@ -2450,7 +2481,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (ticketNumber <= 0 || ticketNumber == null) {
+        if (ticketNumber == null || ticketNumber <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -2525,7 +2556,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (ticketNumber <= 0 || ticketNumber == null) {
+        if (ticketNumber == null || ticketNumber <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -2596,7 +2627,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (returnId <= 0) {
+        if (returnId == null || returnId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
@@ -2673,7 +2704,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
         }
 
-        if (returnId <= 0) {
+        if (returnId == null || returnId <= 0) {
             throw new InvalidTransactionIdException();
         }
 
