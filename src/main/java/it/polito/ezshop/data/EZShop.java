@@ -300,6 +300,8 @@ public class EZShop implements EZShopInterface {
             System.out.println(e.getMessage());
         }
 
+        this.productInstanceMap.clear();
+
         /*Delete all the orders from the database*/
 
             try {
@@ -370,9 +372,6 @@ public class EZShop implements EZShopInterface {
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
     }
-
-
-
 
     /**
      * This method creates a new user with given username, password and role. The returned value is a unique identifier
@@ -1297,6 +1296,7 @@ public class EZShop implements EZShopInterface {
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
 
+
     @Override
     public boolean recordOrderArrivalRFID(Integer orderId, String RFIDfrom) throws InvalidOrderIdException, UnauthorizedException, 
 InvalidLocationException, InvalidRFIDException {
@@ -1748,6 +1748,22 @@ InvalidLocationException, InvalidRFIDException {
         }
     }
 
+    /**
+     * This method adds a product to a sale transaction receiving  its RFID, decreasing the temporary amount of product available on the
+     * shelves for other customers.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param RFID the RFID of the product to be added
+     * @return  true if the operation is successful
+     *          false   if the RFID does not exist,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidRFIDException if the RFID code is empty, null or invalid
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+    // TODO: IMPLEMENTARE METODO
     @Override
     public boolean addProductToSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
         return false;
@@ -1772,8 +1788,6 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidQuantityException if the quantity is less than 0
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-
-    
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
@@ -1850,6 +1864,23 @@ InvalidLocationException, InvalidRFIDException {
         }
     }
 
+    /**
+     * This method deletes a product from a sale transaction , receiving its RFID, increasing the temporary amount of product available on the
+     * shelves for other customers.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param RFID the RFID of the product to be deleted
+     *
+     * @return  true if the operation is successful
+     *          false   if the product code does not exist,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidRFIDException if the RFID is empty, null or invalid
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+    // TODO: IMPLEMENTARE METODO
     @Override
     public boolean deleteProductFromSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
         return false;
@@ -1874,8 +1905,6 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidDiscountRateException if the discount rate is less than 0 or if it greater than or equal to 1.00
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-
-
     @Override
     public boolean applyDiscountRateToProduct(Integer transactionId, String productCode, double discountRate) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidDiscountRateException, UnauthorizedException {
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")

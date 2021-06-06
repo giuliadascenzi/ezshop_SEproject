@@ -12,6 +12,7 @@ import java.util.Locale;
 
 /*ANTONINO*/
 
+// TODO: AGGIUNGERE LISTA DI RFID ASSOCIATI ALLA VENDITA
 public class EZSaleTransaction implements SaleTransaction {
     Integer transactionID;
     List<TicketEntry> entryList;
