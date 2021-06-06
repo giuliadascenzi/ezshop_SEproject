@@ -18,7 +18,6 @@ public class EZShop implements EZShopInterface {
     Map<Integer, ReturnTransaction> returnTransactionMap;
     Map<Integer, Order> orderTransactionMap;
     Map<String, ProductType> productTypeMap; //Key= barcode, value= ProductType
-    Map<String, String> productInstanceMap;  //Key= RFID, value= barcode
     Map<String, EZProductInstance> productInstanceMap;
     User userSession;
     int idUsers;
@@ -1298,11 +1297,119 @@ public class EZShop implements EZShopInterface {
      */
 
 
+    /**
+     * This method records the arrival of an order with given <orderId>. This method changes the quantity of available product.
+     * This method records each product received, with its RFID. RFIDs are recorded starting from RFIDfrom, in increments of 1
+     * ex recordOrderArrivalRFID(10, "000000001000")  where order 10 ordered 10 quantities of an item, this method records
+     * products with RFID 1000, 1001, 1002, 1003 etc until 1009
+     * The product type affected must have a location registered. The order should be either in the PAYED state (in this
+     * case the state will change to the COMPLETED one and the quantity of product type will be updated) or in the
+     * COMPLETED one (in this case this method will have no effect at all).
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param orderId the id of the order that has arrived
+     *
+     * @return  true if the operation was successful
+     *          false if the order does not exist or if it was not in an ORDERED/COMPLETED state
+     *
+     * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
+     * @throws InvalidLocationException if the ordered product type has not an assigned location.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     * @throws InvalidRFIDException if the RFID has invalid format or is not unique
+     */
+
     @Override
-    public boolean recordOrderArrivalRFID(Integer orderId, String RFIDfrom) throws InvalidOrderIdException, UnauthorizedException, 
-InvalidLocationException, InvalidRFIDException {
-        return false;
+    public boolean recordOrderArrivalRFID(Integer orderId, String RFIDfrom) throws InvalidOrderIdException, UnauthorizedException,
+            InvalidLocationException, InvalidRFIDException {
+
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("SHOPMANAGER"))
+            throw new UnauthorizedException();
+
+        // check the validity of RFID
+        if (RFIDfrom == null || RFIDfrom.equalsIgnoreCase("") || !RFIDfrom.matches("[0-9]{10}") || this.productInstanceMap.containsKey(RFIDfrom)) {
+            throw new InvalidRFIDException();
+        }
+
+
+        //check if the order exists
+        if (!this.orderTransactionMap.containsKey(orderId))
+            return false;
+
+        //check location productType
+        String productCode= this.orderTransactionMap.get(orderId).getProductCode();
+        if (this.productTypeMap.get(productCode).getLocation()==null)
+            throw new InvalidLocationException();
+
+        //check order status
+        String status =this.orderTransactionMap.get(orderId).getStatus();
+        if (!status.equalsIgnoreCase("completed") && !status.equalsIgnoreCase("payed"))
+            return false;
+        // if already completed do nothing
+        if (status.equalsIgnoreCase("completed"))
+            return true;
+
+        try {
+            // set status PAYED
+            this.dbase.updateOrderStatus(orderId, "COMPLETED");
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()+"ORDER STATUS");
+            return false;
+        }
+        //state changes to completed
+        this.orderTransactionMap.get(orderId).setStatus("completed");
+        //update product Quantity
+        int quantity=this.orderTransactionMap.get(orderId).getQuantity();
+
+        int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
+
+        this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
+
+        try {
+            this.dbase.updateProduct((EZProductType) this.productTypeMap.get(productCode));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()+"UPDATE PRODUCT");
+        }
+
+        //assign to every product a RFID starting from RFIDfrom, insert them into the local data structure and the db
+        int rfidFromInt= Integer.valueOf(RFIDfrom);
+        for (int i=0; i< quantity; i++)
+        {
+
+            String zeros= "";
+            String rfidProdString= String.valueOf(rfidFromInt); //take the string of the current rfid
+            rfidFromInt++;
+
+            for (int j=0; j<10-rfidProdString.length(); j++)  //add the zeros to get to 10 digits
+                zeros=zeros.concat("0");
+
+            rfidProdString=zeros.concat(rfidProdString);
+
+
+            EZProductInstance pInst= new EZProductInstance(rfidProdString,productCode,-1);
+            //insert it in the local data structure
+            this.productInstanceMap.put(rfidProdString, pInst);
+            //insert it in the database
+
+            try {
+                this.dbase.addProductInstance(pInst);
+            } catch (SQLException e) {
+                System.out.println(e.getMessage()+"add product instance RFID");
+            }
+
+        }
+        System.out.println(this.productInstanceMap.values().stream().map(x -> x.getRFID()).collect(Collectors.toList()));
+
+
+        return true;
     }
+
     @Override
     public List<Order> getAllOrders() throws UnauthorizedException {
         //user session validity
