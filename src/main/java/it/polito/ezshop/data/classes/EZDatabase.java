@@ -480,32 +480,28 @@ public class EZDatabase {
     }
 
     // --- METODI PER LA TABELLA PRODUCTINSTANCES --- //
-    public Map<String, EZProductInstance> getProductInstanceMap() throws SQLException {
+    public Map<String, String> getProductInstanceMap() throws SQLException {
         openConnection();
         String query = "SELECT * FROM ProductInstances;";
         Statement statement =this.connection.createStatement();
         ResultSet rs = statement.executeQuery(query);
-        Map<String, EZProductInstance> piMap = new HashMap<>();
+        Map<String, String> piMap = new HashMap<>();
 
         while(rs.next()) {
-            EZProductInstance pi = new EZProductInstance(
-                    rs.getString("RFID"),
-                    rs.getInt("productID")
-            );
-            piMap.put(pi.getRFID(), pi);
+            piMap.put(rs.getString("RFID"), rs.getString("barcode"));
         }
         closeConnection();
 
         return piMap;
     }
 
-    public void addProductInstance(EZProductInstance pi) throws SQLException {
+    public void addProductInstance(String RFID, String barcode) throws SQLException {
         openConnection();
-        String sql = "INSERT INTO ProductInstances(RFID, productID) VALUES (?, ?);";
+        String sql = "INSERT INTO ProductInstances(RFID, barcode) VALUES (?, ?);";
         PreparedStatement pstm =this.connection.prepareStatement(sql);
 
-        pstm.setString(1, pi.getRFID());
-        pstm.setInt(2, pi.getProductID());
+        pstm.setString(1, RFID);
+        pstm.setString(2, barcode);
 
         pstm.executeUpdate();
         closeConnection();
