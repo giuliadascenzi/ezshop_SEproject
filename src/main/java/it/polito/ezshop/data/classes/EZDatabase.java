@@ -479,6 +479,59 @@ public class EZDatabase {
         closeConnection();
     }
 
+    // --- METODI PER LA TABELLA PRODUCTINSTANCES --- //
+    public Map<String, EZProductInstance> getProductInstanceMap() throws SQLException {
+        openConnection();
+        String query = "SELECT * FROM ProductInstances;";
+        Statement statement =this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(query);
+        Map<String, EZProductInstance> piMap = new HashMap<>();
+
+        while(rs.next()) {
+            EZProductInstance pi = new EZProductInstance(
+                    rs.getString("RFID"),
+                    rs.getInt("productID")
+            );
+            piMap.put(pi.getRFID(), pi);
+        }
+        closeConnection();
+
+        return piMap;
+    }
+
+    public void addProductInstance(EZProductInstance pi) throws SQLException {
+        openConnection();
+        String sql = "INSERT INTO ProductInstances(RFID, productID) VALUES (?, ?);";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setString(1, pi.getRFID());
+        pstm.setInt(2, pi.getProductID());
+
+        pstm.executeUpdate();
+        closeConnection();
+    }
+
+    public void deleteProductInstance(String RFID) throws SQLException {
+        openConnection();
+        String sql = "DELETE FROM ProductInstances WHERE RFID = ?;";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setString(1, RFID);
+
+        pstm.executeUpdate();
+
+        closeConnection();
+    }
+
+    public void clearProductInstances() throws SQLException {
+        openConnection();
+        String sql = "DELETE FROM ProductInstances;";
+        Statement stat = this.connection.createStatement();
+        stat.executeUpdate(sql);
+
+        closeConnection();
+    }
+
     // ---------------------- METODI PER LA TABELLA SALETRANSACTIONS --------------- //
     public void addSaleTransaction(EZSaleTransaction st) throws SQLException {
         openConnection();

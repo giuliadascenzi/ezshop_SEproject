@@ -18,6 +18,7 @@ public class EZShop implements EZShopInterface {
     Map<Integer, ReturnTransaction> returnTransactionMap;
     Map<Integer, Order> orderTransactionMap;
     Map<String, ProductType> productTypeMap; //Key= barcode, value= ProductType
+    Map<String, EZProductInstance> productInstanceMap;
     User userSession;
     int idUsers;
     int idCustomer;
@@ -127,6 +128,16 @@ public class EZShop implements EZShopInterface {
                 System.out.println(e.getSQLState());
                 e.printStackTrace();
                 this.productIds= 0;
+            }
+            // --- ProductInstances
+            try {
+                this.productInstanceMap = this.dbase.getProductInstanceMap();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                e.printStackTrace();
+                this.productInstanceMap = new HashMap<>();
             }
 
             //ProductTypeMap inizializzato da db
@@ -278,6 +289,16 @@ public class EZShop implements EZShopInterface {
             }
 
         this.userList.clear();
+
+        // --- Clear ProductInstance table --- //
+        try {
+            dbase.clearProductInstances();
+        }
+        catch (SQLException e) {
+            System.out.println("ProductInstances: There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
+        }
 
         /*Delete all the orders from the database*/
 
@@ -1727,6 +1748,11 @@ InvalidLocationException, InvalidRFIDException {
         }
     }
 
+    @Override
+    public boolean addProductToSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
+        return false;
+    }
+
     /**
      * This method deletes a product from a sale transaction increasing the temporary amount of product available on the
      * shelves for other customers.
@@ -1746,10 +1772,7 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidQuantityException if the quantity is less than 0
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-    @Override
-    public boolean addProductToSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
-        return false;
-    }
+
     
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
@@ -1827,6 +1850,11 @@ InvalidLocationException, InvalidRFIDException {
         }
     }
 
+    @Override
+    public boolean deleteProductFromSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
+        return false;
+    }
+
     /**
      * This method applies a discount rate to all units of a product type with given type in a sale transaction. The
      * discount rate should be greater than or equal to 0 and less than 1.
@@ -1846,10 +1874,7 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidDiscountRateException if the discount rate is less than 0 or if it greater than or equal to 1.00
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-    @Override
-    public boolean deleteProductFromSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
-        return false;
-    }
+
 
     @Override
     public boolean applyDiscountRateToProduct(Integer transactionId, String productCode, double discountRate) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidDiscountRateException, UnauthorizedException {
@@ -2278,6 +2303,29 @@ InvalidLocationException, InvalidRFIDException {
     }
 
     /**
+     * This method adds a product to the return transaction, starting from its RFID
+     * This method DOES NOT update the product quantity
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the return transaction
+     * @param RFID the RFID of the product to be returned
+     *
+     * @return  true if the operation is successful
+     *          false   if the the product to be returned does not exists,
+     *                  if it was not in the transaction,
+     *                  if the transaction does not exist
+     *
+     * @throws InvalidTransactionIdException if the return id is less ther or equal to 0 or if it is null
+     * @throws InvalidRFIDException if the RFID is empty, null or invalid
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+    @Override
+    public boolean returnProductRFID(Integer returnId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, UnauthorizedException
+    {
+        return false;
+    }
+
+    /**
      * This method closes a return transaction. A closed return transaction can be committed (i.e. <commit> = true) thus
      * it increases the product quantity available on the shelves or not (i.e. <commit> = false) thus the whole trasaction
      * is undone.
@@ -2296,13 +2344,6 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidTransactionIdException if returnId is less than or equal to 0 or if it is null
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-    @Override
-    public boolean returnProductRFID(Integer returnId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, UnauthorizedException 
-    {
-        return false;
-    }
-
-
     @Override
     public boolean endReturnTransaction(Integer returnId, boolean commit) throws InvalidTransactionIdException, UnauthorizedException {
         if (returnId == null || returnId <= 0) {
