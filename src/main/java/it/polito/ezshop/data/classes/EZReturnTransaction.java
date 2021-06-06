@@ -5,7 +5,6 @@ import it.polito.ezshop.data.ReturnTransaction;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: AGGIUNGERE LISTA DI PRODOTTI ASSOCIATI AL RIMBORSO
 public class EZReturnTransaction implements ReturnTransaction{
     private int saleTransactionID;
     private int returnID;

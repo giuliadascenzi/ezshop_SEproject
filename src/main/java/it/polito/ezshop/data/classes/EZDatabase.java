@@ -480,28 +480,57 @@ public class EZDatabase {
     }
 
     // --- METODI PER LA TABELLA PRODUCTINSTANCES --- //
-    public Map<String, String> getProductInstanceMap() throws SQLException {
+    public Map<String, EZProductInstance> getProductInstanceMap() throws SQLException {
         openConnection();
         String query = "SELECT * FROM ProductInstances;";
         Statement statement =this.connection.createStatement();
         ResultSet rs = statement.executeQuery(query);
-        Map<String, String> piMap = new HashMap<>();
+        Map<String, EZProductInstance> piMap = new HashMap<>();
 
         while(rs.next()) {
-            piMap.put(rs.getString("RFID"), rs.getString("barcode"));
+            EZProductInstance p = new EZProductInstance(
+                    rs.getString("RFID"),
+                    rs.getString("barcode"),
+                    rs.getInt("saleId") == 0 ? -1 : rs.getInt("saleId")
+            );
+            piMap.put(p.getRFID(), p);
         }
         closeConnection();
 
         return piMap;
     }
 
-    public void addProductInstance(String RFID, String barcode) throws SQLException {
+    public void addProductInstance(EZProductInstance p) throws SQLException {
         openConnection();
-        String sql = "INSERT INTO ProductInstances(RFID, barcode) VALUES (?, ?);";
-        PreparedStatement pstm =this.connection.prepareStatement(sql);
+        String sql = "INSERT INTO ProductInstances(RFID, barcode, saleId) VALUES (?, ?, ?);";
+        PreparedStatement pstm = this.connection.prepareStatement(sql);
 
-        pstm.setString(1, RFID);
-        pstm.setString(2, barcode);
+        pstm.setString(1, p.getRFID());
+        pstm.setString(2, p.getBarcode());
+
+        if (p.getSaleId() == -1) {
+            pstm.setNull(3, Types.INTEGER);
+        } else {
+            pstm.setInt(3, p.getSaleId());
+        }
+
+        pstm.executeUpdate();
+        closeConnection();
+    }
+
+    public void updateProductInstance(EZProductInstance p) throws SQLException {
+        openConnection();
+        String sql = "UPDATE ProductInstances SET barcode = ?, saleId = ? WHERE RFID = ?;";
+        PreparedStatement pstm = this.connection.prepareStatement(sql);
+
+        pstm.setString(3, p.getRFID());
+        pstm.setString(1, p.getBarcode());
+
+        if (p.getSaleId() == -1) {
+            pstm.setNull(2, Types.INTEGER);
+        } else {
+            pstm.setInt(2, p.getSaleId());
+        }
 
         pstm.executeUpdate();
         closeConnection();
