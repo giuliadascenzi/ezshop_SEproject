@@ -623,6 +623,7 @@ public class EZShopOrderMethodsTest {
     {
 
         try {
+
             int id = sp.createUser("giulia", "ciao", "ShopManager");
             assertEquals(1, id);
 
@@ -648,6 +649,46 @@ public class EZShopOrderMethodsTest {
 
 
         } catch (InvalidUsernameException | InvalidPasswordException | InvalidRoleException | UnauthorizedException | InvalidOrderIdException | InvalidProductDescriptionException | InvalidProductCodeException | InvalidPricePerUnitException | InvalidQuantityException | InvalidLocationException | InvalidProductIdException e) {
+            fail(e.getMessage() + e.toString());
+
+        }
+    }
+
+
+    @Test
+    public void  RecordOrderArrivalRFIDValid()
+    {
+
+        try {
+
+            int id = sp.createUser("giulia", "ciao", "ShopManager");
+            assertEquals(1, id);
+
+            //loggging in
+            assertEquals(1 ,(int)this.sp.login("giulia", "ciao").getId());
+            assertTrue(this.sp.checkUserRole("ShopManager"));
+
+            //add product
+            int productId=this.sp.createProductType("milk", "6291041500213", 2.01, "ciao");
+            assertTrue(productId>=0);
+
+            //add credit to have enough balance
+            sp.recordBalanceUpdate(100);
+            assertEquals(100, (int)sp.computeBalance());
+            assertEquals(2, (int) this.sp.issueOrder("6291041500213", 10, 5));
+            assertTrue(sp.payOrder(2));
+
+            //The product should be in a location
+            assertTrue(sp.updatePosition(productId, "2-b-3"));
+            //Order 2 is in PAYED state
+
+            assertTrue(sp.recordOrderArrivalRFID(2,"0000111111"));
+
+            assertEquals(sp.getAllOrders().get(0).getStatus(), "COMPLETED");
+
+
+
+        } catch (InvalidUsernameException | InvalidPasswordException | InvalidRoleException | UnauthorizedException | InvalidOrderIdException | InvalidProductDescriptionException | InvalidProductCodeException | InvalidPricePerUnitException | InvalidQuantityException | InvalidLocationException | InvalidProductIdException | InvalidRFIDException e) {
             fail(e.getMessage() + e.toString());
 
         }
