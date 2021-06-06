@@ -18,7 +18,7 @@ public class EZShop implements EZShopInterface {
     Map<Integer, ReturnTransaction> returnTransactionMap;
     Map<Integer, Order> orderTransactionMap;
     Map<String, ProductType> productTypeMap; //Key= barcode, value= ProductType
-    Map<String, String> productInstanceMap;
+    Map<String, EZProductInstance> productInstanceMap;
     User userSession;
     int idUsers;
     int idCustomer;
@@ -1798,7 +1798,7 @@ InvalidLocationException, InvalidRFIDException {
         }
 
         // get barcode from the RFID map
-        String barcode = this.productInstanceMap.get(RFID);
+        String barcode = this.productInstanceMap.get(RFID).getBarcode();
 
         try {
             if (this.addProductToSale(transactionId, barcode, 1)) {
@@ -1964,7 +1964,7 @@ InvalidLocationException, InvalidRFIDException {
             return false;
         }
 
-        String barcode = this.productInstanceMap.get(RFID);
+        String barcode = this.productInstanceMap.get(RFID).getBarcode();
 
         try {
             if (this.deleteProductFromSale(transactionId, barcode, 1)) {
@@ -2486,7 +2486,7 @@ InvalidLocationException, InvalidRFIDException {
         }
 
         // get barcode from the RFID map
-        String barcode = this.productInstanceMap.get(RFID);
+        String barcode = this.productInstanceMap.get(RFID).getBarcode();
 
         try {
             if (this.returnProduct(returnId, barcode, 1)) {
