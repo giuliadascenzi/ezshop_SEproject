@@ -2455,7 +2455,57 @@ InvalidLocationException, InvalidRFIDException {
     @Override
     public boolean returnProductRFID(Integer returnId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, UnauthorizedException
     {
-        return false;
+        if (returnId == null || returnId <= 0) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        // check the validity of RFID
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{10}")) {
+            throw new InvalidRFIDException();
+        }
+
+        // check if the sale exists
+        if (!returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        // if it exists, check if the return is open
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+
+        if (!ret.getStatus().equalsIgnoreCase("open")) {
+            return false;
+        }
+
+        // check if the RFID identifies a product instance
+        if (!this.productInstanceMap.containsKey(RFID)) {
+            return false;
+        }
+
+        // get barcode from the RFID map
+        String barcode = this.productInstanceMap.get(RFID);
+
+        try {
+            if (this.returnProduct(returnId, barcode, 1)) {
+                // note: rfid map isn't updated here because we'll need the barcode associated
+                // with the rfid when the ST has to be closed
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (InvalidProductCodeException e) {
+            System.out.println("Invalid product code inserted.");
+            return false;
+        }
+        catch (InvalidQuantityException e) {
+            System.out.println("Invalid return quantity inserted.");
+            return false;
+        }
     }
 
     /**
