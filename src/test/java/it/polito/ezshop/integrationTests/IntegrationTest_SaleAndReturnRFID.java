@@ -2,10 +2,7 @@ package it.polito.ezshop.integrationTests;
 
 import it.polito.ezshop.data.EZShop;
 import it.polito.ezshop.data.classes.EZProductInstance;
-import it.polito.ezshop.exceptions.InvalidProductCodeException;
-import it.polito.ezshop.exceptions.InvalidQuantityException;
-import it.polito.ezshop.exceptions.InvalidTransactionIdException;
-import it.polito.ezshop.exceptions.UnauthorizedException;
+import it.polito.ezshop.exceptions.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,6 +66,25 @@ public class IntegrationTest_SaleAndReturnRFID {
             return;
         }
 
+        try {
+            // -- add products to inventory through an order
+            //add credit to have enough balance
+            ez.recordBalanceUpdate(100);
+            assertEquals(100, (int) ez.computeBalance());
+
+            int oID = this.ez.issueOrder("6291041500213", 10, 5);
+            assertTrue(ez.payOrder(oID));
+
+            //Order is in PAYED state
+            assertTrue(ez.recordOrderArrivalRFID(oID,"0000111111"));
+
+            assertEquals(ez.getAllOrders().get(0).getStatus(), "COMPLETED");
+        }
+        catch (Exception e) {
+            System.out.println("problem in ordering the product");
+            e.printStackTrace();
+            return;
+        }
 
         try {
             int finalTID = tID;
@@ -82,8 +98,15 @@ public class IntegrationTest_SaleAndReturnRFID {
                 ez.addProductToSale(-1, validBC, -1);
             });
 
-            assertTrue(ez.addProductToSale(tID, validBC, 4));
-            assertTrue(ez.deleteProductFromSale(tID, validBC, 2));
+            assertTrue(ez.addProductToSaleRFID(tID, "0000111111"));
+            assertTrue(ez.deleteProductFromSaleRFID(tID, "0000111111"));
+            assertFalse(ez.deleteProductFromSaleRFID(tID, "0000111112"));
+            assertTrue(ez.addProductToSaleRFID(tID, "0000111111"));
+            assertTrue(ez.addProductToSaleRFID(tID, "0000111112"));
+
+            assertThrows(InvalidRFIDException.class, () -> {
+                ez.addProductToSaleRFID(finalTID, "patata");
+            });
 
             assertTrue(ez.applyDiscountRateToProduct(tID, validBC, 0.5));
             assertTrue(ez.applyDiscountRateToSale(tID, 0.5));
@@ -92,17 +115,26 @@ public class IntegrationTest_SaleAndReturnRFID {
 
             assertTrue(ez.endSaleTransaction(tID));
 
+            assertFalse(ez.deleteProductFromSaleRFID(tID, "0000111112"));
+
             double price = ez.computeSaleTransactionPrice(ez.getSaleTransaction(tID));
 
             assertTrue(price > 0);
+            // pay for the sale
+            assertTrue(ez.receiveCashPayment(tID, 800) > 0);
 
-            assertEquals(price / 10, ez.computePointsForSale(tID), 0.1);
+            int rID = ez.startReturnTransaction(tID);
 
-            assertEquals(price * (1 - ez.getSaleTransaction(tID).getDiscountRate()), ez.getCreditsAndDebits(null, null).get(0).getMoney(), 0.0);
+            assertTrue(rID != -1);
 
-            assertEquals(price * (1 - ez.getSaleTransaction(tID).getDiscountRate()), ez.computeBalance(), 0.0);
+            assertTrue(ez.returnProductRFID(rID, "0000111112"));
+            assertFalse(ez.returnProductRFID(rID, "0000111118"));
+            assertFalse(ez.returnProductRFID(rID, "0000111142"));
+            assertThrows(InvalidRFIDException.class, () -> {
+                ez.returnProductRFID(rID, "patata");
+            });
 
-            assertTrue(ez.deleteSaleTransaction(tID));
+            assertTrue(ez.endReturnTransaction(rID, true));
         }
         catch (Exception e) {
             System.out.println("Encountered exception while testing:");

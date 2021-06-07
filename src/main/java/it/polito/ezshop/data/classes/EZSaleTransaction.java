@@ -167,7 +167,17 @@ public class EZSaleTransaction implements SaleTransaction {
         * Adds an entry to the transaction
      */
     public void addEntry(ProductType product, int amount, double discountRate) {
-        // Create a new entry and add it to the list of entries
+        // check if product is already in sale
+        for (TicketEntry t : this.entryList) {
+            // if there's already an entry with the product, then update the entry
+            if (t.getBarCode().equals(product.getBarCode())) {
+                t.setAmount(t.getAmount() + amount);
+                t.setDiscountRate(discountRate);
+                return;
+            }
+        }
+
+        // otherwise, create a new entry and add it to the list of entries
         this.entryList.add(new EZTicketEntry(
                 product.getBarCode(),
                 product.getProductDescription(),
