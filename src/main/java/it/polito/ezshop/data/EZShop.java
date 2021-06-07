@@ -1805,8 +1805,10 @@ InvalidLocationException, InvalidRFIDException {
                 // update sale and map
                 sale.addRFID(RFID);
                 this.saleTransactionMap.put(transactionId, sale);
-                // note: rfid map isn't updated here because we'll need the barcode associated
-                // with the rfid when the ST has to be closed
+                // update rfid map
+                EZProductInstance p = this.productInstanceMap.get(RFID);
+                p.setSaleId(transactionId);
+                this.productInstanceMap.put(RFID, p);
                 return true;
             }
             else {
@@ -1971,6 +1973,10 @@ InvalidLocationException, InvalidRFIDException {
                 // update sale and map
                 sale.deleteRFID(RFID);
                 this.saleTransactionMap.put(transactionId, sale);
+                // update rfid map
+                EZProductInstance p = this.productInstanceMap.get(RFID);
+                p.setSaleId(-1);
+                this.productInstanceMap.put(RFID, p);
                 return true;
             }
             else {
@@ -2188,8 +2194,7 @@ InvalidLocationException, InvalidRFIDException {
             List<String> list = st.getRFIDList();
 
             for (String rfid : list) {
-                this.dbase.deleteProductInstance(rfid);
-                this.productInstanceMap.remove(rfid);
+                this.dbase.setInstanceSaleId(rfid, st.getTicketNumber());
             }
         }
         catch (SQLException e) {
@@ -2197,17 +2202,6 @@ InvalidLocationException, InvalidRFIDException {
             System.out.println(e.getSQLState());
             return false;
         }
-
-        // aggiorna dati in locale
-        /*List<TicketEntry> entryList = st.getEntries();
-
-        for (TicketEntry e : entryList) {
-            ProductType p = this.productTypeMap.get(e.getBarCode());
-
-            // aggiorna la quantità del prodotto
-            p.setQuantity(p.getQuantity() - e.getAmount());
-            productTypeMap.put(p.getBarCode(), p);
-        }*/
 
         this.transactionMap.put(transactionId, bo);
         this.saleTransactionMap.put(transactionId, st);
@@ -2265,6 +2259,12 @@ InvalidLocationException, InvalidRFIDException {
             p.setQuantity(p.getQuantity() + e.getAmount());
 
             this.productTypeMap.put(p.getBarCode(), p);
+        }
+        // stessa cosa per gli rfid
+        for (String r : st.getRFIDList()) {
+            EZProductInstance p = this.productInstanceMap.get(r);
+            p.setSaleId(-1);
+            this.productInstanceMap.put(r, p);
         }
 
         this.saleTransactionMap.remove(saleNumber);
@@ -2468,7 +2468,7 @@ InvalidLocationException, InvalidRFIDException {
             throw new InvalidRFIDException();
         }
 
-        // check if the sale exists
+        // check if return exists
         if (!returnTransactionMap.containsKey(returnId)) {
             return false;
         }
@@ -2485,13 +2485,20 @@ InvalidLocationException, InvalidRFIDException {
             return false;
         }
 
+        // check if the RFID was in the original ST
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+
+        if (!sale.getRFIDList().contains(RFID)) {
+            return false;
+        }
+
+        // --- OK
         // get barcode from the RFID map
         String barcode = this.productInstanceMap.get(RFID).getBarcode();
 
         try {
             if (this.returnProduct(returnId, barcode, 1)) {
-                // note: rfid map isn't updated here because we'll need the barcode associated
-                // with the rfid when the ST has to be closed
+                ret.addRFID(RFID);
                 return true;
             }
             else {
@@ -2565,6 +2572,7 @@ InvalidLocationException, InvalidRFIDException {
                 Must update:
                 * the corresponding sale transaction, i.e. entries and price
                 * the quantity for each product type returned
+                * the rfid map
              */
             HashMap<String, Integer> rMap = (HashMap<String, Integer>) ret.getMapOfProducts();
 
@@ -2592,10 +2600,15 @@ InvalidLocationException, InvalidRFIDException {
             // recompute the sale's price
             sale.setPrice(newMoney);
             bo.setMoney(newMoney);
+            // delete returned RFIDs from the sale's list
+            for (String r : ret.getRFIDList()) {
+                sale.deleteRFID(r);
+            }
 
             try {
                 this.dbase.addReturnTransaction(ret);
                 this.dbase.updateBalanceOperation(bo);
+                // RFIDs in DB get updated here:
                 this.dbase.updateSaleTransaction(sale);
                 this.dbase.updateReturnInventoryQuantity(ret);
             }
@@ -2607,6 +2620,14 @@ InvalidLocationException, InvalidRFIDException {
 
             // update the corresponding BO
             this.transactionMap.put(bo.getBalanceId(), bo);
+
+            // update RFID map
+            for (String r : ret.getRFIDList()) {
+                EZProductInstance p = this.productInstanceMap.get(r);
+                // reset sale number
+                p.setSaleId(-1);
+                this.productInstanceMap.put(r, p);
+            }
 
             // update both the ST's list and the return map
             sale.updateReturn(ret);
