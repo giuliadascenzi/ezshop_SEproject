@@ -76,7 +76,7 @@ public class IntegrationTest_SaleAndReturnRFID {
             assertTrue(ez.payOrder(oID));
 
             //Order is in PAYED state
-            assertTrue(ez.recordOrderArrivalRFID(oID,"0000111111"));
+            assertTrue(ez.recordOrderArrivalRFID(oID,"000000111111"));
 
             assertEquals(ez.getAllOrders().get(0).getStatus(), "COMPLETED");
         }
@@ -98,11 +98,11 @@ public class IntegrationTest_SaleAndReturnRFID {
                 ez.addProductToSale(-1, validBC, -1);
             });
 
-            assertTrue(ez.addProductToSaleRFID(tID, "0000111111"));
-            assertTrue(ez.deleteProductFromSaleRFID(tID, "0000111111"));
-            assertFalse(ez.deleteProductFromSaleRFID(tID, "0000111112"));
-            assertTrue(ez.addProductToSaleRFID(tID, "0000111111"));
-            assertTrue(ez.addProductToSaleRFID(tID, "0000111112"));
+            assertTrue(ez.addProductToSaleRFID(tID, "000000111111"));
+            assertTrue(ez.deleteProductFromSaleRFID(tID, "000000111111"));
+            assertFalse(ez.deleteProductFromSaleRFID(tID, "000000111112"));
+            assertTrue(ez.addProductToSaleRFID(tID, "000000111111"));
+            assertTrue(ez.addProductToSaleRFID(tID, "000000111112"));
 
             assertThrows(InvalidRFIDException.class, () -> {
                 ez.addProductToSaleRFID(finalTID, "patata");
@@ -115,7 +115,7 @@ public class IntegrationTest_SaleAndReturnRFID {
 
             assertTrue(ez.endSaleTransaction(tID));
 
-            assertFalse(ez.deleteProductFromSaleRFID(tID, "0000111112"));
+            assertFalse(ez.deleteProductFromSaleRFID(tID, "000000111112"));
 
             double price = ez.computeSaleTransactionPrice(ez.getSaleTransaction(tID));
 
@@ -127,9 +127,9 @@ public class IntegrationTest_SaleAndReturnRFID {
 
             assertTrue(rID != -1);
 
-            assertTrue(ez.returnProductRFID(rID, "0000111112"));
-            assertFalse(ez.returnProductRFID(rID, "0000111118"));
-            assertFalse(ez.returnProductRFID(rID, "0000111142"));
+            assertTrue(ez.returnProductRFID(rID, "000000111112"));
+            assertFalse(ez.returnProductRFID(rID, "000000111118"));
+            assertFalse(ez.returnProductRFID(rID, "000000111142"));
             assertThrows(InvalidRFIDException.class, () -> {
                 ez.returnProductRFID(rID, "patata");
             });

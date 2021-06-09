@@ -1885,7 +1885,7 @@ public class EZShop implements EZShopInterface {
         }
 
         // check the validity of RFID
-        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{10}")) {
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{12}")) {
             throw new InvalidRFIDException();
         }
 
@@ -2054,7 +2054,7 @@ public class EZShop implements EZShopInterface {
         }
 
         // check the validity of RFID
-        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{10}")) {
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{12}")) {
             throw new InvalidRFIDException();
         }
 
@@ -2572,7 +2572,7 @@ public class EZShop implements EZShopInterface {
         }
 
         // check the validity of RFID
-        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{10}")) {
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{12}")) {
             throw new InvalidRFIDException();
         }
 
