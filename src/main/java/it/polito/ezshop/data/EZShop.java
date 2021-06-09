@@ -1332,7 +1332,7 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
 
         // check the validity of RFID
-        if (RFIDfrom == null || RFIDfrom.equalsIgnoreCase("") || !RFIDfrom.matches("[0-9]{10}") || this.productInstanceMap.containsKey(RFIDfrom)) {
+        if (RFIDfrom == null || RFIDfrom.equalsIgnoreCase("") || !RFIDfrom.matches("[0-9]{12}") || this.productInstanceMap.containsKey(RFIDfrom)) {
             throw new InvalidRFIDException();
         }
 
@@ -1386,7 +1386,7 @@ public class EZShop implements EZShopInterface {
             String rfidProdString= String.valueOf(rfidFromInt); //take the string of the current rfid
             rfidFromInt++;
 
-            for (int j=0; j<10-rfidProdString.length(); j++)  //add the zeros to get to 10 digits
+            for (int j=0; j<12-rfidProdString.length(); j++)  //add the zeros to get to 10 digits
                 zeros=zeros.concat("0");
 
             rfidProdString=zeros.concat(rfidProdString);

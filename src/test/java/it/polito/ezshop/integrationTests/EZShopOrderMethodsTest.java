@@ -682,7 +682,7 @@ public class EZShopOrderMethodsTest {
             assertTrue(sp.updatePosition(productId, "2-b-3"));
             //Order 2 is in PAYED state
 
-            assertTrue(sp.recordOrderArrivalRFID(2,"0000111111"));
+            assertTrue(sp.recordOrderArrivalRFID(2,"000011111111"));
 
             assertEquals(sp.getAllOrders().get(0).getStatus(), "COMPLETED");
 
