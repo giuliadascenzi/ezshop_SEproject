@@ -685,6 +685,15 @@ public class EZShopOrderMethodsTest {
             assertTrue(sp.recordOrderArrivalRFID(2,"000011111111"));
 
             assertEquals(sp.getAllOrders().get(0).getStatus(), "COMPLETED");
+            sp.recordBalanceUpdate(500);
+            //add product
+            int productId2=this.sp.createProductType("pencil", "8003340005096", 2.01, "ciao");
+            assertTrue(productId2>=0);
+            int id4=this.sp.payOrderFor("8003340005096", 2, 50);
+            assertTrue(sp.updatePosition(productId2, "2-b-4"));
+            assertThrows(InvalidRFIDException.class, () -> { sp.recordOrderArrivalRFID(id4,"000011111110"); });
+
+
 
 
 

@@ -1332,19 +1332,32 @@ public class EZShop implements EZShopInterface {
             throw new UnauthorizedException();
 
         // check the validity of RFID
-        if (RFIDfrom == null || RFIDfrom.equalsIgnoreCase("") || !RFIDfrom.matches("[0-9]{12}") || this.productInstanceMap.containsKey(RFIDfrom)) {
+        if (RFIDfrom == null || RFIDfrom.equalsIgnoreCase("") || !RFIDfrom.matches("[0-9]{12}")) {
             throw new InvalidRFIDException();
         }
-
-
         //check if the order exists
         if (!this.orderTransactionMap.containsKey(orderId))
             return false;
+        //check if all the RFIDs are usable
+        int rfidFromInt0= Integer.valueOf(RFIDfrom);
+        for (int i=0; i< this.orderTransactionMap.get(orderId).getQuantity(); i++) {
 
+            String zeros0 = "";
+            String rfidProdString0 = String.valueOf(rfidFromInt0); //take the string of the current rfid
+            rfidFromInt0++;
+
+            for (int j = 0; j < 12 - rfidProdString0.length(); j++)  //add the zeros to get to 10 digits
+                zeros0 = zeros0.concat("0");
+
+            rfidProdString0 = zeros0.concat(rfidProdString0);
+            if (this.productInstanceMap.containsKey(rfidProdString0))
+                throw new InvalidRFIDException();
+        }
         //check location productType
         String productCode= this.orderTransactionMap.get(orderId).getProductCode();
         if (this.productTypeMap.get(productCode).getLocation()==null)
             throw new InvalidLocationException();
+
 
         //check order status
         String status =this.orderTransactionMap.get(orderId).getStatus();
@@ -1404,7 +1417,7 @@ public class EZShop implements EZShopInterface {
             }
 
         }
-        System.out.println(this.productInstanceMap.values().stream().map(x -> x.getRFID()).collect(Collectors.toList()));
+
 
 
         return true;
