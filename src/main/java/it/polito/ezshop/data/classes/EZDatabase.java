@@ -479,6 +479,97 @@ public class EZDatabase {
         closeConnection();
     }
 
+    // --- METODI PER LA TABELLA PRODUCTINSTANCES --- //
+    public Map<String, EZProductInstance> getProductInstanceMap() throws SQLException {
+        openConnection();
+        String query = "SELECT * FROM ProductInstances;";
+        Statement statement =this.connection.createStatement();
+        ResultSet rs = statement.executeQuery(query);
+        Map<String, EZProductInstance> piMap = new HashMap<>();
+
+        while(rs.next()) {
+            EZProductInstance p = new EZProductInstance(
+                    rs.getString("RFID"),
+                    rs.getString("barcode"),
+                    rs.getInt("saleId") == 0 ? -1 : rs.getInt("saleId")
+            );
+            piMap.put(p.getRFID(), p);
+        }
+        closeConnection();
+
+        return piMap;
+    }
+
+    public void addProductInstance(EZProductInstance p) throws SQLException {
+        openConnection();
+        String sql = "INSERT INTO ProductInstances(RFID, barcode, saleId) VALUES (?, ?, ?);";
+        PreparedStatement pstm = this.connection.prepareStatement(sql);
+
+        pstm.setString(1, p.getRFID());
+        pstm.setString(2, p.getBarcode());
+
+        if (p.getSaleId() == -1) {
+            pstm.setNull(3, Types.INTEGER);
+        } else {
+            pstm.setInt(3, p.getSaleId());
+        }
+
+        pstm.executeUpdate();
+        closeConnection();
+    }
+
+    public void updateProductInstance(EZProductInstance p) throws SQLException {
+        openConnection();
+        String sql = "UPDATE ProductInstances SET barcode = ?, saleId = ? WHERE RFID = ?;";
+        PreparedStatement pstm = this.connection.prepareStatement(sql);
+
+        pstm.setString(3, p.getRFID());
+        pstm.setString(1, p.getBarcode());
+
+        if (p.getSaleId() == -1) {
+            pstm.setNull(2, Types.INTEGER);
+        } else {
+            pstm.setInt(2, p.getSaleId());
+        }
+
+        pstm.executeUpdate();
+        closeConnection();
+    }
+
+    public void deleteProductInstance(String RFID) throws SQLException {
+        openConnection();
+        String sql = "DELETE FROM ProductInstances WHERE RFID = ?;";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setString(1, RFID);
+
+        pstm.executeUpdate();
+
+        closeConnection();
+    }
+
+    public void setInstanceSaleId(String RFID, Integer saleId) throws SQLException {
+        openConnection();
+        String sql = "UPDATE ProductInstances SET saleId = ? WHERE RFID = ?;";
+        PreparedStatement pstm =this.connection.prepareStatement(sql);
+
+        pstm.setInt(1, saleId);
+        pstm.setString(2, RFID);
+
+        pstm.executeUpdate();
+
+        closeConnection();
+    }
+
+    public void clearProductInstances() throws SQLException {
+        openConnection();
+        String sql = "DELETE FROM ProductInstances;";
+        Statement stat = this.connection.createStatement();
+        stat.executeUpdate(sql);
+
+        closeConnection();
+    }
+
     // ---------------------- METODI PER LA TABELLA SALETRANSACTIONS --------------- //
     public void addSaleTransaction(EZSaleTransaction st) throws SQLException {
         openConnection();
@@ -507,6 +598,18 @@ public class EZDatabase {
             stat_e.setInt(4, e.getAmount());
             stat_e.setDouble(5, e.getDiscountRate());
             stat_e.setDouble(6, e.getPricePerUnit());
+
+            stat_e.executeUpdate();
+        }
+
+        List<String> rfidList = st.getRFIDList();
+
+        for (String i : rfidList) {
+            String query_e = "UPDATE ProductInstances SET saleId = ? WHERE RFID = ?;";
+            PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+            stat_e.setInt(1, st.getTicketNumber());
+            stat_e.setString(2, i);
 
             stat_e.executeUpdate();
         }
@@ -544,6 +647,26 @@ public class EZDatabase {
             stat_e.setInt(6, st.getTicketNumber());
 
             stat_e.executeUpdate();
+        }
+
+        List<String> rfidList = st.getRFIDList();
+
+        // reset saleId for rfids with this sale's id
+        String query_e = "UPDATE ProductInstances SET saleId = NULL WHERE saleId = ?;";
+        PreparedStatement stat_e = this.connection.prepareStatement(query_e);
+
+        stat_e.setInt(1, st.getTicketNumber());
+
+        stat_e.executeUpdate();
+
+        for (String i : rfidList) {
+            String query_2 = "UPDATE ProductInstances SET saleId = ? WHERE RFID = ?;";
+            PreparedStatement stat_2 = this.connection.prepareStatement(query_2);
+
+            stat_2.setInt(1, st.getTicketNumber());
+            stat_2.setString(2, i);
+
+            stat_2.executeUpdate();
         }
 
         pstm.executeUpdate();
@@ -590,6 +713,21 @@ public class EZDatabase {
             }
             // set the list for the sale transaction
             st.setEntries(entryList);
+
+            // get rfid list for the st
+            productQuery = "SELECT * FROM ProductInstances WHERE saleId = ?;";
+            pstat = this.connection.prepareStatement(productQuery);
+
+            pstat.setInt(1, st.getTicketNumber());
+
+            ResultSet rs_prodI = pstat.executeQuery();
+
+            // for each rfid...
+            while (rs_prodI.next()) {
+                // add to st list
+                st.addRFID(rs_prodI.getString("RFID"));
+            }
+
             // add the st to the st list
             stMap.put(st.getTicketNumber(), st);
         }

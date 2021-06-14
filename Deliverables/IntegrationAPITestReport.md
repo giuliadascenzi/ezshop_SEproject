@@ -70,9 +70,14 @@ JUnit test cases applied to them> JUnit test classes should be here src/test/jav
 ||EZShopOrderMethodsTest|
 ||EZShopProductTypeTest|
 ||EZShopUserMethodsTest|
-||...|
-||...|
+||EZShopCustomerMethodTest|
 
+## Step 4
+
+| Classes                                        | JUnit test cases                  |
+| ---------------------------------------------- | --------------------------------- |
+| EZShop + EzSaleTransaction + EZProductInstance | IntegrationTest_SaleAndReturnRFID |
+|                                                | EZShopOrderMethodsTest            |
 
 # Scenarios
 

@@ -25,6 +25,7 @@ public class EZSaleTransaction implements SaleTransaction {
         - PAID
      */
     String status;
+    List<String> RFIDList;
 
     public EZSaleTransaction(Integer transactionID) {
         this.transactionID = transactionID;
@@ -33,6 +34,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.entryList = new ArrayList<>();
         this.returnList = new ArrayList<>();
         this.status = "OPEN";
+        this.RFIDList = new ArrayList<>();
     }
 
     public EZSaleTransaction(Integer transactionID, double discountRate, double price) {
@@ -42,6 +44,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.entryList = new ArrayList<>();
         this.returnList = new ArrayList<>();
         this.status = "OPEN";
+        this.RFIDList = new ArrayList<>();
     }
 
     public EZSaleTransaction(Integer transactionID, double discountRate, double price, String status) {
@@ -51,6 +54,7 @@ public class EZSaleTransaction implements SaleTransaction {
         this.entryList = new ArrayList<>();
         this.returnList = new ArrayList<>();
         this.status = status;
+        this.RFIDList = new ArrayList<>();
     }
 
     @Override
@@ -110,12 +114,69 @@ public class EZSaleTransaction implements SaleTransaction {
         this.status = s.toUpperCase();
     }
 
+    /**
+        addRFID(String RFID)
+        * Adds the RFID of a product in the object's list
+
+        @return
+            true:   if the RFID was added successfully
+            false:  if the RFID is already in the list
+    */
+    public boolean addRFID(String RFID) {
+        if (this.RFIDList.contains(RFID)) {
+            return false;
+        }
+
+        this.RFIDList.add(RFID);
+
+        return true;
+    }
+
+    /**
+     * deleteRFID(String RFID)
+     *  Deletes an RFID from the list.
+     *
+     * @param RFID: the RFID to delete
+     * @return
+     *      true:   if the RFID was contained in the list and successfully removed
+     *      false:  if the RFID wasn't contained in the list
+     */
+    public boolean deleteRFID(String RFID) {
+        if (!this.RFIDList.contains((RFID))) {
+            return false;
+        }
+
+        this.RFIDList.remove(RFID);
+
+        return true;
+    }
+
+    /**
+     * Returns the object's RFID list
+     *
+     * @return
+     *      the object's RFID list
+     */
+    public List<String> getRFIDList() {
+        return this.RFIDList;
+    }
+
     /*
         addEntry(ProductType product, int amount, double discountRate)
         * Adds an entry to the transaction
      */
     public void addEntry(ProductType product, int amount, double discountRate) {
-        // Create a new entry and add it to the list of entries
+        // check if product is already in sale
+        for (TicketEntry t : this.entryList) {
+            // if there's already an entry with the product, then update the entry
+            if (t.getBarCode().equals(product.getBarCode())) {
+                t.setAmount(t.getAmount() + amount);
+                t.setDiscountRate(discountRate);
+                return;
+            }
+        }
+
+        // otherwise, create a new entry and add it to the list of entries
         this.entryList.add(new EZTicketEntry(
                 product.getBarCode(),
                 product.getProductDescription(),

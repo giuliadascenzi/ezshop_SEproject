@@ -1,4 +1,4 @@
-# Timesheet
+# -Timesheet
 
 Report in this table the effort (in person hours) spent per week, per activity, per team. 
 [One person hour is the effort of one person working one hour.
@@ -18,8 +18,8 @@ These figures will not be used to evaluate neither the project nor the team, the
 | may 10 - 16| | | 27ph | 9ph |  | | 1ph | 1ph |
 | may 17 - 23| | 3ph | 16ph | 3ph | 30ph | | 1ph | 1ph |
 | may 24 - 30| | | | | 15ph | 11ph | 1ph | 1ph |
-| jun 31 - 6 | | | | | | | | |
-| jun 7 - 13 | | | | | | | | |
+| jun 31 - 6 | | | 6ph | |  | | | 1ph |
+| jun 7 - 13 | | 1ph | | | 2ph | | | 1ph |
 | jun 14 -20 | | | | | | | | |
 | jun 21 -27 | | | | | | | | |
 | jun 28 - 4 | | | | | | | | |

@@ -18,6 +18,7 @@ public class EZShop implements EZShopInterface {
     Map<Integer, ReturnTransaction> returnTransactionMap;
     Map<Integer, Order> orderTransactionMap;
     Map<String, ProductType> productTypeMap; //Key= barcode, value= ProductType
+    Map<String, EZProductInstance> productInstanceMap;
     User userSession;
     int idUsers;
     int idCustomer;
@@ -127,6 +128,16 @@ public class EZShop implements EZShopInterface {
                 System.out.println(e.getSQLState());
                 e.printStackTrace();
                 this.productIds= 0;
+            }
+            // --- ProductInstances
+            try {
+                this.productInstanceMap = this.dbase.getProductInstanceMap();
+            }
+            catch (SQLException e) {
+                System.out.println("There was a problem in connecting with the SQLite database:");
+                System.out.println(e.getSQLState());
+                e.printStackTrace();
+                this.productInstanceMap = new HashMap<>();
             }
 
             //ProductTypeMap inizializzato da db
@@ -279,6 +290,18 @@ public class EZShop implements EZShopInterface {
 
         this.userList.clear();
 
+        // --- Clear ProductInstance table --- //
+        try {
+            dbase.clearProductInstances();
+        }
+        catch (SQLException e) {
+            System.out.println("ProductInstances: There was a problem in connecting with the SQLite database:");
+            System.out.println(e.getSQLState());
+            System.out.println(e.getMessage());
+        }
+
+        this.productInstanceMap.clear();
+
         /*Delete all the orders from the database*/
 
             try {
@@ -349,9 +372,6 @@ public class EZShop implements EZShopInterface {
         this.counter_returnTransactionID = 0;
         this.productIds = 0;
     }
-
-
-
 
     /**
      * This method creates a new user with given username, password and role. The returned value is a unique identifier
@@ -1276,11 +1296,133 @@ public class EZShop implements EZShopInterface {
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
 
+
+    /**
+     * This method records the arrival of an order with given <orderId>. This method changes the quantity of available product.
+     * This method records each product received, with its RFID. RFIDs are recorded starting from RFIDfrom, in increments of 1
+     * ex recordOrderArrivalRFID(10, "000000001000")  where order 10 ordered 10 quantities of an item, this method records
+     * products with RFID 1000, 1001, 1002, 1003 etc until 1009
+     * The product type affected must have a location registered. The order should be either in the PAYED state (in this
+     * case the state will change to the COMPLETED one and the quantity of product type will be updated) or in the
+     * COMPLETED one (in this case this method will have no effect at all).
+     * It can be invoked only after a user with role "Administrator" or "ShopManager" is logged in.
+     *
+     * @param orderId the id of the order that has arrived
+     *
+     * @return  true if the operation was successful
+     *          false if the order does not exist or if it was not in an ORDERED/COMPLETED state
+     *
+     * @throws InvalidOrderIdException if the order id is less than or equal to 0 or if it is null.
+     * @throws InvalidLocationException if the ordered product type has not an assigned location.
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     * @throws InvalidRFIDException if the RFID has invalid format or is not unique
+     */
+
     @Override
-    public boolean recordOrderArrivalRFID(Integer orderId, String RFIDfrom) throws InvalidOrderIdException, UnauthorizedException, 
-InvalidLocationException, InvalidRFIDException {
-        return false;
+    public boolean recordOrderArrivalRFID(Integer orderId, String RFIDfrom) throws InvalidOrderIdException, UnauthorizedException,
+            InvalidLocationException, InvalidRFIDException {
+
+        // check order code validity
+        if (orderId==null || orderId<=0)
+            throw new InvalidOrderIdException();
+
+        //user session validity
+        if (!this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("SHOPMANAGER"))
+            throw new UnauthorizedException();
+
+        // check the validity of RFID
+        if (RFIDfrom == null || RFIDfrom.equalsIgnoreCase("") || !RFIDfrom.matches("[0-9]{12}")) {
+            throw new InvalidRFIDException();
+        }
+        //check if the order exists
+        if (!this.orderTransactionMap.containsKey(orderId))
+            return false;
+        //check if all the RFIDs are usable
+        int rfidFromInt0= Integer.valueOf(RFIDfrom);
+        for (int i=0; i< this.orderTransactionMap.get(orderId).getQuantity(); i++) {
+
+            String zeros0 = "";
+            String rfidProdString0 = String.valueOf(rfidFromInt0); //take the string of the current rfid
+            rfidFromInt0++;
+
+            for (int j = 0; j < 12 - rfidProdString0.length(); j++)  //add the zeros to get to 10 digits
+                zeros0 = zeros0.concat("0");
+
+            rfidProdString0 = zeros0.concat(rfidProdString0);
+            if (this.productInstanceMap.containsKey(rfidProdString0))
+                throw new InvalidRFIDException();
+        }
+        //check location productType
+        String productCode= this.orderTransactionMap.get(orderId).getProductCode();
+        if (this.productTypeMap.get(productCode).getLocation()==null)
+            throw new InvalidLocationException();
+
+
+        //check order status
+        String status =this.orderTransactionMap.get(orderId).getStatus();
+        if (!status.equalsIgnoreCase("completed") && !status.equalsIgnoreCase("payed"))
+            return false;
+        // if already completed do nothing
+        if (status.equalsIgnoreCase("completed"))
+            return true;
+
+        try {
+            // set status PAYED
+            this.dbase.updateOrderStatus(orderId, "COMPLETED");
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()+"ORDER STATUS");
+            return false;
+        }
+        //state changes to completed
+        this.orderTransactionMap.get(orderId).setStatus("completed");
+        //update product Quantity
+        int quantity=this.orderTransactionMap.get(orderId).getQuantity();
+
+        int oldQuantity= this.productTypeMap.get(productCode).getQuantity();
+
+        this.productTypeMap.get(productCode).setQuantity(oldQuantity+quantity);
+
+        try {
+            this.dbase.updateProduct((EZProductType) this.productTypeMap.get(productCode));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage()+"UPDATE PRODUCT");
+        }
+
+        //assign to every product a RFID starting from RFIDfrom, insert them into the local data structure and the db
+        int rfidFromInt= Integer.valueOf(RFIDfrom);
+        for (int i=0; i< quantity; i++)
+        {
+
+            String zeros= "";
+            String rfidProdString= String.valueOf(rfidFromInt); //take the string of the current rfid
+            rfidFromInt++;
+
+            for (int j=0; j<12-rfidProdString.length(); j++)  //add the zeros to get to 10 digits
+                zeros=zeros.concat("0");
+
+            rfidProdString=zeros.concat(rfidProdString);
+
+
+            EZProductInstance pInst= new EZProductInstance(rfidProdString,productCode,-1);
+            //insert it in the local data structure
+            this.productInstanceMap.put(rfidProdString, pInst);
+            //insert it in the database
+
+            try {
+                this.dbase.addProductInstance(pInst);
+            } catch (SQLException e) {
+                System.out.println(e.getMessage()+"add product instance RFID");
+            }
+
+        }
+
+
+
+        return true;
     }
+
     @Override
     public List<Order> getAllOrders() throws UnauthorizedException {
         //user session validity
@@ -1728,6 +1870,79 @@ InvalidLocationException, InvalidRFIDException {
     }
 
     /**
+     * This method adds a product to a sale transaction receiving  its RFID, decreasing the temporary amount of product available on the
+     * shelves for other customers.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param RFID the RFID of the product to be added
+     * @return  true if the operation is successful
+     *          false   if the RFID does not exist,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidRFIDException if the RFID code is empty, null or invalid
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+    @Override
+    public boolean addProductToSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
+        // check if the user is logged in and authorized
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        // check the validity of transactionId
+        if (transactionId == null ||transactionId <= 0  ) {
+            throw new InvalidTransactionIdException();
+        }
+
+        // check the validity of RFID
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{12}")) {
+            throw new InvalidRFIDException();
+        }
+
+        // check if the sale exists
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return false;
+        }
+        // if it exists, check if the sale is open
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+
+        if (!sale.getStatus().equalsIgnoreCase("open")) {
+            return false;
+        }
+
+        // check if the RFID identifies a product instance
+        if (!this.productInstanceMap.containsKey(RFID)) {
+            return false;
+        }
+
+        // get barcode from the RFID map
+        String barcode = this.productInstanceMap.get(RFID).getBarcode();
+
+        try {
+            if (this.addProductToSale(transactionId, barcode, 1)) {
+                // update sale and map
+                sale.addRFID(RFID);
+                this.saleTransactionMap.put(transactionId, sale);
+                // update rfid map
+                EZProductInstance p = this.productInstanceMap.get(RFID);
+                p.setSaleId(transactionId);
+                this.productInstanceMap.put(RFID, p);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (InvalidProductCodeException e) {
+            System.out.println("Invalid bar code inserted.");
+            return false;
+        }
+    }
+
+    /**
      * This method deletes a product from a sale transaction increasing the temporary amount of product available on the
      * shelves for other customers.
      * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
@@ -1746,11 +1961,6 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidQuantityException if the quantity is less than 0
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-    @Override
-    public boolean addProductToSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
-        return false;
-    }
-    
     @Override
     public boolean deleteProductFromSale(Integer transactionId, String productCode, int amount) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidQuantityException, UnauthorizedException {
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
@@ -1828,6 +2038,79 @@ InvalidLocationException, InvalidRFIDException {
     }
 
     /**
+     * This method deletes a product from a sale transaction , receiving its RFID, increasing the temporary amount of product available on the
+     * shelves for other customers.
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param transactionId the id of the Sale transaction
+     * @param RFID the RFID of the product to be deleted
+     *
+     * @return  true if the operation is successful
+     *          false   if the product code does not exist,
+     *                  if the transaction id does not identify a started and open transaction.
+     *
+     * @throws InvalidTransactionIdException if the transaction id less than or equal to 0 or if it is null
+     * @throws InvalidRFIDException if the RFID is empty, null or invalid
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+    @Override
+    public boolean deleteProductFromSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
+        // check if the user is logged in and authorized
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        // check the validity of transactionId
+        if (transactionId == null || transactionId <= 0  ) {
+            throw new InvalidTransactionIdException();
+        }
+
+        // check the validity of RFID
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{12}")) {
+            throw new InvalidRFIDException();
+        }
+
+        // check if the sale exists
+        if (!saleTransactionMap.containsKey(transactionId)) {
+            return false;
+        }
+        // if it exists, check if the sale is open
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(transactionId);
+
+        if (!sale.getStatus().equalsIgnoreCase("open")) {
+            return false;
+        }
+
+        // check if the RFID identifies a product instance
+        if (!this.productInstanceMap.containsKey(RFID)) {
+            return false;
+        }
+
+        String barcode = this.productInstanceMap.get(RFID).getBarcode();
+
+        try {
+            if (this.deleteProductFromSale(transactionId, barcode, 1)) {
+                // update sale and map
+                sale.deleteRFID(RFID);
+                this.saleTransactionMap.put(transactionId, sale);
+                // update rfid map
+                EZProductInstance p = this.productInstanceMap.get(RFID);
+                p.setSaleId(-1);
+                this.productInstanceMap.put(RFID, p);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (InvalidProductCodeException e) {
+            System.out.println("Invalid bar code inserted.");
+            return false;
+        }
+    }
+
+    /**
      * This method applies a discount rate to all units of a product type with given type in a sale transaction. The
      * discount rate should be greater than or equal to 0 and less than 1.
      * The sale transaction should be started and open.
@@ -1846,11 +2129,6 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidDiscountRateException if the discount rate is less than 0 or if it greater than or equal to 1.00
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-    @Override
-    public boolean deleteProductFromSaleRFID(Integer transactionId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, InvalidQuantityException, UnauthorizedException{
-        return false;
-    }
-
     @Override
     public boolean applyDiscountRateToProduct(Integer transactionId, String productCode, double discountRate) throws InvalidTransactionIdException, InvalidProductCodeException, InvalidDiscountRateException, UnauthorizedException {
         if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
@@ -2033,23 +2311,18 @@ InvalidLocationException, InvalidRFIDException {
             this.dbase.addBalanceOperation(bo);
             this.dbase.addSaleTransaction(st);
             this.dbase.updateSaleInventoryQuantity(st);
+
+            List<String> list = st.getRFIDList();
+
+            for (String rfid : list) {
+                this.dbase.setInstanceSaleId(rfid, st.getTicketNumber());
+            }
         }
         catch (SQLException e) {
             System.out.println("There was a problem with the database:");
             System.out.println(e.getSQLState());
             return false;
         }
-
-        // aggiorna dati in locale
-        /*List<TicketEntry> entryList = st.getEntries();
-
-        for (TicketEntry e : entryList) {
-            ProductType p = this.productTypeMap.get(e.getBarCode());
-
-            // aggiorna la quantità del prodotto
-            p.setQuantity(p.getQuantity() - e.getAmount());
-            productTypeMap.put(p.getBarCode(), p);
-        }*/
 
         this.transactionMap.put(transactionId, bo);
         this.saleTransactionMap.put(transactionId, st);
@@ -2107,6 +2380,12 @@ InvalidLocationException, InvalidRFIDException {
             p.setQuantity(p.getQuantity() + e.getAmount());
 
             this.productTypeMap.put(p.getBarCode(), p);
+        }
+        // stessa cosa per gli rfid
+        for (String r : st.getRFIDList()) {
+            EZProductInstance p = this.productInstanceMap.get(r);
+            p.setSaleId(-1);
+            this.productInstanceMap.put(r, p);
         }
 
         this.saleTransactionMap.remove(saleNumber);
@@ -2278,6 +2557,86 @@ InvalidLocationException, InvalidRFIDException {
     }
 
     /**
+     * This method adds a product to the return transaction, starting from its RFID
+     * This method DOES NOT update the product quantity
+     * It can be invoked only after a user with role "Administrator", "ShopManager" or "Cashier" is logged in.
+     *
+     * @param returnId the id of the return transaction
+     * @param RFID the RFID of the product to be returned
+     *
+     * @return  true if the operation is successful
+     *          false   if the the product to be returned does not exists,
+     *                  if it was not in the transaction,
+     *                  if the transaction does not exist
+     *
+     * @throws InvalidTransactionIdException if the return id is less ther or equal to 0 or if it is null
+     * @throws InvalidRFIDException if the RFID is empty, null or invalid
+     * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
+     */
+    @Override
+    public boolean returnProductRFID(Integer returnId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, UnauthorizedException
+    {
+        if (returnId == null || returnId <= 0) {
+            throw new InvalidTransactionIdException();
+        }
+        if (!this.checkUserRole("SHOPMANAGER") && !this.checkUserRole("ADMINISTRATOR")
+                && !this.checkUserRole("CASHIER")) {
+            throw new UnauthorizedException();
+        }
+
+        // check the validity of RFID
+        if (RFID == null || RFID.equalsIgnoreCase("") || !RFID.matches("[0-9]{12}")) {
+            throw new InvalidRFIDException();
+        }
+
+        // check if return exists
+        if (!returnTransactionMap.containsKey(returnId)) {
+            return false;
+        }
+
+        // if it exists, check if the return is open
+        EZReturnTransaction ret = (EZReturnTransaction) this.returnTransactionMap.get(returnId);
+
+        if (!ret.getStatus().equalsIgnoreCase("open")) {
+            return false;
+        }
+
+        // check if the RFID identifies a product instance
+        if (!this.productInstanceMap.containsKey(RFID)) {
+            return false;
+        }
+
+        // check if the RFID was in the original ST
+        EZSaleTransaction sale = (EZSaleTransaction) this.saleTransactionMap.get(ret.getSaleTransactionID());
+
+        if (!sale.getRFIDList().contains(RFID)) {
+            return false;
+        }
+
+        // --- OK
+        // get barcode from the RFID map
+        String barcode = this.productInstanceMap.get(RFID).getBarcode();
+
+        try {
+            if (this.returnProduct(returnId, barcode, 1)) {
+                ret.addRFID(RFID);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        catch (InvalidProductCodeException e) {
+            System.out.println("Invalid product code inserted.");
+            return false;
+        }
+        catch (InvalidQuantityException e) {
+            System.out.println("Invalid return quantity inserted.");
+            return false;
+        }
+    }
+
+    /**
      * This method closes a return transaction. A closed return transaction can be committed (i.e. <commit> = true) thus
      * it increases the product quantity available on the shelves or not (i.e. <commit> = false) thus the whole trasaction
      * is undone.
@@ -2296,13 +2655,6 @@ InvalidLocationException, InvalidRFIDException {
      * @throws InvalidTransactionIdException if returnId is less than or equal to 0 or if it is null
      * @throws UnauthorizedException if there is no logged user or if it has not the rights to perform the operation
      */
-    @Override
-    public boolean returnProductRFID(Integer returnId, String RFID) throws InvalidTransactionIdException, InvalidRFIDException, UnauthorizedException 
-    {
-        return false;
-    }
-
-
     @Override
     public boolean endReturnTransaction(Integer returnId, boolean commit) throws InvalidTransactionIdException, UnauthorizedException {
         if (returnId == null || returnId <= 0) {
@@ -2341,6 +2693,7 @@ InvalidLocationException, InvalidRFIDException {
                 Must update:
                 * the corresponding sale transaction, i.e. entries and price
                 * the quantity for each product type returned
+                * the rfid map
              */
             HashMap<String, Integer> rMap = (HashMap<String, Integer>) ret.getMapOfProducts();
 
@@ -2368,10 +2721,15 @@ InvalidLocationException, InvalidRFIDException {
             // recompute the sale's price
             sale.setPrice(newMoney);
             bo.setMoney(newMoney);
+            // delete returned RFIDs from the sale's list
+            for (String r : ret.getRFIDList()) {
+                sale.deleteRFID(r);
+            }
 
             try {
                 this.dbase.addReturnTransaction(ret);
                 this.dbase.updateBalanceOperation(bo);
+                // RFIDs in DB get updated here:
                 this.dbase.updateSaleTransaction(sale);
                 this.dbase.updateReturnInventoryQuantity(ret);
             }
@@ -2383,6 +2741,14 @@ InvalidLocationException, InvalidRFIDException {
 
             // update the corresponding BO
             this.transactionMap.put(bo.getBalanceId(), bo);
+
+            // update RFID map
+            for (String r : ret.getRFIDList()) {
+                EZProductInstance p = this.productInstanceMap.get(r);
+                // reset sale number
+                p.setSaleId(-1);
+                this.productInstanceMap.put(r, p);
+            }
 
             // update both the ST's list and the return map
             sale.updateReturn(ret);

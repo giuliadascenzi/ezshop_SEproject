@@ -463,8 +463,6 @@ public class TestDBClass {
 
     }
 
-
-    //TODO: l'insert non fa il check sulla foreign key
     /*
     @Test
     public void testInsertOrderIdBarCodeNotExisting()
